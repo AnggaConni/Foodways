@@ -81,6 +81,18 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
         .leaflet-tooltip-top:before { display: none; }
+        
+        /* Dropdown Suggestion */
+        #origin-suggestions {
+            max-height: 150px; overflow-y: auto;
+            background: #0f172a; border: 1px solid #334155;
+            position: absolute; width: 100%; z-index: 50;
+        }
+        .suggestion-item {
+            padding: 8px 12px; cursor: pointer; font-size: 12px; color: #cbd5e1;
+            border-bottom: 1px solid #1e293b;
+        }
+        .suggestion-item:hover { background: #1e293b; color: #22d3ee; }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col bg-black">
@@ -105,7 +117,7 @@
                 <button onclick="location.reload()" class="ml-2 underline hover:text-white">Retry?</button>
             </div>
 
-            <!-- BUTTONS: Force Centered & Visible -->
+            <!-- BUTTONS: Force Centered -->
             <div id="entry-buttons" class="hidden flex-col items-center justify-center gap-4 mt-8 w-full">
                 <button onclick="app.enterAsGuest()" class="w-64 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/50 flex items-center justify-center gap-2 transition transform hover:scale-105 mx-auto">
                     ENTER SYSTEM <i class="fas fa-arrow-right"></i>
@@ -116,7 +128,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-8 pt-4 border-t border-slate-800 w-full text-center">
-                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v35.0 (One World) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
+                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v30.0 (Smart Heritage) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
                 <div class="text-xs text-slate-400 font-bold tracking-widest">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -191,13 +203,13 @@
                     </div>
                 </div>
 
-                <!-- CHARTS: Fixed Overlap by using relative containers with fixed height -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col min-h-[350px]">
+                <!-- CHARTS -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 min-h-[400px]">
+                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700/50 pb-2">Influencing Countries</h3>
                         <div class="relative w-full h-64"><canvas id="chart-country"></canvas></div>
                     </div>
-                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col min-h-[350px]">
+                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700/50 pb-2">Interaction Types</h3>
                         <div class="relative w-full h-64 flex justify-center"><canvas id="chart-type"></canvas></div>
                     </div>
@@ -213,7 +225,7 @@
                 <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
                     <div class="p-6 border-b border-slate-700 bg-slate-900/50 flex flex-wrap gap-4 justify-between items-center">
                         <h3 class="font-bold text-white flex items-center"><i class="fas fa-database mr-3 text-slate-500"></i> Database</h3>
-                        <input type="text" id="search-input" placeholder="Search..." class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1 text-sm text-white w-64 focus:border-cyan-500 outline-none">
+                        <input type="text" id="search-input" placeholder="Search..." class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1 text-sm text-white w-64 focus:border-cyan-500 outline-none" oninput="dashboard.updateSearch(this.value)">
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-slate-300 text-sm">
@@ -245,6 +257,13 @@
                     <div class="flex items-center gap-3 mb-2"><span class="w-3 h-3 rounded-full bg-cyan-500 border border-cyan-300"></span> Local Food</div>
                     <div class="flex items-center gap-3 mb-2"><span class="w-3 h-3 rounded-full bg-orange-500 border border-orange-700"></span> Origin</div>
                     <div class="flex items-center gap-3"><span class="w-8 h-0 border-t-2 border-dashed border-slate-500"></span> Path</div>
+                </div>
+                <!-- Map Search (Overlaid) -->
+                <div class="absolute top-6 left-6 z-[400]">
+                    <div class="relative">
+                        <input type="text" id="map-search" placeholder="Search Map..." class="bg-slate-900/90 border border-slate-700 text-white rounded-xl px-4 py-2 text-sm w-64 shadow-2xl backdrop-blur-md focus:border-cyan-500 outline-none" oninput="app.updateMapFilter(this.value)">
+                        <i class="fas fa-search absolute right-3 top-2.5 text-slate-500"></i>
+                    </div>
                 </div>
             </div>
         </main>
@@ -285,6 +304,7 @@
                 <div class="grid grid-cols-2 gap-6">
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
+                     <div><label class="text-xs text-slate-500 font-bold block mb-1">Image URL</label><input type="text" id="inp-image" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                 </div>
                 <div class="bg-slate-800/40 p-6 rounded-2xl border border-slate-700">
                     <div class="flex justify-between items-center mb-4">
@@ -336,23 +356,12 @@
         function robustParse(val) {
             if (!val) return null;
             let str = String(val).trim();
-            // Step 1: Clean excessive dots (e.g., 1.003.543 -> 1003543)
-            if ((str.match(/\./g) || []).length > 1) {
-                str = str.replace(/\./g, '');
-            } else if (str.includes(',') && str.includes('.')) {
-                str = str.replace(/\./g, '').replace(',', '.');
-            } else if (str.includes(',')) {
-                str = str.replace(',', '.');
-            }
-
+            if ((str.match(/\./g) || []).length > 1) str = str.replace(/\./g, ''); 
+            else if (str.includes(',') && str.includes('.')) str = str.replace(/\./g, '').replace(',', '.'); 
+            else if (str.includes(',')) str = str.replace(',', '.'); 
             let n = parseFloat(str);
             if (isNaN(n)) return null;
-
-            // Step 2: Auto-Correct Logic for Coordinates
-            // If Lat/Lng is massive (e.g., 1003543), divide by 10 until it fits Earth (-180 to 180)
-            while (Math.abs(n) > 180) {
-                n = n / 10;
-            }
+            while (Math.abs(n) > 180) { n = n / 10; }
             return n;
         }
 
@@ -384,7 +393,6 @@
         function transformData(item) {
              const get = (k) => item[Object.keys(item).find(x=>x.toLowerCase().includes(k))];
              const parseN = robustParse;
-
              return {
                 id: get('id'), food_name: get('food_name')||get('name'), country: get('country'),
                 lat: parseN(get('lat')), lng: parseN(get('lng')),
@@ -406,21 +414,14 @@
                 const btnLogin = document.getElementById('btn-sidebar-login');
                 const btnAdd = document.getElementById('btn-sidebar-add');
                 const btnLogout = document.getElementById('btn-sidebar-logout');
-
-                if(!sGuest) return; // Safety check
+                if(!sGuest) return; 
 
                 if (state.role === 'admin') {
-                    sGuest.classList.add('hidden');
-                    sAdmin.classList.remove('hidden');
-                    btnLogin.classList.add('hidden');
-                    btnAdd.classList.remove('hidden');
-                    btnLogout.classList.remove('hidden');
+                    sGuest.classList.add('hidden'); sAdmin.classList.remove('hidden');
+                    btnLogin.classList.add('hidden'); btnAdd.classList.remove('hidden'); btnLogout.classList.remove('hidden');
                 } else {
-                    sGuest.classList.remove('hidden');
-                    sAdmin.classList.add('hidden');
-                    btnLogin.classList.remove('hidden');
-                    btnAdd.classList.add('hidden');
-                    btnLogout.classList.add('hidden');
+                    sGuest.classList.remove('hidden'); sAdmin.classList.add('hidden');
+                    btnLogin.classList.remove('hidden'); btnAdd.classList.add('hidden'); btnLogout.classList.add('hidden');
                 }
             },
             loaded: () => {
@@ -429,11 +430,6 @@
                 setTimeout(() => document.getElementById('entry-buttons').classList.remove('opacity-0'), 50);
                 document.getElementById('dataset-info').classList.remove('hidden');
                 document.getElementById('record-count').innerText = state.data.length;
-            },
-            updateServerStatus: (s, m) => {
-                const el = document.getElementById('admin-server-status'), dot = document.getElementById('server-dot'), txt = document.getElementById('server-text');
-                if (s) { dot.className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"; txt.className="text-xs text-emerald-400 font-bold"; txt.textContent = m; }
-                else { dot.className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_red]"; txt.className="text-xs text-red-400 font-bold"; txt.textContent = m; }
             },
             openModal: (id) => document.getElementById(id).classList.remove('hidden'),
             closeModal: (id) => document.getElementById(id).classList.add('hidden'),
@@ -447,59 +443,69 @@
         const mapLogic = {
             map: null, layers: [], lines: [], markers: [],
             init: () => {
-                // FIXED: One World View
-                mapLogic.map = L.map('map-container', { 
-                    zoomControl: false, 
-                    attributionControl: false,
-                    maxBounds: [[-90, -180], [90, 180]], // RESTRICT PANNING
-                    maxBoundsViscosity: 1.0,
-                    minZoom: 2
-                }).setView([20, 0], 2);
-
-                // FIXED: No Wrap (No repeated maps)
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { 
-                    maxZoom: 19,
-                    noWrap: true, 
-                    bounds: [[-90, -180], [90, 180]]
-                }).addTo(mapLogic.map);
-
+                mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false, maxBounds: [[-90, -180], [90, 180]], maxBoundsViscosity: 1.0, minZoom: 2 }).setView([20, 0], 2);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, noWrap: true, bounds: [[-90, -180], [90, 180]] }).addTo(mapLogic.map);
                 L.control.zoom({ position: 'topright' }).addTo(mapLogic.map);
             },
             resize: () => setTimeout(() => mapLogic.map.invalidateSize(), 200),
             resetZoom: () => {
-                // AUTO ZOOM TO DATA
-                if (mapLogic.layers.length > 0) {
-                     const group = new L.featureGroup(mapLogic.layers);
-                     mapLogic.map.fitBounds(group.getBounds().pad(0.1));
-                } else {
-                     mapLogic.map.setView([20, 0], 2);
-                }
+                if (mapLogic.layers.length > 0) { const group = new L.featureGroup(mapLogic.layers); mapLogic.map.fitBounds(group.getBounds().pad(0.1)); } 
+                else mapLogic.map.setView([20, 0], 2);
             },
             render: () => { 
                 mapLogic.layers.forEach(l => mapLogic.map.removeLayer(l));
                 mapLogic.lines.forEach(l => mapLogic.map.removeLayer(l));
                 mapLogic.markers.forEach(l => mapLogic.map.removeLayer(l));
+                mapLogic.layers = []; mapLogic.lines = []; mapLogic.markers = [];
                 
-                mapLogic.layers = [];
-                mapLogic.lines = [];
-                mapLogic.markers = [];
-                
-                state.data.forEach(d => {
+                // FILTER DATA FIRST for Search
+                const search = state.filter.search.toLowerCase();
+                const filteredData = state.data.filter(d => 
+                    d.food_name.toLowerCase().includes(search) || 
+                    d.country.toLowerCase().includes(search) ||
+                    (d.origin_country && d.origin_country.toLowerCase().includes(search))
+                );
+
+                // --- SHARED HERITAGE LOGIC ---
+                // Identify IDs of filtered nodes
+                const visibleIds = new Set(filteredData.map(d => d.id));
+                // Add Origin Nodes that connect to these visible nodes
+                filteredData.forEach(d => {
+                   if (d.origin_food_name) {
+                       // Find if origin exists as a main node
+                       const originNode = state.data.find(n => n.food_name === d.origin_food_name);
+                       if (originNode) visibleIds.add(originNode.id);
+                   }
+                });
+
+                const dataToRender = state.data.filter(d => visibleIds.has(d.id));
+
+                dataToRender.forEach(d => {
                     if (!d.lat || !d.lng) return;
+                    
+                    // Draw Line & Origin Marker
                     if (d.origin_lat && d.origin_lng) {
                         const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], { color: '#cbd5e1', weight: 1.5, opacity: 0.4, dashArray: '4, 8' }).addTo(mapLogic.map);
                         mapLogic.lines.push(line);
-                        const origin = L.circleMarker([d.origin_lat, d.origin_lng], { color: '#f97316', fillColor: '#f97316', fillOpacity: 0.8, radius: 4 }).addTo(mapLogic.map);
-                        mapLogic.markers.push(origin); 
-                        mapLogic.layers.push(line, origin);
+                        
+                        // GHOST NODE LOGIC: Only draw orange marker if it DOES NOT overlap with an existing Blue Node
+                        const isBlueNode = state.data.some(n => Math.abs(n.lat - d.origin_lat) < 0.001 && Math.abs(n.lng - d.origin_lng) < 0.001);
+                        
+                        if (!isBlueNode) {
+                            const origin = L.circleMarker([d.origin_lat, d.origin_lng], { color: '#f97316', fillColor: '#f97316', fillOpacity: 0.8, radius: 4 }).addTo(mapLogic.map);
+                            origin.bindTooltip(`Origin: ${d.origin_food_name}`, { direction: 'top', className: 'custom-tooltip' });
+                            mapLogic.markers.push(origin); 
+                            mapLogic.layers.push(origin);
+                        }
+                        mapLogic.layers.push(line);
                     }
+                    // Draw Main Blue Node
                     const m = L.circleMarker([d.lat, d.lng], { color: '#22d3ee', fillColor: '#22d3ee', fillOpacity: 0.8, radius: 6 }).addTo(mapLogic.map);
                     m.on('click', () => dashboard.showDetail(d));
                     m.bindTooltip(d.food_name, { direction: 'top', className: 'custom-tooltip' });
                     mapLogic.layers.push(m);
                 });
                 
-                mapLogic.layers.forEach(l => l.addTo(mapLogic.map));
                 setTimeout(mapLogic.resetZoom, 500); 
             },
             enablePicker: (cb) => {
@@ -516,14 +522,6 @@
                 mapLogic.map.getContainer().classList.remove('picker-mode');
                 if (mapLogic.pickerHandler) mapLogic.map.off('click', mapLogic.pickerHandler);
                 if (mapLogic.pickerMarker) mapLogic.map.removeLayer(mapLogic.pickerMarker);
-            },
-            clearMap: () => {
-                if(mapLogic.markers) mapLogic.markers.forEach(l => mapLogic.map.removeLayer(l));
-                if(mapLogic.lines) mapLogic.lines.forEach(l => mapLogic.map.removeLayer(l));
-                mapLogic.markers = []; mapLogic.lines = [];
-            },
-            renderData: () => {
-                mapLogic.render(); // Alias
             }
         };
 
@@ -624,7 +622,24 @@
                 });
             },
             listeners: () => {
-                document.getElementById('search-input').addEventListener('keyup', (e)=>{state.filter.search=e.target.value; dashboard.renderTable()});
+                // FIXED: Table Filter
+                document.getElementById('search-input').addEventListener('keyup', (e)=>{
+                    state.filter.search=e.target.value; 
+                    dashboard.renderTable();
+                });
+                
+                // NEW: Map Filter
+                const mapSearch = document.getElementById('map-search');
+                if(mapSearch) {
+                    mapSearch.addEventListener('keyup', (e)=>{
+                        state.filter.search = e.target.value;
+                        mapLogic.render(); // Re-render map layers based on search
+                    });
+                }
+            },
+            updateSearch: (val) => {
+                 state.filter.search = val;
+                 dashboard.renderTable();
             },
             showDetail: (d) => {
                 state.currentDetail = d;
@@ -719,7 +734,7 @@
                 if(val.length < 2) { list.classList.add('hidden'); return; }
                 const matches = state.data.filter(d => d.food_name.toLowerCase().includes(val.toLowerCase())).slice(0, 5);
                 if(matches.length > 0) {
-                    list.innerHTML = matches.map(m => `<div class="p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="text-cyan-400">Link</span></div>`).join('');
+                    list.innerHTML = matches.map(m => `<div class="suggestion-item" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="suggestion-highlight">Link Node</span></div>`).join('');
                     list.classList.remove('hidden');
                 } else list.classList.add('hidden');
             },
@@ -741,13 +756,17 @@
                     lat: document.getElementById('inp-lat'), lng: document.getElementById('inp-lng'), desc: document.getElementById('inp-desc'), geo: document.getElementById('inp-geometry'),
                     unesco: document.getElementById('inp-unesco'), res: document.getElementById('inp-research'),
                     oName: document.getElementById('inp-origin-name'), oCountry: document.getElementById('inp-origin-country'),
-                    oLat: document.getElementById('inp-origin-lat'), oLng: document.getElementById('inp-origin-lng')
+                    oLat: document.getElementById('inp-origin-lat'), oLng: document.getElementById('inp-origin-lng'),
+                    type: document.getElementById('inp-conn-type'),
+                    image: document.getElementById('inp-image')
                 };
                 if(mode==='edit' && state.currentDetail) {
                     const d = state.currentDetail; state.editId = d.id;
                     form.id.value = d.id; form.name.value=d.food_name; form.country.value=d.country; form.lat.value=d.lat; form.lng.value=d.lng;
                     form.desc.value=d.description; form.geo.value=d.geometry_json||''; form.unesco.value=d.unesco_status||''; form.res.value=d.research_links||'';
                     form.oName.value=d.origin_food_name||''; form.oCountry.value=d.origin_country||''; form.oLat.value=d.origin_lat||''; form.oLng.value=d.origin_lng||'';
+                    form.type.value = d.connection_type || 'Trade';
+                    form.image.value = d.image_url || '';
                     document.getElementById('input-title').innerText = 'Edit Data: ' + d.id;
                 } else {
                     state.editId=null; form.id.value = ''; Object.values(form).forEach(e=> { if(e.tagName) e.value='' }); 
@@ -771,6 +790,7 @@
                     lat: parseFloat(document.getElementById('inp-lat').value), lng: parseFloat(document.getElementById('inp-lng').value),
                     description: document.getElementById('inp-desc').value, geometry_json: document.getElementById('inp-geometry').value,
                     unesco_status: document.getElementById('inp-unesco').value, research_links: document.getElementById('inp-research').value,
+                    image_url: document.getElementById('inp-image').value,
                     origin_food_name: document.getElementById('inp-origin-name').value, origin_country: document.getElementById('inp-origin-country').value,
                     origin_lat: document.getElementById('inp-origin-lat').value, origin_lng: document.getElementById('inp-origin-lng').value,
                     connection_type: document.getElementById('inp-conn-type').value
