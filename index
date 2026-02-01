@@ -1,107 +1,501 @@
-const SHEET_DATA_NAME = "Nodes";
-const SHEET_USERS_NAME = "Users";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foodways: Shared Heritage</title>
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PapaParse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
-function doPost(e) {
-  const lock = LockService.getScriptLock();
-  lock.tryLock(10000);
+    <style>
+        :root { --neon-cyan: #22d3ee; --neon-orange: #f97316; --glass-bg: rgba(15, 23, 42, 0.95); }
+        body { background-color: #020617; color: #e2e8f0; font-family: 'Inter', sans-serif; overflow: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        
+        .leaflet-container { background: #020617; }
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid rgba(148, 163, 184, 0.1); }
+        .section-view { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
+        .section-view.active { display: flex; opacity: 1; }
+        .z-modal { z-index: 2000; }
+        .z-picker { z-index: 3000; }
+        .picker-mode { cursor: crosshair !important; }
+        
+        .custom-tooltip {
+            background: rgba(15, 23, 42, 0.95) !important; border: 1px solid var(--neon-cyan) !important; 
+            color: white !important; border-radius: 4px; font-weight: bold; padding: 4px 8px;
+        }
+        .leaflet-tooltip-top:before { display: none; }
+        
+        /* Draggable Marker Style */
+        .geo-marker-icon {
+            background-color: #d946ef; border: 2px solid white; border-radius: 50%; 
+            box-shadow: 0 0 10px rgba(217, 70, 239, 0.8); cursor: move;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col bg-black">
 
-  try {
-    let params = {};
-    if (e.postData && e.postData.contents) {
-      try { params = JSON.parse(e.postData.contents); } catch (err) {}
-    }
-    if (e.parameter) { params = { ...params, ...e.parameter }; }
+    <!-- LANDING -->
+    <div id="landing-page" class="section-view active h-full w-full relative z-50 bg-[#020617] items-center justify-center flex-col">
+        <div class="z-10 text-center space-y-6 glass-panel p-12 rounded-3xl max-w-2xl border-t border-cyan-500/30">
+            <h1 class="text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">Foodways</h1>
+            <p class="text-xl text-slate-400 tracking-widest uppercase">Shared Heritage Project</p>
+            <div id="loading-container" class="mt-8 flex justify-center"><i class="fas fa-circle-notch fa-spin text-cyan-400 text-2xl"></i></div>
+            <div id="entry-buttons" class="hidden flex justify-center gap-4 mt-8">
+                <button onclick="app.enterAsGuest()" class="px-6 py-3 bg-slate-800 rounded-xl hover:bg-slate-700 transition font-bold">Explore</button>
+                <button onclick="app.enterAsContributor()" class="px-6 py-3 bg-blue-600 rounded-xl hover:bg-blue-500 transition font-bold text-white shadow-lg">Admin</button>
+            </div>
+            <div id="dataset-info" class="hidden mt-4 text-[10px] text-slate-600 font-mono uppercase">
+                v9.0 • <span id="record-count">0</span> Records
+            </div>
+        </div>
+    </div>
 
-    let inputData = params.data;
-    if (typeof inputData === 'string') {
-      try { inputData = JSON.parse(inputData); } catch (e) {}
-    }
+    <!-- MAIN APP -->
+    <div id="main-app" class="section-view h-full w-full overflow-hidden flex-row relative">
+        <aside class="w-64 bg-[#0f172a] border-r border-slate-800 flex flex-col justify-between z-40 shadow-2xl">
+            <div>
+                <div class="h-16 flex items-center justify-center border-b border-slate-800 font-bold text-xl text-white">Foodways</div>
+                <nav class="p-4 space-y-2">
+                    <button onclick="app.switchTab('dashboard')" id="nav-dashboard" class="w-full text-left p-3 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"><i class="fas fa-chart-pie mr-2"></i> Dashboard</button>
+                    <button onclick="app.switchTab('map')" id="nav-map" class="w-full text-left p-3 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"><i class="fas fa-map-marked-alt mr-2"></i> Global Map</button>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-slate-800">
+                <div id="auth-status"></div>
+            </div>
+        </aside>
 
-    const action = params.action;
-    let result;
+        <main class="flex-1 relative bg-[#020617]">
+            <!-- DASHBOARD -->
+            <div id="view-dashboard" class="absolute inset-0 p-8 overflow-y-auto hidden">
+                <h2 class="text-3xl font-bold text-white mb-6">Culinary Analytics</h2>
+                <div class="grid grid-cols-3 gap-6 mb-8">
+                    <div class="glass-panel p-6 rounded-xl text-center"><div class="text-4xl font-bold text-white" id="kpi-total">0</div><div class="text-xs text-slate-400 uppercase">Total Foods</div></div>
+                    <div class="glass-panel p-6 rounded-xl text-center"><div class="text-4xl font-bold text-white" id="kpi-countries">0</div><div class="text-xs text-slate-400 uppercase">Countries</div></div>
+                    <div class="glass-panel p-6 rounded-xl text-center"><div class="text-4xl font-bold text-white" id="kpi-edges">0</div><div class="text-xs text-slate-400 uppercase">Connections</div></div>
+                </div>
+                <div class="glass-panel p-4 rounded-xl overflow-x-auto">
+                    <table class="w-full text-left text-slate-300 text-sm">
+                        <thead class="bg-slate-800 text-xs uppercase font-bold text-slate-500"><tr><th class="p-3">Name</th><th class="p-3">Country</th><th class="p-3">Origin</th><th class="p-3 text-right">View</th></tr></thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+            </div>
 
-    if (action === 'login') {
-      result = handleLogin(params.username, params.password);
-    } else if (action === 'insert') {
-      result = handleInsertData(inputData);
-    } else if (action === 'update') {
-      result = handleUpdateData(inputData); // UPDATE LOGIC
-    } else if (action === 'ping') {
-      result = { "status": "success", "message": "Server Online" };
-    } else {
-      throw new Error("Action unknown: " + action);
-    }
+            <!-- MAP -->
+            <div id="view-map" class="absolute inset-0 hidden">
+                <div id="map-container" class="h-full w-full z-0"></div>
+                <div id="picker-notification" class="absolute top-6 left-1/2 -translate-x-1/2 z-[3000] hidden flex-col items-center gap-2">
+                    <div class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 border border-blue-400 animate-pulse">
+                        <i class="fas fa-map-marker-alt"></i> <span id="picker-msg" class="font-bold text-sm">Select Location</span>
+                    </div>
+                    <div class="text-xs bg-black/60 text-white px-3 py-1 rounded backdrop-blur">Click map to drop pin</div>
+                    <button onclick="app.cancelPicker()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1 rounded-full text-xs backdrop-blur-md">Cancel</button>
+                </div>
+            </div>
+        </main>
+    </div>
 
-    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+    <!-- MODALS -->
+    <!-- LOGIN -->
+    <div id="login-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/90 backdrop-blur-sm">
+        <div class="glass-panel w-80 p-6 rounded-2xl">
+            <h3 class="text-xl font-bold text-white mb-4 text-center">Admin Access</h3>
+            <input type="text" id="login-user" placeholder="Username" class="w-full bg-slate-900 border border-slate-700 rounded p-2 mb-3 text-white">
+            <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-900 border border-slate-700 rounded p-2 mb-4 text-white">
+            <button onclick="app.login()" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded">Login</button>
+            <button onclick="ui.closeModal('login-modal')" class="w-full mt-2 text-slate-500 text-xs hover:text-white">Cancel</button>
+        </div>
+    </div>
 
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": error.toString() })).setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
-  }
-}
+    <!-- INPUT -->
+    <div id="input-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+        <div class="glass-panel w-full max-w-3xl h-[90vh] rounded-2xl flex flex-col relative">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white text-lg">Manage Data</h3>
+                <button onclick="ui.closeModal('input-modal')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar space-y-4 flex-1">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="inp-name" placeholder="Name" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    <input type="text" id="inp-country" placeholder="Country" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs text-cyan-400 font-bold">Location</label>
+                        <div class="flex gap-2">
+                            <button onclick="app.pickLocation('main')" class="text-xs bg-cyan-900/50 text-cyan-400 px-2 py-1 rounded border border-cyan-500/30">Pick Point</button>
+                            <button onclick="geoEditor.start()" class="text-xs bg-purple-900/50 text-purple-400 px-2 py-1 rounded border border-purple-500/30">Draw Area</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-2">
+                        <input type="text" id="inp-lat" placeholder="Lat" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm">
+                        <input type="text" id="inp-lng" placeholder="Lng" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm">
+                    </div>
+                    <textarea id="inp-geometry" rows="2" class="w-full bg-black/50 border-slate-700 rounded p-2 text-slate-500 text-xs font-mono" placeholder="Geometry JSON" readonly></textarea>
+                </div>
+                <textarea id="inp-desc" rows="3" placeholder="Description" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"></textarea>
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs text-orange-400 font-bold">Influence Source</label>
+                        <button onclick="app.pickLocation('origin')" class="text-xs bg-orange-900/50 text-orange-400 px-2 py-1 rounded border border-orange-500/30">Pick Origin</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-2">
+                        <input type="text" id="inp-origin-name" placeholder="Origin Name" class="bg-slate-900 border-slate-700 rounded p-2 text-white text-sm">
+                        <input type="text" id="inp-origin-country" placeholder="Origin Country" class="bg-slate-900 border-slate-700 rounded p-2 text-white text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="text" id="inp-origin-lat" placeholder="Lat" class="bg-slate-900 border-slate-700 rounded p-2 text-white text-sm">
+                        <input type="text" id="inp-origin-lng" placeholder="Lng" class="bg-slate-900 border-slate-700 rounded p-2 text-white text-sm">
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-700 bg-slate-900 flex justify-end gap-3">
+                <button onclick="ui.closeModal('input-modal')" class="px-4 py-2 text-slate-400 text-sm">Cancel</button>
+                <button onclick="app.saveData()" id="btn-save" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold shadow-lg text-sm">Save Changes</button>
+            </div>
+        </div>
+    </div>
 
-function handleLogin(u, p) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_USERS_NAME);
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(u) && String(data[i][1]) === String(p)) return { "status": "success" };
-  }
-  return { "status": "error", "message": "Invalid Credentials" };
-}
+    <!-- GEO EDITOR -->
+    <div id="geo-editor" class="fixed inset-0 z-picker hidden bg-black">
+        <div id="geo-map" class="w-full h-full"></div>
+        <div class="geo-controls absolute top-6 left-1/2 -translate-x-1/2 z-[3100] flex gap-4">
+            <div class="bg-slate-900/90 text-white px-6 py-3 rounded-full border border-slate-700 shadow-2xl flex items-center gap-4">
+                <span class="text-xs font-bold text-purple-400">DRAWING MODE</span>
+                <div class="text-[10px] text-slate-300 border-l border-slate-600 pl-3">Drag points to adjust.<br>Click to add point.</div>
+                <button onclick="geoEditor.finish()" class="bg-green-600 px-3 py-1 rounded text-xs font-bold">Finish</button>
+                <button onclick="geoEditor.cancel()" class="text-slate-400 hover:text-white text-xs">Cancel</button>
+            </div>
+        </div>
+    </div>
 
-function handleInsertData(d) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_DATA_NAME);
-  const lastRow = sheet.getLastRow();
-  let newId = "FH001";
-  // Auto ID Generation
-  if (lastRow > 1) {
-    const lastId = String(sheet.getRange(lastRow, 1).getValue());
-    if (lastId.startsWith("FH")) {
-      const num = parseInt(lastId.replace("FH","")) + 1;
-      newId = "FH" + ("000" + num).slice(-3);
-    }
-  }
-  
-  // Use user provided ID if updating failed fallback, otherwise new ID
-  const finalId = (d.id && d.id.startsWith('FH')) ? d.id : newId;
-  const row = buildRow(finalId, d);
-  sheet.appendRow(row);
-  return { "status": "success", "message": "Created", "id": finalId };
-}
+    <!-- DETAIL -->
+    <div id="detail-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/95 backdrop-blur-xl p-4">
+        <div class="bg-[#0f172a] w-full max-w-5xl h-[85vh] rounded-3xl border border-slate-700 shadow-2xl flex flex-col relative overflow-hidden">
+            <button onclick="ui.closeModal('detail-modal')" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/40 hover:bg-red-500 text-white rounded-full transition flex items-center justify-center border border-white/10"><i class="fas fa-times"></i></button>
+            <div id="detail-content" class="overflow-y-auto h-full p-8 custom-scrollbar"></div>
+        </div>
+    </div>
 
-function handleUpdateData(d) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_DATA_NAME);
-  const data = sheet.getDataRange().getValues();
-  let rowIndex = -1;
-  
-  // ROBUST ID MATCHING (Trim & Uppercase)
-  const targetId = String(d.id).trim().toUpperCase();
+    <script>
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzHp10nUHMINcLtbXZrSqc29lrOnrmE248DupOenfPM8P_jFMWUOp5_QF0AwuOzTGgZ/exec'; 
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
+        const state = { data: [], role: 'guest', editId: null, pickerTarget: null, currentDetail: null };
 
-  for (let i = 1; i < data.length; i++) {
-    const rowId = String(data[i][0]).trim().toUpperCase();
-    if (rowId === targetId) {
-      rowIndex = i + 1; // 1-based index
-      break;
-    }
-  }
+        const ui = {
+            renderAuth: () => {
+                const html = state.role==='admin' 
+                ? `<div class="w-full p-2 bg-emerald-900/30 text-emerald-400 text-center rounded border border-emerald-500/30 mb-2 font-bold text-xs">ADMIN ACTIVE</div>
+                   <button onclick="app.initiateAddEntry()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold mb-2">Add New</button>
+                   <button onclick="app.logout()" class="w-full py-2 text-red-400 text-xs hover:text-white">Logout</button>`
+                : `<button onclick="app.enterAsContributor()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-bold">Admin Login</button>`;
+                document.getElementById('auth-status').innerHTML = html;
+            },
+            loaded: () => {
+                document.getElementById('loading-container').classList.add('hidden');
+                document.getElementById('entry-buttons').classList.remove('hidden');
+                document.getElementById('dataset-info').classList.remove('hidden');
+                document.getElementById('record-count').innerText = state.data.length;
+            },
+            openModal: (id) => document.getElementById(id).classList.remove('hidden'),
+            closeModal: (id) => document.getElementById(id).classList.add('hidden')
+        };
 
-  if (rowIndex === -1) {
-    // If ID not found, insert as new data instead of failing
-    return handleInsertData(d);
-  }
+        const mapLogic = {
+            map: null, layers: [], pickerHandler: null, pickerMarker: null,
+            init: () => {
+                mapLogic.map = L.map('map-container', { zoomControl: false }).setView([20,0], 2);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(mapLogic.map);
+                L.control.zoom({ position: 'topright' }).addTo(mapLogic.map);
+                mapLogic.render();
+            },
+            render: () => {
+                mapLogic.layers.forEach(l => mapLogic.map.removeLayer(l));
+                mapLogic.layers = [];
+                state.data.forEach(d => {
+                    if(!d.lat || !d.lng) return;
+                    if(d.origin_lat) {
+                        const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], {color:'#64748b', dashArray:'4,8', weight:1}).addTo(mapLogic.map);
+                        const org = L.circleMarker([d.origin_lat, d.origin_lng], {color:'#f97316', radius:4}).addTo(mapLogic.map);
+                        mapLogic.layers.push(line, org);
+                    }
+                    const m = L.circleMarker([d.lat, d.lng], {color:'#22d3ee', fillColor:'#22d3ee', fillOpacity:0.8, radius:6}).addTo(mapLogic.map);
+                    m.on('click', () => app.showDetailById(d.id));
+                    m.bindTooltip(d.food_name, { direction:'top', className:'custom-tooltip' });
+                    mapLogic.layers.push(m);
+                });
+            },
+            resize: () => setTimeout(()=>mapLogic.map.invalidateSize(), 200),
+            enablePicker: (cb) => {
+                mapLogic.map.getContainer().classList.add('picker-mode');
+                mapLogic.pickerHandler = (e) => {
+                    if(mapLogic.pickerMarker) mapLogic.map.removeLayer(mapLogic.pickerMarker);
+                    const color = state.pickerTarget==='main'?'#22d3ee':'#f97316';
+                    mapLogic.pickerMarker = L.circleMarker(e.latlng, {color:color, fillColor:color, fillOpacity:1, radius:8}).addTo(mapLogic.map);
+                    cb(e.latlng.lat, e.latlng.lng);
+                };
+                mapLogic.map.on('click', mapLogic.pickerHandler);
+            },
+            disablePicker: () => {
+                mapLogic.map.getContainer().classList.remove('picker-mode');
+                if(mapLogic.pickerHandler) mapLogic.map.off('click', mapLogic.pickerHandler);
+                if(mapLogic.pickerMarker) mapLogic.map.removeLayer(mapLogic.pickerMarker);
+            }
+        };
 
-  const row = buildRow(d.id, d);
-  sheet.getRange(rowIndex, 1, 1, row.length).setValues([row]);
-  return { "status": "success", "message": "Updated" };
-}
+        const dashboard = {
+            render: () => {
+                document.getElementById('kpi-total').innerText = state.data.length;
+                document.getElementById('kpi-countries').innerText = new Set(state.data.map(x=>x.country)).size;
+                document.getElementById('kpi-edges').innerText = state.data.filter(x=>x.origin_lat).length;
+                const tbody = document.getElementById('table-body');
+                tbody.innerHTML = state.data.map(d => `
+                    <tr class="border-b border-slate-800 hover:bg-slate-800/50 cursor-pointer" onclick="app.showDetailById('${d.id}')">
+                        <td class="p-3 font-bold text-white">${d.food_name}</td>
+                        <td class="p-3 text-slate-400">${d.country}</td>
+                        <td class="p-3 text-slate-500 text-xs">${d.origin_food_name||'-'}</td>
+                        <td class="p-3 text-right"><i class="fas fa-chevron-right text-slate-600"></i></td>
+                    </tr>
+                `).join('');
+            }
+        };
 
-function buildRow(id, d) {
-  const c = (v) => String(v || '').replace(',', '.'); // Ensure dot decimal
-  return [
-    id, d.food_name, d.country, c(d.lat), c(d.lng), 
-    d.origin_food_name, d.origin_country, c(d.origin_lat), c(d.origin_lng), 
-    d.connection_type, d.geometry_json || '', d.youtube_url || '', 
-    d.unesco_status || '', d.research_links || '', d.image_url || '', d.description || ''
-  ];
-}
+        const app = {
+            init: () => {
+                ui.renderAuth();
+                Papa.parse(CSV_URL, {
+                    download: true, header: true, skipEmptyLines: true,
+                    complete: (res) => {
+                        if(res.data.length) {
+                            state.data = res.data.map(transformData).filter(x => x.lat && x.lng);
+                            mapLogic.init(); dashboard.render(); ui.loaded();
+                        } else alert('Data Empty');
+                    }
+                });
+            },
+            enterAsContributor: () => { if(state.role==='admin') return; ui.openModal('login-modal'); },
+            enterAsGuest: () => { document.getElementById('landing-page').style.display='none'; document.getElementById('main-app').classList.add('active'); mapLogic.resize(); },
+            
+            login: () => {
+                const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
+                const form = new URLSearchParams(); form.append('action', 'login'); form.append('username', u); form.append('password', p);
+                const btn = document.getElementById('btn-login'); btn.innerText='Verifying...';
+
+                fetch(GAS_URL, { method: 'POST', body: form })
+                .then(r => r.json())
+                .then(d => {
+                    btn.innerText='Login';
+                    if(d.status==='success') { state.role='admin'; ui.renderAuth(); ui.closeModal('login-modal'); if(document.getElementById('landing-page').style.display!=='none') app.enterAsGuest(); } 
+                    else alert(d.message);
+                })
+                .catch(e => { btn.innerText='Login'; alert('Server Error. Likely CORS issue.'); });
+            },
+            logout: () => { state.role='guest'; ui.renderAuth(); alert('Logged Out'); },
+            testConnection: () => {
+                 const formData = new URLSearchParams(); formData.append('action', 'ping');
+                 fetch(GAS_URL, { method: 'POST', redirect: "follow", body: formData })
+                .then(res => res.json()).then(data => alert("Server Reachable! Status: " + data.status)).catch(e => alert("Server Unreachable."));
+            },
+            initiateAddEntry: () => {
+                app.switchTab('map');
+                state.editId = null;
+                document.querySelectorAll('#input-modal input, #input-modal textarea').forEach(el => el.value = '');
+                app.pickLocation('main');
+            },
+            showDetailById: (id) => {
+                const d = state.data.find(i => i.id === id);
+                if (d) {
+                    state.currentDetail = d;
+                    // Render detail modal content here (simplified for brevity)
+                    let yt = '';
+                    if(d.youtube_url) {
+                         if(d.youtube_url.includes('iframe')) yt = d.youtube_url.replace(/width=".*?"/,'width="100%"').replace(/height=".*?"/,'height="100%"');
+                         else yt = `<div class="h-full flex items-center justify-center bg-black"><a href="${d.youtube_url}" target="_blank" class="px-4 py-2 bg-red-600 text-white rounded font-bold">Watch on YouTube</a></div>`;
+                    }
+                    let geoMapHtml = d.geometry_json ? `<div id="mini-map-geo" class="h-48 w-full bg-slate-900 rounded-xl mt-4 z-0 border border-slate-700"></div>` : '';
+
+                    const html = `
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                            <div class="overflow-y-auto pr-2">
+                                <h2 class="text-4xl font-black text-white mb-2">${d.food_name}</h2>
+                                <span class="text-cyan-400 text-sm"><i class="fas fa-map-marker-alt"></i> ${d.country}</span>
+                                <p class="text-slate-300 mt-4 leading-relaxed">${d.description}</p>
+                            </div>
+                            <div class="flex flex-col gap-4 overflow-y-auto">
+                                <div class="bg-black rounded-xl overflow-hidden border border-slate-700 aspect-video flex items-center justify-center">${yt}</div>
+                                ${geoMapHtml}
+                                ${state.role==='admin' ? `<button onclick="app.openInputModal('edit')" class="mt-4 w-full py-4 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl font-bold shadow-lg">Edit Data</button>`:''}
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('detail-content').innerHTML = html;
+                    ui.openModal('detail-modal');
+
+                    if(d.geometry_json) {
+                        setTimeout(() => {
+                            const mm = L.map('mini-map-geo', {zoomControl:false, dragging:false, scrollWheelZoom:false}).setView([d.lat, d.lng], 6);
+                            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(mm);
+                            try { const pts = JSON.parse(d.geometry_json); L.polygon(pts, {color:'#d946ef', fillOpacity:0.4}).addTo(mm); mm.fitBounds(pts); } catch(e){}
+                        }, 500);
+                    }
+                }
+            },
+            openInputModal: (mode='create') => {
+                if(state.role!=='admin') return alert('Admin Only');
+                ui.closeModal('detail-modal');
+                const form = {
+                    name: document.getElementById('inp-name'), country: document.getElementById('inp-country'),
+                    lat: document.getElementById('inp-lat'), lng: document.getElementById('inp-lng'),
+                    desc: document.getElementById('inp-desc'), geo: document.getElementById('inp-geometry'),
+                    oName: document.getElementById('inp-origin-name'), oCountry: document.getElementById('inp-origin-country'),
+                    oLat: document.getElementById('inp-origin-lat'), oLng: document.getElementById('inp-origin-lng')
+                };
+                if(mode==='edit' && state.currentDetail) {
+                    const d = state.currentDetail; state.editId = d.id;
+                    form.name.value=d.food_name; form.country.value=d.country;
+                    form.lat.value=d.lat; form.lng.value=d.lng;
+                    form.desc.value=d.description; form.geo.value=d.geometry_json||'';
+                    form.oName.value=d.origin_food_name||''; form.oCountry.value=d.origin_country||'';
+                    form.oLat.value=d.origin_lat||''; form.oLng.value=d.origin_lng||'';
+                } else { state.editId=null; Object.values(form).forEach(e=>e.value=''); }
+                ui.openModal('input-modal');
+            },
+            pickLocation: (target) => {
+                state.pickerTarget = target;
+                ui.closeModal('input-modal');
+                document.getElementById('picker-notification').classList.remove('hidden');
+                document.getElementById('picker-msg').innerText = target==='main'?'Select Location':'Select Origin';
+                mapLogic.enablePicker((lat, lng) => {
+                    if(state.pickerTarget==='main') { document.getElementById('inp-lat').value=lat.toFixed(6); document.getElementById('inp-lng').value=lng.toFixed(6); }
+                    else { document.getElementById('inp-origin-lat').value=lat.toFixed(6); document.getElementById('inp-origin-lng').value=lng.toFixed(6); }
+                    app.cancelPicker();
+                });
+            },
+            cancelPicker: () => {
+                document.getElementById('picker-notification').classList.add('hidden');
+                mapLogic.disablePicker();
+                ui.openModal('input-modal');
+            },
+            saveData: () => {
+                const data = {
+                    food_name: document.getElementById('inp-name').value,
+                    country: document.getElementById('inp-country').value,
+                    lat: parseFloat(document.getElementById('inp-lat').value),
+                    lng: parseFloat(document.getElementById('inp-lng').value),
+                    description: document.getElementById('inp-desc').value,
+                    geometry_json: document.getElementById('inp-geometry').value,
+                    origin_food_name: document.getElementById('inp-origin-name').value,
+                    origin_country: document.getElementById('inp-origin-country').value,
+                    origin_lat: document.getElementById('inp-origin-lat').value,
+                    origin_lng: document.getElementById('inp-origin-lng').value,
+                    connection_type: 'Trade',
+                    id: state.editId || 'TEMP-'+Date.now()
+                };
+                const btn = document.getElementById('btn-save'); btn.innerText='Saving...';
+                
+                if(state.editId) {
+                    const idx = state.data.findIndex(x=>x.id===state.editId);
+                    if(idx!==-1) state.data[idx] = {...state.data[idx], ...data};
+                } else state.data.push(data);
+                
+                mapLogic.render(); dashboard.render();
+
+                const form = new URLSearchParams();
+                form.append('action', state.editId?'update':'insert');
+                form.append('data', JSON.stringify(data));
+
+                fetch(GAS_URL, { method: 'POST', body: form })
+                .then(r=>r.json())
+                .then(d => { if(d.status==='success') { alert('Saved!'); ui.closeModal('input-modal'); } else alert('Error: '+d.message); })
+                .catch(e => alert('Offline Mode: Saved locally.'))
+                .finally(()=> btn.innerText='Save Changes');
+            },
+            switchTab: (t) => {
+                document.getElementById('view-dashboard').classList.add('hidden');
+                document.getElementById('view-map').classList.add('hidden');
+                document.getElementById('view-'+t).classList.remove('hidden');
+                if(t==='map') mapLogic.resize();
+            },
+            exportData: () => {
+                 const csv = Papa.unparse(state.data);
+                 const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURI(csv); a.download='foodways.csv'; a.click();
+            }
+        };
+
+        const geoEditor = {
+            map: null, layer: null, points: [], markers: [],
+            start: () => {
+                ui.closeModal('input-modal');
+                document.getElementById('geo-editor').classList.remove('hidden');
+                if(!geoEditor.map) {
+                    geoEditor.map = L.map('geo-map').setView([0,0], 2);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(geoEditor.map);
+                    geoEditor.map.on('click', e => geoEditor.addPoint(e.latlng));
+                }
+                geoEditor.points = [];
+                geoEditor.markers.forEach(m => geoEditor.map.removeLayer(m));
+                geoEditor.markers = [];
+                if(geoEditor.layer) geoEditor.map.removeLayer(geoEditor.layer);
+                
+                const lat = parseFloat(document.getElementById('inp-lat').value);
+                const lng = parseFloat(document.getElementById('inp-lng').value);
+                if(!isNaN(lat)) geoEditor.map.setView([lat, lng], 10);
+                setTimeout(()=>geoEditor.map.invalidateSize(), 200);
+            },
+            addPoint: (latlng) => {
+                const m = L.marker(latlng, { draggable: true, icon: L.divIcon({ className: 'geo-marker-icon', iconSize: [12,12] }) }).addTo(geoEditor.map);
+                m.on('drag', () => geoEditor.updatePoly());
+                m.on('dragend', () => geoEditor.updatePoly());
+                geoEditor.markers.push(m);
+                geoEditor.updatePoly();
+            },
+            updatePoly: () => {
+                geoEditor.points = geoEditor.markers.map(m => [m.getLatLng().lat, m.getLatLng().lng]);
+                if(geoEditor.layer) geoEditor.map.removeLayer(geoEditor.layer);
+                if(geoEditor.points.length > 2) geoEditor.layer = L.polygon(geoEditor.points, {color:'#d946ef', weight:2}).addTo(geoEditor.map);
+                else if(geoEditor.points.length > 1) geoEditor.layer = L.polyline(geoEditor.points, {color:'#d946ef', weight:2}).addTo(geoEditor.map);
+            },
+            finish: () => {
+                if(geoEditor.points.length > 0) document.getElementById('inp-geometry').value = JSON.stringify(geoEditor.points);
+                geoEditor.cancel();
+            },
+            cancel: () => {
+                document.getElementById('geo-editor').classList.add('hidden');
+                ui.openModal('input-modal');
+            }
+        };
+
+        function transformData(item) {
+            const get = (k) => item[Object.keys(item).find(x=>x.toLowerCase().includes(k))];
+            const parseN = (v) => { if(!v) return null; let n = parseFloat(String(v).replace(/\./g,'').replace(',','.')); while(Math.abs(n)>180) n/=10; return n; };
+
+            return {
+                id: get('id'), food_name: get('food_name')||get('name'), country: get('country'),
+                lat: parseN(get('lat')), lng: parseN(get('lng')),
+                origin_food_name: get('origin_food_name')||get('origin_name'), 
+                origin_country: get('origin_country'),
+                origin_lat: parseN(get('origin_lat')), origin_lng: parseN(get('origin_lng')),
+                connection_type: get('connection_type')||get('type'), 
+                youtube_url: get('youtube_url'), image_url: get('image_url'), 
+                description: get('description'), geometry_json: get('geometry_json'),
+                unesco_status: get('unesco_status'), research_links: get('research_links')
+            };
+        }
+
+        window.addEventListener('DOMContentLoaded', app.init);
+    </script>
+</body>
+</html>
