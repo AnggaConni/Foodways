@@ -81,6 +81,11 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
         .leaflet-tooltip-top:before { display: none; }
+        
+        /* Centering Fixes */
+        .center-absolute {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col bg-black">
@@ -116,7 +121,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-8 pt-4 border-t border-slate-800 w-full text-center">
-                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v32.0 (UI Polish) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
+                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v34.0 (Line Fix) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
                 <div class="text-xs text-slate-400 font-bold tracking-widest">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -191,20 +196,20 @@
                     </div>
                 </div>
 
-                <!-- CHARTS: Fixed Overlap by using relative containers with fixed height -->
+                <!-- CHARTS -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col">
+                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col min-h-[350px]">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700/50 pb-2">Influencing Countries</h3>
                         <div class="relative w-full h-64"><canvas id="chart-country"></canvas></div>
                     </div>
-                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col">
+                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col min-h-[350px]">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700/50 pb-2">Interaction Types</h3>
                         <div class="relative w-full h-64 flex justify-center"><canvas id="chart-type"></canvas></div>
                     </div>
                 </div>
 
                 <!-- UNESCO Chart -->
-                <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 mb-8">
+                <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 mb-8 min-h-[300px]">
                     <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700/50 pb-2">Heritage Status Breakdown</h3>
                     <div class="relative w-full h-64"><canvas id="chart-unesco"></canvas></div>
                 </div>
@@ -284,7 +289,7 @@
                 <div><label class="text-xs text-slate-500 font-bold block mb-1">Description</label><textarea id="inp-desc" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></textarea></div>
                 <div class="grid grid-cols-2 gap-6">
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
-                     <div><label class="text-xs text-slate-500 font-bold block mb-1">Links</label><input type="text" id="inp-research" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
+                     <div><label class="text-xs text-slate-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                 </div>
                 <div class="bg-slate-800/40 p-6 rounded-2xl border border-slate-700">
                     <div class="flex justify-between items-center mb-4">
@@ -384,7 +389,7 @@
 
         function transformData(item) {
              const get = (k) => item[Object.keys(item).find(x=>x.toLowerCase().includes(k))];
-             const parseN = robustParse; // Use the Smart Parser
+             const parseN = robustParse;
 
              return {
                 id: get('id'), food_name: get('food_name')||get('name'), country: get('country'),
@@ -407,6 +412,8 @@
                 const btnLogin = document.getElementById('btn-sidebar-login');
                 const btnAdd = document.getElementById('btn-sidebar-add');
                 const btnLogout = document.getElementById('btn-sidebar-logout');
+
+                if(!sGuest) return; // Safety check
 
                 if (state.role === 'admin') {
                     sGuest.classList.add('hidden');
@@ -444,14 +451,48 @@
 
         // --- MAP LOGIC ---
         const mapLogic = {
-            map: null, layers: [], pickerHandler: null, pickerMarker: null,
+            map: null, layers: [], lines: [], markers: [],
             init: () => {
                 mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false }).setView([20, 0], 2);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(mapLogic.map);
                 L.control.zoom({ position: 'topright' }).addTo(mapLogic.map);
             },
             resize: () => setTimeout(() => mapLogic.map.invalidateSize(), 200),
-            resetZoom: () => mapLogic.map.setView([20, 0], 2),
+            resetZoom: () => {
+                if (mapLogic.layers.length > 0) {
+                     const group = new L.featureGroup(mapLogic.layers);
+                     mapLogic.map.fitBounds(group.getBounds().pad(0.1));
+                } else {
+                     mapLogic.map.setView([20, 0], 2);
+                }
+            },
+            render: () => { 
+                mapLogic.layers.forEach(l => mapLogic.map.removeLayer(l));
+                mapLogic.lines.forEach(l => mapLogic.map.removeLayer(l));
+                mapLogic.markers.forEach(l => mapLogic.map.removeLayer(l));
+                
+                mapLogic.layers = [];
+                mapLogic.lines = [];
+                mapLogic.markers = [];
+                
+                state.data.forEach(d => {
+                    if (!d.lat || !d.lng) return;
+                    if (d.origin_lat && d.origin_lng) {
+                        const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], { color: '#cbd5e1', weight: 1.5, opacity: 0.4, dashArray: '4, 8' }).addTo(mapLogic.map);
+                        mapLogic.lines.push(line);
+                        const origin = L.circleMarker([d.origin_lat, d.origin_lng], { color: '#f97316', fillColor: '#f97316', fillOpacity: 0.8, radius: 4 }).addTo(mapLogic.map);
+                        mapLogic.markers.push(origin); 
+                        mapLogic.layers.push(line, origin);
+                    }
+                    const m = L.circleMarker([d.lat, d.lng], { color: '#22d3ee', fillColor: '#22d3ee', fillOpacity: 0.8, radius: 6 }).addTo(mapLogic.map);
+                    m.on('click', () => dashboard.showDetail(d));
+                    m.bindTooltip(d.food_name, { direction: 'top', className: 'custom-tooltip' });
+                    mapLogic.layers.push(m);
+                });
+                
+                mapLogic.layers.forEach(l => l.addTo(mapLogic.map));
+                setTimeout(mapLogic.resetZoom, 500); 
+            },
             enablePicker: (cb) => {
                 mapLogic.map.getContainer().classList.add('picker-mode');
                 mapLogic.pickerHandler = (e) => {
@@ -466,34 +507,6 @@
                 mapLogic.map.getContainer().classList.remove('picker-mode');
                 if (mapLogic.pickerHandler) mapLogic.map.off('click', mapLogic.pickerHandler);
                 if (mapLogic.pickerMarker) mapLogic.map.removeLayer(mapLogic.pickerMarker);
-            },
-            clearMap: () => {
-                if(mapLogic.markers) mapLogic.markers.forEach(l => mapLogic.map.removeLayer(l));
-                if(mapLogic.lines) mapLogic.lines.forEach(l => mapLogic.map.removeLayer(l));
-                mapLogic.markers = []; mapLogic.lines = [];
-            },
-            renderData: () => {
-                mapLogic.layers.forEach(l => mapLogic.map.removeLayer(l));
-                mapLogic.layers = [];
-                state.data.forEach(d => {
-                    if (!d.lat || !d.lng) return;
-                    if (d.origin_lat && d.origin_lng) {
-                        const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], { color: '#cbd5e1', weight: 1.5, opacity: 0.4, dashArray: '4, 8' }).addTo(mapLogic.map);
-                        mapLogic.lines.push(line);
-                        const origin = L.circleMarker([d.origin_lat, d.origin_lng], { color: '#f97316', fillColor: '#f97316', fillOpacity: 0.8, radius: 4, weight: 1 }).addTo(mapLogic.map);
-                        mapLogic.layers.push(line, origin);
-                    }
-                    const m = L.circleMarker([d.lat, d.lng], { color: '#22d3ee', fillColor: '#22d3ee', fillOpacity: 0.8, radius: 6 }).addTo(mapLogic.map);
-                    m.on('click', () => dashboard.showDetail(d));
-                    m.bindTooltip(d.food_name, { direction: 'top', className: 'custom-tooltip' });
-                    mapLogic.layers.push(m);
-                });
-                
-                // --- NEW: AUTO-FIT BOUNDS ---
-                if (mapLogic.layers.length > 0) {
-                     const group = new L.featureGroup(mapLogic.layers);
-                     mapLogic.map.fitBounds(group.getBounds().pad(0.1));
-                }
             }
         };
 
@@ -539,14 +552,10 @@
             chartCountry: null, chartType: null, chartUnesco: null,
             init: () => { dashboard.render(); dashboard.listeners(); }, 
             render: () => {
-                // IMPORTANT CHECK: If view-dashboard is hidden, do NOT render charts
                 if(document.getElementById('view-dashboard').classList.contains('hidden')) return;
-
                 const ctx1 = document.getElementById('chart-country')?.getContext('2d');
                 const ctx2 = document.getElementById('chart-type')?.getContext('2d');
                 const ctx3 = document.getElementById('chart-unesco')?.getContext('2d');
-
-                // If any context is missing (still loading), skip render
                 if (!ctx1 || !ctx2 || !ctx3) return;
 
                 dashboard.updateKPI(); 
@@ -653,13 +662,19 @@
                         if(res.data.length) {
                             state.data = res.data.map(transformData).filter(x => x.lat && x.lng);
                             mapLogic.init(); dashboard.init(); ui.loaded();
+                            mapLogic.render(); // Force Initial Map Render
                         } else alert('Data Empty');
                     },
                     error: (err) => ui.showError("Failed to Download Data")
                 });
             },
             enterAsContributor: () => { if(state.role==='admin') return; ui.openModal('login-modal'); },
-            enterAsGuest: () => { document.getElementById('landing-page').style.display='none'; document.getElementById('main-app').classList.add('active'); app.switchTab('dashboard'); mapLogic.resize(); },
+            enterAsGuest: () => { 
+                document.getElementById('landing-page').style.display='none'; 
+                document.getElementById('main-app').classList.add('active'); 
+                app.switchTab('dashboard'); 
+                mapLogic.resize(); 
+            },
             login: () => {
                 const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
                 const form = new URLSearchParams(); form.append('action', 'login'); form.append('username', u); form.append('password', p);
@@ -687,7 +702,7 @@
                 if(val.length < 2) { list.classList.add('hidden'); return; }
                 const matches = state.data.filter(d => d.food_name.toLowerCase().includes(val.toLowerCase())).slice(0, 5);
                 if(matches.length > 0) {
-                    list.innerHTML = matches.map(m => `<div class="suggestion-item" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="suggestion-highlight">Link Node</span></div>`).join('');
+                    list.innerHTML = matches.map(m => `<div class="p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="text-cyan-400">Link</span></div>`).join('');
                     list.classList.remove('hidden');
                 } else list.classList.add('hidden');
             },
@@ -748,7 +763,7 @@
                 
                 if(state.editId) { const idx = state.data.findIndex(x=>x.id===state.editId); if(idx!==-1) state.data[idx] = {...state.data[idx], ...data}; } 
                 else { data.id = 'TEMP'; state.data.push(data); }
-                mapLogic.renderData(); dashboard.render();
+                mapLogic.render(); dashboard.render();
 
                 const form = new URLSearchParams(); form.append('action', action); form.append('data', JSON.stringify(data));
                 fetch(GAS_URL, { method: 'POST', body: form }).then(r=>r.json()).then(d => { 
