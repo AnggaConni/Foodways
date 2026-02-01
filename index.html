@@ -133,7 +133,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-8 pt-4 border-t border-slate-800 w-full text-center">
-                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v37.0 (Final Heritage) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
+                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v40.0 (Final Complete) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
                 <div class="text-xs text-slate-400 font-bold tracking-widest">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -317,8 +317,13 @@
                 <div class="grid grid-cols-2 gap-6">
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
-                     <div><label class="text-xs text-slate-500 font-bold block mb-1">Image URL</label><input type="text" id="inp-image" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" placeholder="https://example.com/image.jpg"></div>
                 </div>
+                <!-- ADDED MISSING FIELDS -->
+                 <div class="grid grid-cols-1 gap-6 mt-4">
+                     <div><label class="text-xs text-slate-500 font-bold block mb-1">Image URL</label><input type="text" id="inp-image" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" placeholder="https://"></div>
+                     <div><label class="text-xs text-slate-500 font-bold block mb-1">YouTube URL</label><input type="text" id="inp-youtube" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" placeholder="https://youtube.com/..."></div>
+                </div>
+
                 <div class="bg-slate-800/40 p-6 rounded-2xl border border-slate-700">
                     <div class="flex justify-between items-center mb-4">
                         <label class="text-sm text-orange-400 font-bold">Influence Source</label>
@@ -669,7 +674,6 @@
                 state.currentDetail = d;
                 let yt = extractYoutubeEmbed(d.youtube_url) || '<div class="h-full flex items-center justify-center text-slate-500 text-xs">No Video Available</div>';
                 let geoMapHtml = d.geometry_json ? `<div id="detail-geo-map" class="h-48 w-full bg-black rounded-xl border border-slate-700 mt-4"></div>` : '';
-                const badge = getTypeBadge(d.connection_type);
 
                 const html = `
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
@@ -696,7 +700,7 @@
                                     </div>
                                     <div class="flex-1 border-t-2 border-dashed border-slate-700 relative">
                                         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#0f172a] px-2">
-                                            ${badge}
+                                            ${getTypeBadge(d.connection_type)}
                                         </div>
                                     </div>
                                     <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
@@ -708,7 +712,9 @@
 
                              <div class="glass-panel p-6 rounded-2xl">
                                 <h3 class="text-xs font-bold text-slate-500 uppercase mb-3 border-b border-slate-700 pb-2">Narrative</h3>
-                                <p class="text-slate-300 leading-relaxed text-justify text-sm">${d.description || 'No description provided.'}</p>
+                                <div class="max-h-40 overflow-y-auto custom-scrollbar pr-2">
+                                    <p class="text-slate-300 leading-relaxed text-justify text-sm">${d.description || 'No description provided.'}</p>
+                                </div>
                              </div>
                              
                              <div class="glass-panel p-6 rounded-2xl">
@@ -785,7 +791,7 @@
                 if(val.length < 2) { list.classList.add('hidden'); return; }
                 const matches = state.data.filter(d => d.food_name.toLowerCase().includes(val.toLowerCase())).slice(0, 5);
                 if(matches.length > 0) {
-                    list.innerHTML = matches.map(m => `<div class="p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="text-cyan-400">Link</span></div>`).join('');
+                    list.innerHTML = matches.map(m => `<div class="suggestion-item" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="text-cyan-400">Link</span></div>`).join('');
                     list.classList.remove('hidden');
                 } else list.classList.add('hidden');
             },
@@ -808,14 +814,14 @@
                     unesco: document.getElementById('inp-unesco'), res: document.getElementById('inp-research'),
                     oName: document.getElementById('inp-origin-name'), oCountry: document.getElementById('inp-origin-country'),
                     oLat: document.getElementById('inp-origin-lat'), oLng: document.getElementById('inp-origin-lng'),
-                    type: document.getElementById('inp-conn-type'), image: document.getElementById('inp-image')
+                    type: document.getElementById('inp-conn-type'), image: document.getElementById('inp-image'), youtube: document.getElementById('inp-youtube')
                 };
                 if(mode==='edit' && state.currentDetail) {
                     const d = state.currentDetail; state.editId = d.id;
                     form.id.value = d.id; form.name.value=d.food_name; form.country.value=d.country; form.lat.value=d.lat; form.lng.value=d.lng;
                     form.desc.value=d.description; form.geo.value=d.geometry_json||''; form.unesco.value=d.unesco_status||''; form.res.value=d.research_links||'';
                     form.oName.value=d.origin_food_name||''; form.oCountry.value=d.origin_country||''; form.oLat.value=d.origin_lat||''; form.oLng.value=d.origin_lng||'';
-                    form.type.value = d.connection_type || 'Trade'; form.image.value = d.image_url || '';
+                    form.type.value = d.connection_type || 'Trade'; form.image.value = d.image_url || ''; form.youtube.value = d.youtube_url || '';
                     document.getElementById('input-title').innerText = 'Edit Data: ' + d.id;
                 } else {
                     state.editId=null; form.id.value = ''; Object.values(form).forEach(e=> { if(e.tagName) e.value='' }); 
@@ -839,7 +845,7 @@
                     lat: parseFloat(document.getElementById('inp-lat').value), lng: parseFloat(document.getElementById('inp-lng').value),
                     description: document.getElementById('inp-desc').value, geometry_json: document.getElementById('inp-geometry').value,
                     unesco_status: document.getElementById('inp-unesco').value, research_links: document.getElementById('inp-research').value,
-                    image_url: document.getElementById('inp-image').value,
+                    image_url: document.getElementById('inp-image').value, youtube_url: document.getElementById('inp-youtube').value,
                     origin_food_name: document.getElementById('inp-origin-name').value, origin_country: document.getElementById('inp-origin-country').value,
                     origin_lat: document.getElementById('inp-origin-lat').value, origin_lng: document.getElementById('inp-origin-lng').value,
                     connection_type: document.getElementById('inp-conn-type').value
