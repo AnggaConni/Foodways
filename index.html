@@ -82,6 +82,18 @@
         }
         .leaflet-tooltip-top:before { display: none; }
         
+        /* Dropdown Suggestion */
+        #origin-suggestions {
+            max-height: 150px; overflow-y: auto;
+            background: #0f172a; border: 1px solid #334155;
+            position: absolute; width: 100%; z-index: 50;
+        }
+        .suggestion-item {
+            padding: 8px 12px; cursor: pointer; font-size: 12px; color: #cbd5e1;
+            border-bottom: 1px solid #1e293b;
+        }
+        .suggestion-item:hover { background: #1e293b; color: #22d3ee; }
+        
         /* Centering Fixes */
         .center-absolute {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -110,7 +122,7 @@
                 <button onclick="location.reload()" class="ml-2 underline hover:text-white">Retry?</button>
             </div>
 
-            <!-- BUTTONS: Force Centered -->
+            <!-- BUTTONS: Force Centered & Visible -->
             <div id="entry-buttons" class="hidden flex-col items-center justify-center gap-4 mt-8 w-full">
                 <button onclick="app.enterAsGuest()" class="w-64 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/50 flex items-center justify-center gap-2 transition transform hover:scale-105 mx-auto">
                     ENTER SYSTEM <i class="fas fa-arrow-right"></i>
@@ -121,7 +133,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-8 pt-4 border-t border-slate-800 w-full text-center">
-                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v38.0 (Edit Fixed) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
+                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v37.0 (Final Heritage) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
                 <div class="text-xs text-slate-400 font-bold tracking-widest">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -196,7 +208,7 @@
                     </div>
                 </div>
 
-                <!-- CHARTS: Fixed Overlap by using relative containers with fixed height -->
+                <!-- CHARTS -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
                     <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col min-h-[350px]">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700/50 pb-2">Influencing Countries</h3>
@@ -214,7 +226,7 @@
                     <div class="relative w-full h-64"><canvas id="chart-unesco"></canvas></div>
                 </div>
 
-                <!-- Data Table with Pagination -->
+                <!-- Data Table -->
                 <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
                     <div class="p-6 border-b border-slate-700 bg-slate-900/50 flex flex-wrap gap-4 justify-between items-center">
                         <h3 class="font-bold text-white flex items-center"><i class="fas fa-database mr-3 text-slate-500"></i> Database</h3>
@@ -235,8 +247,7 @@
                             <tbody id="table-body"></tbody>
                         </table>
                     </div>
-                    
-                    <!-- PAGINATION FOOTER -->
+                    <!-- Pagination Footer -->
                     <div class="p-4 border-t border-slate-700 bg-slate-900 flex justify-between items-center text-sm">
                         <span class="text-slate-500 text-xs font-mono uppercase" id="pagination-info">Showing 0-0 of 0</span>
                         <div class="flex gap-2">
@@ -306,13 +317,8 @@
                 <div class="grid grid-cols-2 gap-6">
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
+                     <div><label class="text-xs text-slate-500 font-bold block mb-1">Image URL</label><input type="text" id="inp-image" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" placeholder="https://example.com/image.jpg"></div>
                 </div>
-                <!-- ADDED MISSING IMAGE INPUT HERE -->
-                <div class="mb-4">
-                     <label class="text-xs text-slate-500 font-bold block mb-1">Image URL</label>
-                     <input type="text" id="inp-image" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" placeholder="https://example.com/image.jpg">
-                </div>
-                
                 <div class="bg-slate-800/40 p-6 rounded-2xl border border-slate-700">
                     <div class="flex justify-between items-center mb-4">
                         <label class="text-sm text-orange-400 font-bold">Influence Source</label>
@@ -491,6 +497,13 @@
                         const isBlueNode = state.data.some(n => Math.abs(n.lat - d.origin_lat) < 0.001 && Math.abs(n.lng - d.origin_lng) < 0.001);
                         if (!isBlueNode) {
                             const origin = L.circleMarker([d.origin_lat, d.origin_lng], { color: '#f97316', fillColor: '#f97316', fillOpacity: 0.8, radius: 4 }).addTo(mapLogic.map);
+                            origin.bindTooltip(`
+                                <div class="text-center px-2 py-1">
+                                    <div class="text-[9px] font-bold text-orange-400 tracking-widest uppercase">${d.connection_type || 'ORIGIN'}</div>
+                                    <div class="text-xs font-bold text-white">${d.origin_food_name}</div>
+                                    <div class="text-[9px] text-slate-400">${d.origin_country}</div>
+                                </div>
+                            `, { direction: 'top', className: 'custom-tooltip' });
                             mapLogic.markers.push(origin); mapLogic.layers.push(origin);
                         }
                         mapLogic.layers.push(line);
@@ -592,18 +605,18 @@
                     type: 'bar', data: { labels: so.map(x=>x[0]), datasets: [{ label: 'Count', data: so.map(x=>x[1]), backgroundColor: '#22d3ee', borderRadius: 6 }] }, 
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#334155' } }, x: { grid: { display: false } } } } 
                 });
+                
                 if(dashboard.chartType) dashboard.chartType.destroy();
                 dashboard.chartType = new Chart(ctx2, { 
                     type: 'doughnut', data: { labels: Object.keys(t), datasets: [{ data: Object.values(t), backgroundColor: ['#facc15', '#4ade80', '#f87171'], borderWidth: 0 }] }, 
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: {size: 10} } } } } 
                 });
+
                 if(dashboard.chartUnesco) dashboard.chartUnesco.destroy();
                 dashboard.chartUnesco = new Chart(ctx3, { 
                     type: 'bar', indexAxis: 'y', data: { labels: Object.keys(u), datasets: [{ label: 'Count', data: Object.values(u), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#64748b'], borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' } }, y: { grid: { display: false } } } } 
                 });
             },
-            
-            // --- PAGINATION LOGIC ---
             changePage: (step) => {
                 state.pagination.page += step;
                 dashboard.renderTable();
@@ -640,7 +653,6 @@
                     state.pagination.page = 1; 
                     dashboard.renderTable();
                 });
-                // Map Search
                 const mapSearch = document.getElementById('map-search');
                 if(mapSearch) {
                     mapSearch.addEventListener('keyup', (e)=>{
@@ -657,6 +669,7 @@
                 state.currentDetail = d;
                 let yt = extractYoutubeEmbed(d.youtube_url) || '<div class="h-full flex items-center justify-center text-slate-500 text-xs">No Video Available</div>';
                 let geoMapHtml = d.geometry_json ? `<div id="detail-geo-map" class="h-48 w-full bg-black rounded-xl border border-slate-700 mt-4"></div>` : '';
+                const badge = getTypeBadge(d.connection_type);
 
                 const html = `
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
@@ -664,14 +677,40 @@
                              <div class="aspect-video bg-slate-800 rounded-2xl mb-4 overflow-hidden border border-slate-700 relative">
                                 <img src="${d.image_url}" class="w-full h-full object-cover" onerror="this.style.display='none'">
                                 <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/90 to-transparent">
-                                    <h2 class="text-4xl font-black text-white leading-none">${d.food_name}</h2>
-                                    <span class="text-cyan-400 text-sm font-bold bg-black/50 px-2 py-1 rounded backdrop-blur mt-2 inline-block"><i class="fas fa-map-marker-alt mr-1"></i> ${d.country}</span>
+                                    <h2 class="text-4xl font-black text-white leading-none mb-2">${d.food_name}</h2>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="text-cyan-400 text-xs font-bold bg-black/50 px-2 py-1 rounded backdrop-blur border border-cyan-500/30"><i class="fas fa-map-marker-alt mr-1"></i> ${d.country}</span>
+                                        ${d.unesco_status ? `<span class="text-emerald-400 text-xs font-bold bg-black/50 px-2 py-1 rounded backdrop-blur border border-emerald-500/30"><i class="fas fa-university mr-1"></i> ${d.unesco_status}</span>` : ''}
+                                    </div>
                                 </div>
                              </div>
+
+                             ${d.origin_food_name ? `
+                             <div class="glass-panel p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden">
+                                <div class="absolute right-4 top-4 opacity-20 text-4xl"><i class="fas fa-exchange-alt"></i></div>
+                                <h3 class="text-xs font-bold text-orange-400 uppercase mb-2 tracking-wider">Influence Trail</h3>
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                                        <div class="text-xl font-bold text-white">${d.origin_food_name}</div>
+                                        <div class="text-xs text-slate-400">from ${d.origin_country}</div>
+                                    </div>
+                                    <div class="flex-1 border-t-2 border-dashed border-slate-700 relative">
+                                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#0f172a] px-2">
+                                            ${badge}
+                                        </div>
+                                    </div>
+                                    <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                                        <div class="text-xl font-bold text-cyan-400">${d.food_name}</div>
+                                        <div class="text-xs text-slate-400">in ${d.country}</div>
+                                    </div>
+                                </div>
+                             </div>` : ''}
+
                              <div class="glass-panel p-6 rounded-2xl">
                                 <h3 class="text-xs font-bold text-slate-500 uppercase mb-3 border-b border-slate-700 pb-2">Narrative</h3>
                                 <p class="text-slate-300 leading-relaxed text-justify text-sm">${d.description || 'No description provided.'}</p>
                              </div>
+                             
                              <div class="glass-panel p-6 rounded-2xl">
                                 <h3 class="text-xs font-bold text-slate-500 uppercase mb-3 border-b border-slate-700 pb-2">Research Sources</h3>
                                 ${d.research_links ? d.research_links.split(',').map(l => `<a href="${l.trim()}" target="_blank" class="block truncate text-cyan-400 hover:underline text-xs mb-1"><i class="fas fa-link mr-1"></i> ${l.trim()}</a>`).join('') : '<span class="text-slate-500 italic">No sources.</span>'}
