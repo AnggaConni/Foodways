@@ -1,0 +1,107 @@
+const SHEET_DATA_NAME = "Nodes";
+const SHEET_USERS_NAME = "Users";
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+
+  try {
+    let params = {};
+    if (e.postData && e.postData.contents) {
+      try { params = JSON.parse(e.postData.contents); } catch (err) {}
+    }
+    if (e.parameter) { params = { ...params, ...e.parameter }; }
+
+    let inputData = params.data;
+    if (typeof inputData === 'string') {
+      try { inputData = JSON.parse(inputData); } catch (e) {}
+    }
+
+    const action = params.action;
+    let result;
+
+    if (action === 'login') {
+      result = handleLogin(params.username, params.password);
+    } else if (action === 'insert') {
+      result = handleInsertData(inputData);
+    } else if (action === 'update') {
+      result = handleUpdateData(inputData); // UPDATE LOGIC
+    } else if (action === 'ping') {
+      result = { "status": "success", "message": "Server Online" };
+    } else {
+      throw new Error("Action unknown: " + action);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": error.toString() })).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function handleLogin(u, p) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_USERS_NAME);
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(u) && String(data[i][1]) === String(p)) return { "status": "success" };
+  }
+  return { "status": "error", "message": "Invalid Credentials" };
+}
+
+function handleInsertData(d) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_DATA_NAME);
+  const lastRow = sheet.getLastRow();
+  let newId = "FH001";
+  // Auto ID Generation
+  if (lastRow > 1) {
+    const lastId = String(sheet.getRange(lastRow, 1).getValue());
+    if (lastId.startsWith("FH")) {
+      const num = parseInt(lastId.replace("FH","")) + 1;
+      newId = "FH" + ("000" + num).slice(-3);
+    }
+  }
+  
+  // Use user provided ID if updating failed fallback, otherwise new ID
+  const finalId = (d.id && d.id.startsWith('FH')) ? d.id : newId;
+  const row = buildRow(finalId, d);
+  sheet.appendRow(row);
+  return { "status": "success", "message": "Created", "id": finalId };
+}
+
+function handleUpdateData(d) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_DATA_NAME);
+  const data = sheet.getDataRange().getValues();
+  let rowIndex = -1;
+  
+  // ROBUST ID MATCHING (Trim & Uppercase)
+  const targetId = String(d.id).trim().toUpperCase();
+
+  for (let i = 1; i < data.length; i++) {
+    const rowId = String(data[i][0]).trim().toUpperCase();
+    if (rowId === targetId) {
+      rowIndex = i + 1; // 1-based index
+      break;
+    }
+  }
+
+  if (rowIndex === -1) {
+    // If ID not found, insert as new data instead of failing
+    return handleInsertData(d);
+  }
+
+  const row = buildRow(d.id, d);
+  sheet.getRange(rowIndex, 1, 1, row.length).setValues([row]);
+  return { "status": "success", "message": "Updated" };
+}
+
+function buildRow(id, d) {
+  const c = (v) => String(v || '').replace(',', '.'); // Ensure dot decimal
+  return [
+    id, d.food_name, d.country, c(d.lat), c(d.lng), 
+    d.origin_food_name, d.origin_country, c(d.origin_lat), c(d.origin_lng), 
+    d.connection_type, d.geometry_json || '', d.youtube_url || '', 
+    d.unesco_status || '', d.research_links || '', d.image_url || '', d.description || ''
+  ];
+}
