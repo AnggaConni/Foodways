@@ -111,7 +111,7 @@
             </div>
 
             <!-- BUTTONS: Force Centered -->
-            <div id="entry-buttons" class="hidden flex-col items-center gap-4 mt-8 w-full justify-center">
+            <div id="entry-buttons" class="hidden flex-col items-center justify-center gap-4 mt-8 w-full">
                 <button onclick="app.enterAsGuest()" class="w-64 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/50 flex items-center justify-center gap-2 transition transform hover:scale-105 mx-auto">
                     ENTER SYSTEM <i class="fas fa-arrow-right"></i>
                 </button>
@@ -121,7 +121,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-8 pt-4 border-t border-slate-800 w-full text-center">
-                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v37.0 (Pagination) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
+                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v38.0 (Edit Fixed) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
                 <div class="text-xs text-slate-400 font-bold tracking-widest">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -196,13 +196,13 @@
                     </div>
                 </div>
 
-                <!-- CHARTS -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 min-h-[400px]">
-                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col">
+                <!-- CHARTS: Fixed Overlap by using relative containers with fixed height -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col min-h-[350px]">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700/50 pb-2">Influencing Countries</h3>
                         <div class="relative w-full h-64"><canvas id="chart-country"></canvas></div>
                     </div>
-                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col">
+                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col min-h-[350px]">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700/50 pb-2">Interaction Types</h3>
                         <div class="relative w-full h-64 flex justify-center"><canvas id="chart-type"></canvas></div>
                     </div>
@@ -260,11 +260,19 @@
                     <div class="flex items-center gap-3 mb-2"><span class="w-3 h-3 rounded-full bg-orange-500 border border-orange-700"></span> Origin</div>
                     <div class="flex items-center gap-3"><span class="w-8 h-0 border-t-2 border-dashed border-slate-500"></span> Path</div>
                 </div>
+                <!-- Map Search -->
+                <div class="absolute top-6 left-6 z-[400]">
+                    <div class="relative">
+                        <input type="text" id="map-search" placeholder="Search Map..." class="bg-slate-900/90 border border-slate-700 text-white rounded-xl px-4 py-2 text-sm w-64 shadow-2xl backdrop-blur-md focus:border-cyan-500 outline-none" oninput="app.updateMapFilter(this.value)">
+                        <i class="fas fa-search absolute right-3 top-2.5 text-slate-500"></i>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- MODALS (Login, Input, Detail, Geo Editor - same as before) -->
+    <!-- MODALS -->
+    
     <!-- LOGIN -->
     <div id="login-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
         <div class="glass-panel w-96 p-8 rounded-3xl border border-slate-700">
@@ -299,10 +307,23 @@
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                 </div>
+                <!-- ADDED MISSING IMAGE INPUT HERE -->
+                <div class="mb-4">
+                     <label class="text-xs text-slate-500 font-bold block mb-1">Image URL</label>
+                     <input type="text" id="inp-image" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" placeholder="https://example.com/image.jpg">
+                </div>
+                
                 <div class="bg-slate-800/40 p-6 rounded-2xl border border-slate-700">
-                    <div class="flex justify-between items-center mb-4"><label class="text-sm text-orange-400 font-bold">Influence Source</label><button onclick="app.pickLocation('origin')" class="text-xs bg-orange-600 px-3 py-1.5 rounded-lg text-white font-bold">Set Origin</button></div>
-                    <div class="grid grid-cols-2 gap-4 mb-4"><input type="text" id="inp-origin-name" class="input-field" placeholder="Origin Food Name"><input type="text" id="inp-origin-country" class="input-field" placeholder="Origin Country"></div>
-                    <div class="grid grid-cols-2 gap-4"><input type="text" id="inp-origin-lat" class="input-field" placeholder="Lat"><input type="text" id="inp-origin-lng" class="input-field" placeholder="Lng"></div>
+                    <div class="flex justify-between items-center mb-4">
+                        <label class="text-sm text-orange-400 font-bold">Influence Source</label>
+                        <button onclick="app.pickLocation('origin')" class="text-xs bg-orange-600 px-3 py-1.5 rounded-lg text-white font-bold">Set Origin</button>
+                    </div>
+                    <div class="relative mb-4">
+                         <input type="text" id="inp-origin-name" placeholder="Origin Food Name (Type to search)" class="w-full bg-slate-900 border-slate-700 rounded-xl p-3 text-white text-sm" oninput="app.handleOriginSearch(this.value)">
+                         <div id="origin-suggestions" class="hidden absolute top-full left-0 w-full bg-slate-800 border border-slate-600 rounded-b-xl z-50 max-h-40 overflow-y-auto"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4"><input type="text" id="inp-origin-country" placeholder="Origin Country" class="bg-slate-900 border-slate-700 rounded-xl p-3 text-white text-sm"></div>
+                    <div class="grid grid-cols-2 gap-4"><input type="text" id="inp-origin-lat" placeholder="Lat" class="bg-slate-900 border-slate-700 rounded-xl p-3 text-white text-sm"><input type="text" id="inp-origin-lng" placeholder="Lng" class="bg-slate-900 border-slate-700 rounded-xl p-3 text-white text-sm"></div>
                     <div class="mt-4"><label class="text-xs text-slate-500 font-bold block mb-1">Type</label><select id="inp-conn-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"><option value="Trade">Trade</option><option value="Migration">Migration</option><option value="Colonialism">Colonialism</option></select></div>
                 </div>
             </div>
@@ -336,7 +357,6 @@
     <script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbx2DclhzYacLARlyM0bJs5KAQ6nhpxw0J1fBD0CMvjGRIiZ2jnJlVd0h9X8oJ8d79wT/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
-        // PAGINATION STATE: page = 1, limit = 10
         const state = { data: [], role: 'guest', editId: null, pickerTarget: null, currentDetail: null, filter: { search: '' }, pagination: { page: 1, limit: 10 } };
 
         function robustParse(val) {
@@ -415,6 +435,11 @@
                 document.getElementById('dataset-info').classList.remove('hidden');
                 document.getElementById('record-count').innerText = state.data.length;
             },
+            updateServerStatus: (s, m) => {
+                const el = document.getElementById('admin-server-status'), dot = document.getElementById('server-dot'), txt = document.getElementById('server-text');
+                if (s) { dot.className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"; txt.className="text-xs text-emerald-400 font-bold"; txt.textContent = m; }
+                else { dot.className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_red]"; txt.className="text-xs text-red-400 font-bold"; txt.textContent = m; }
+            },
             openModal: (id) => document.getElementById(id).classList.remove('hidden'),
             closeModal: (id) => document.getElementById(id).classList.add('hidden'),
             showError: (msg) => {
@@ -440,12 +465,29 @@
                 mapLogic.lines.forEach(l => mapLogic.map.removeLayer(l));
                 mapLogic.markers.forEach(l => mapLogic.map.removeLayer(l));
                 mapLogic.layers = []; mapLogic.lines = []; mapLogic.markers = [];
-                state.data.forEach(d => {
+                
+                const search = state.filter.search.toLowerCase();
+                const filteredData = state.data.filter(d => 
+                    d.food_name.toLowerCase().includes(search) || 
+                    d.country.toLowerCase().includes(search) ||
+                    (d.origin_country && d.origin_country.toLowerCase().includes(search))
+                );
+
+                const visibleIds = new Set(filteredData.map(d => d.id));
+                filteredData.forEach(d => {
+                   if (d.origin_food_name) {
+                       const originNode = state.data.find(n => n.food_name === d.origin_food_name);
+                       if (originNode) visibleIds.add(originNode.id);
+                   }
+                });
+
+                const dataToRender = state.data.filter(d => visibleIds.has(d.id));
+
+                dataToRender.forEach(d => {
                     if (!d.lat || !d.lng) return;
                     if (d.origin_lat && d.origin_lng) {
                         const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], { color: '#cbd5e1', weight: 1.5, opacity: 0.4, dashArray: '4, 8' }).addTo(mapLogic.map);
                         mapLogic.lines.push(line);
-                        // Ghost Node Logic
                         const isBlueNode = state.data.some(n => Math.abs(n.lat - d.origin_lat) < 0.001 && Math.abs(n.lng - d.origin_lng) < 0.001);
                         if (!isBlueNode) {
                             const origin = L.circleMarker([d.origin_lat, d.origin_lng], { color: '#f97316', fillColor: '#f97316', fillOpacity: 0.8, radius: 4 }).addTo(mapLogic.map);
@@ -458,7 +500,7 @@
                     m.bindTooltip(d.food_name, { direction: 'top', className: 'custom-tooltip' });
                     mapLogic.layers.push(m);
                 });
-                mapLogic.layers.forEach(l => l.addTo(mapLogic.map));
+                
                 setTimeout(mapLogic.resetZoom, 500); 
             },
             enablePicker: (cb) => {
@@ -561,22 +603,18 @@
                 });
             },
             
-            // --- NEW: PAGINATION LOGIC ---
+            // --- PAGINATION LOGIC ---
             changePage: (step) => {
                 state.pagination.page += step;
                 dashboard.renderTable();
             },
-
             renderTable: () => {
                 const b = document.getElementById('table-body'); b.innerHTML='';
                 const search = state.filter.search.toLowerCase();
-                // Filter first
                 const f = state.data.filter(d => d.food_name && d.food_name.toLowerCase().includes(search));
                 
-                // Pagination Calc
                 const total = f.length;
                 const totalPages = Math.ceil(total / state.pagination.limit);
-                
                 if(state.pagination.page < 1) state.pagination.page = 1;
                 if(state.pagination.page > totalPages && totalPages > 0) state.pagination.page = totalPages;
 
@@ -592,7 +630,6 @@
                     b.appendChild(tr);
                 });
 
-                // Update Controls
                 document.getElementById('pagination-info').innerText = `Showing ${start+1}-${Math.min(end, total)} of ${total}`;
                 document.getElementById('btn-prev').disabled = state.pagination.page <= 1;
                 document.getElementById('btn-next').disabled = state.pagination.page >= totalPages || totalPages === 0;
@@ -600,9 +637,21 @@
             listeners: () => {
                 document.getElementById('search-input').addEventListener('keyup', (e)=>{
                     state.filter.search=e.target.value; 
-                    state.pagination.page = 1; // Reset to page 1 on search
+                    state.pagination.page = 1; 
                     dashboard.renderTable();
                 });
+                // Map Search
+                const mapSearch = document.getElementById('map-search');
+                if(mapSearch) {
+                    mapSearch.addEventListener('keyup', (e)=>{
+                        state.filter.search = e.target.value;
+                        mapLogic.render(); 
+                    });
+                }
+            },
+            updateSearch: (val) => {
+                 state.filter.search = val;
+                 dashboard.renderTable();
             },
             showDetail: (d) => {
                 state.currentDetail = d;
@@ -689,6 +738,27 @@
                 state.editId = null;
                 document.querySelectorAll('#input-modal input, #input-modal textarea').forEach(el => el.value = '');
                 app.switchTab('map'); app.pickLocation('main');
+            },
+            
+            // --- NEW: Autocomplete Logic ---
+            handleOriginSearch: (val) => {
+                const list = document.getElementById('origin-suggestions');
+                if(val.length < 2) { list.classList.add('hidden'); return; }
+                const matches = state.data.filter(d => d.food_name.toLowerCase().includes(val.toLowerCase())).slice(0, 5);
+                if(matches.length > 0) {
+                    list.innerHTML = matches.map(m => `<div class="p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="text-cyan-400">Link</span></div>`).join('');
+                    list.classList.remove('hidden');
+                } else list.classList.add('hidden');
+            },
+            selectOriginNode: (id) => {
+                const node = state.data.find(d => d.id === id);
+                if(node) {
+                    document.getElementById('inp-origin-name').value = node.food_name;
+                    document.getElementById('inp-origin-country').value = node.country;
+                    document.getElementById('inp-origin-lat').value = node.lat;
+                    document.getElementById('inp-origin-lng').value = node.lng;
+                    document.getElementById('origin-suggestions').classList.add('hidden');
+                }
             },
             openInputModal: (mode='create') => {
                 if(state.role!=='admin') return alert('Admin Only');
