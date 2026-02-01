@@ -81,11 +81,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
         .leaflet-tooltip-top:before { display: none; }
-        
-        /* Centering Fixes */
-        .center-absolute {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col bg-black">
@@ -110,8 +105,8 @@
                 <button onclick="location.reload()" class="ml-2 underline hover:text-white">Retry?</button>
             </div>
 
-            <!-- BUTTONS: Force Centered -->
-            <div id="entry-buttons" class="hidden flex-col items-center gap-4 mt-8 w-full justify-center">
+            <!-- BUTTONS: Force Centered & Visible -->
+            <div id="entry-buttons" class="hidden flex-col items-center justify-center gap-4 mt-8 w-full">
                 <button onclick="app.enterAsGuest()" class="w-64 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/50 flex items-center justify-center gap-2 transition transform hover:scale-105 mx-auto">
                     ENTER SYSTEM <i class="fas fa-arrow-right"></i>
                 </button>
@@ -121,7 +116,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-8 pt-4 border-t border-slate-800 w-full text-center">
-                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v34.0 (Line Fix) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
+                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v35.0 (One World) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
                 <div class="text-xs text-slate-400 font-bold tracking-widest">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -196,7 +191,7 @@
                     </div>
                 </div>
 
-                <!-- CHARTS -->
+                <!-- CHARTS: Fixed Overlap by using relative containers with fixed height -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
                     <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col min-h-[350px]">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700/50 pb-2">Influencing Countries</h3>
@@ -337,11 +332,10 @@
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
         const state = { data: [], role: 'guest', editId: null, pickerTarget: null, currentDetail: null, filter: { search: '' } };
 
-        // --- SMART PARSER (THE SAVIOR) ---
+        // --- ROBUST PARSER ---
         function robustParse(val) {
             if (!val) return null;
             let str = String(val).trim();
-            
             // Step 1: Clean excessive dots (e.g., 1.003.543 -> 1003543)
             if ((str.match(/\./g) || []).length > 1) {
                 str = str.replace(/\./g, '');
@@ -453,12 +447,27 @@
         const mapLogic = {
             map: null, layers: [], lines: [], markers: [],
             init: () => {
-                mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false }).setView([20, 0], 2);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(mapLogic.map);
+                // FIXED: One World View
+                mapLogic.map = L.map('map-container', { 
+                    zoomControl: false, 
+                    attributionControl: false,
+                    maxBounds: [[-90, -180], [90, 180]], // RESTRICT PANNING
+                    maxBoundsViscosity: 1.0,
+                    minZoom: 2
+                }).setView([20, 0], 2);
+
+                // FIXED: No Wrap (No repeated maps)
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { 
+                    maxZoom: 19,
+                    noWrap: true, 
+                    bounds: [[-90, -180], [90, 180]]
+                }).addTo(mapLogic.map);
+
                 L.control.zoom({ position: 'topright' }).addTo(mapLogic.map);
             },
             resize: () => setTimeout(() => mapLogic.map.invalidateSize(), 200),
             resetZoom: () => {
+                // AUTO ZOOM TO DATA
                 if (mapLogic.layers.length > 0) {
                      const group = new L.featureGroup(mapLogic.layers);
                      mapLogic.map.fitBounds(group.getBounds().pad(0.1));
@@ -507,6 +516,14 @@
                 mapLogic.map.getContainer().classList.remove('picker-mode');
                 if (mapLogic.pickerHandler) mapLogic.map.off('click', mapLogic.pickerHandler);
                 if (mapLogic.pickerMarker) mapLogic.map.removeLayer(mapLogic.pickerMarker);
+            },
+            clearMap: () => {
+                if(mapLogic.markers) mapLogic.markers.forEach(l => mapLogic.map.removeLayer(l));
+                if(mapLogic.lines) mapLogic.lines.forEach(l => mapLogic.map.removeLayer(l));
+                mapLogic.markers = []; mapLogic.lines = [];
+            },
+            renderData: () => {
+                mapLogic.render(); // Alias
             }
         };
 
