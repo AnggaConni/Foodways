@@ -19,51 +19,23 @@
             --neon-cyan: #22d3ee;
             --neon-orange: #f97316;
             --glass-bg: rgba(15, 23, 42, 0.95);
-            --glass-border: rgba(148, 163, 184, 0.1);
+            --glass-border: rgba(148, 163, 184, 0.2);
         }
         
         body {
-            background-color: #020617; /* Slate 950 */
+            background-color: #020617;
             color: #e2e8f0;
             font-family: 'Inter', sans-serif;
             overflow: hidden; 
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-        /* Leaflet Map Customization */
+        /* Leaflet & UI */
         .leaflet-container { background: #020617; }
-        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-            background: rgba(2, 6, 23, 0.95);
-            color: white;
-            border: 1px solid #334155;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 0 20px rgba(34, 211, 238, 0.1);
-            border-radius: 0.75rem;
-        }
-        .leaflet-popup-content { margin: 12px; }
-        
-        .leaflet-container.picker-mode {
-            cursor: crosshair !important;
-        }
-        
-        /* Custom Tooltip Style */
-        .custom-tooltip {
-            background: rgba(15, 23, 42, 0.95) !important;
-            border: 1px solid var(--neon-orange) !important;
-            color: white !important;
-            border-radius: 6px !important;
-            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3) !important;
-            font-family: 'Inter', sans-serif !important;
-            padding: 0 !important;
-        }
-        .custom-tooltip::before { border-top-color: var(--neon-orange) !important; }
-
-        /* Glassmorphism Classes */
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
@@ -71,41 +43,50 @@
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
 
+        /* Transitions */
         .section-view { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
         .section-view.active { display: flex; opacity: 1; }
+        .z-modal { z-index: 2000; }
+        .z-picker { z-index: 3000; }
+        
+        /* Badges Glow */
+        .badge-trade {
+            background: rgba(250, 204, 21, 0.15); color: #facc15;
+            border: 1px solid rgba(250, 204, 21, 0.5);
+            box-shadow: 0 0 8px rgba(250, 204, 21, 0.3);
+        }
+        .badge-migration {
+            background: rgba(74, 222, 128, 0.15); color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.5);
+            box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+        }
+        .badge-colonialism {
+            background: rgba(248, 113, 113, 0.15); color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.5);
+            box-shadow: 0 0 8px rgba(248, 113, 113, 0.3);
+        }
+        .badge-default { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid #475569; }
 
-        .z-modal-base { z-index: 1000; }
-        .z-modal-top { z-index: 1100; } 
-        .z-notification { z-index: 2000; }
-        
-        /* Animation */
-        @keyframes fadeInDown { from { opacity: 0; transform: translate3d(-50%, -20px, 0); } to { opacity: 1; transform: translate3d(-50%, 0, 0); } }
-        .animate-fade-in-down { animation: fadeInDown 0.5s ease-out forwards; }
-        
         /* Geo Marker */
         .geo-marker-icon {
-            background-color: #d946ef;
-            border: 2px solid white;
-            border-radius: 50%;
-            width: 12px !important;
-            height: 12px !important;
-            margin-left: -6px !important;
-            margin-top: -6px !important;
-            cursor: move;
-            box-shadow: 0 0 10px rgba(217, 70, 239, 0.8);
+            background-color: #d946ef; border: 2px solid white; border-radius: 50%;
+            width: 12px !important; height: 12px !important; margin-left: -6px; margin-top: -6px;
+            cursor: move; box-shadow: 0 0 10px rgba(217, 70, 239, 0.8);
         }
-        /* Glow Animation for Enter Button */
-        @keyframes glow { 0% { box-shadow: 0 0 5px #3b82f6; } 50% { box-shadow: 0 0 20px #3b82f6, 0 0 10px #22d3ee; } 100% { box-shadow: 0 0 5px #3b82f6; } }
-        .btn-glow { animation: glow 2s infinite; }
+
+        /* Tooltip */
+        .custom-tooltip {
+            background: rgba(15, 23, 42, 0.95); border: 1px solid var(--neon-cyan);
+            color: white; border-radius: 4px; font-weight: bold; padding: 4px 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .leaflet-tooltip-top:before { display: none; }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col bg-black">
 
     <!-- 1. LANDING PAGE -->
     <div id="landing-page" class="section-view active h-full w-full relative z-50 bg-[#020617] items-center justify-center flex-col">
-        <div class="absolute inset-0 z-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center"></div>
-        <div class="absolute inset-0 z-0 bg-gradient-to-b from-[#020617]/80 via-[#020617]/95 to-[#020617]"></div>
-
         <div class="z-10 text-center space-y-8 glass-panel p-16 rounded-3xl max-w-3xl border-t border-cyan-500/30 shadow-2xl">
             <h1 class="text-7xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600 mb-2">Foodways</h1>
             <p class="text-xl text-slate-400 tracking-[0.4em] uppercase font-light">Shared Heritage Project</p>
@@ -115,31 +96,19 @@
                 <span class="ml-3 text-cyan-400 font-mono text-sm">Connecting to Database...</span>
             </div>
 
-            <div id="error-container" class="hidden mt-4 bg-red-900/50 border border-red-500/50 p-4 rounded-xl text-sm">
-                <i class="fas fa-wifi text-red-400 mr-2"></i> Connection Failed. 
-                <button onclick="location.reload()" class="ml-2 underline hover:text-white">Retry?</button>
-            </div>
-
-            <!-- BUTTONS -->
             <div id="entry-buttons" class="hidden flex-col items-center gap-4 mt-8">
-                <button onclick="app.enterAsGuest()" class="w-64 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-lg transition transform hover:scale-105 btn-glow flex items-center justify-center gap-2">
+                <!-- ENTER BUTTON -->
+                <button onclick="app.enterAsGuest()" class="w-64 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/50 flex items-center justify-center gap-2 transition transform hover:scale-105">
                     ENTER SYSTEM <i class="fas fa-arrow-right"></i>
                 </button>
-                <div class="flex gap-4 text-xs text-slate-500">
-                    <button onclick="app.enterAsContributor()" class="hover:text-cyan-400 transition underline">Admin Access</button>
-                    <span>|</span>
-                    <span class="opacity-70">Press Enter Key</span>
+                <div class="flex gap-4 text-xs text-slate-500 mt-2">
+                    <button onclick="app.enterAsContributor()" class="hover:text-cyan-400 transition underline">Admin Login</button>
                 </div>
             </div>
             
-            <div id="dataset-info" class="hidden mt-8 pt-4 border-t border-slate-800 w-full">
-                <div class="flex justify-between items-center text-[10px] text-slate-500 font-mono uppercase">
-                    <span>v21.0 (Chart Fix)</span>
-                    <span><span id="record-count" class="text-cyan-500 font-bold">0</span> Records</span>
-                </div>
-                <div class="text-xs text-slate-400 font-bold tracking-widest mt-2">
-                    Angga Conni Saputra 2026
-                </div>
+            <div id="dataset-info" class="hidden mt-8 pt-4 border-t border-slate-800 w-full text-center">
+                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v25.0 (Stable) • <span id="record-count">0</span> Records</div>
+                <div class="text-xs text-slate-400 font-bold tracking-widest">Angga Conni Saputra 2026</div>
             </div>
         </div>
     </div>
@@ -148,86 +117,108 @@
     <div id="main-app" class="section-view h-full w-full overflow-hidden flex-row relative">
         
         <!-- PICKER NOTIFICATION -->
-        <div id="picker-notification" class="absolute top-6 left-1/2 -translate-x-1/2 z-notification hidden flex-col items-center w-96">
+        <div id="picker-notification" class="absolute top-6 left-1/2 -translate-x-1/2 z-[3000] hidden flex-col items-center w-96">
             <div class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 border border-blue-400 animate-pulse cursor-pointer transition hover:bg-blue-500" onclick="app.cancelPicker()">
                 <i class="fas fa-crosshairs fa-lg"></i>
                 <div class="text-sm font-bold" id="picker-msg">Select Location</div>
                 <div class="bg-white/20 rounded-full w-6 h-6 flex items-center justify-center text-xs"><i class="fas fa-times"></i></div>
             </div>
-            <div class="mt-2 text-[10px] text-white/80 bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm">Click on map to confirm position</div>
+            <div class="mt-2 text-[10px] text-white/80 bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm">Click map to confirm</div>
         </div>
 
-        <!-- Sidebar -->
+        <!-- SIDEBAR -->
         <aside class="w-72 bg-[#0f172a] border-r border-slate-800 flex flex-col justify-between z-40 shadow-2xl">
             <div>
                 <div class="h-20 flex items-center justify-center border-b border-slate-800 font-bold text-2xl text-white tracking-tight">Foodways</div>
                 <nav class="p-6 space-y-3">
-                    <button onclick="app.switchTab('dashboard')" id="nav-dashboard" class="w-full text-left p-4 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition flex items-center text-lg"><i class="fas fa-chart-pie w-8"></i> Dashboard</button>
-                    <button onclick="app.switchTab('map')" id="nav-map" class="w-full text-left p-4 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition flex items-center text-lg"><i class="fas fa-map-marked-alt w-8"></i> Global Map</button>
+                    <button onclick="app.switchTab('dashboard')" id="nav-dashboard" class="w-full text-left p-4 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition flex items-center text-lg"><i class="fas fa-chart-pie w-8 mr-3"></i> Dashboard</button>
+                    <button onclick="app.switchTab('map')" id="nav-map" class="w-full text-left p-4 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition flex items-center text-lg"><i class="fas fa-map-marked-alt w-8 mr-3"></i> Global Map</button>
                 </nav>
             </div>
+            
+            <!-- FIXED BOTTOM MENU -->
             <div class="p-6 border-t border-slate-800 bg-[#0f172a]">
-                <div class="mb-4">
-                    <div class="flex items-center justify-between text-[10px] uppercase font-bold text-slate-500 mb-1">Status</div>
-                    <div id="admin-server-status" class="flex items-center gap-2 p-2 bg-slate-900 rounded border border-slate-800">
-                        <div id="server-dot" class="w-2 h-2 rounded-full bg-slate-600"></div>
-                        <span id="server-text" class="text-xs text-slate-500">Guest Mode</span>
-                    </div>
+                <!-- Auth Status UI -->
+                <div id="auth-status-ui" class="mb-4">
+                    <div id="status-guest" class="w-full p-3 bg-slate-800 text-slate-400 text-center rounded-xl border border-slate-700 mb-3 text-xs font-bold">GUEST MODE</div>
+                    <div id="status-admin" class="hidden w-full p-3 bg-emerald-900/30 text-emerald-400 text-center rounded-xl border border-emerald-500/30 mb-3 text-xs font-bold">ADMIN ACTIVE</div>
+                    
+                    <button id="btn-sidebar-login" onclick="app.enterAsContributor()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition">Admin Login</button>
+                    <button id="btn-sidebar-add" onclick="app.initiateAddEntry()" class="hidden w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition mb-2">Add New Data</button>
+                    <button id="btn-sidebar-logout" onclick="app.logout()" class="hidden w-full py-2 text-red-400 hover:text-white text-xs transition">Sign Out</button>
                 </div>
-                <button onclick="app.exportData()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold border border-slate-700">Download CSV</button>
-                <div id="auth-status-container" class="mt-4"></div>
+
+                <div class="pt-4 border-t border-slate-800">
+                    <div class="flex items-center gap-2 text-[10px] text-slate-500 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div> System Ready
+                    </div>
+                    <button onclick="app.exportData()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[10px] font-bold border border-slate-700">Download CSV</button>
+                </div>
             </div>
         </aside>
 
-        <!-- Content Area -->
-        <main class="flex-1 relative bg-[#020617]">
+        <!-- CONTENT -->
+        <main class="flex-1 relative overflow-hidden bg-[#020617] flex flex-col">
             
             <!-- DASHBOARD TAB -->
             <div id="view-dashboard" class="absolute inset-0 p-10 overflow-y-auto hidden">
                 <header class="flex justify-between items-end pb-6 border-b border-slate-800 mb-8">
                     <div>
                         <h2 class="text-3xl font-bold text-white mb-1">Culinary Analytics</h2>
-                        <p class="text-slate-400 text-sm">Visualization of global culinary heritage data.</p>
+                        <p class="text-slate-400 text-sm">Global culinary heritage data visualization.</p>
                     </div>
                 </header>
 
+                <!-- Stats Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
                     <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center border-t-4 border-cyan-500">
                         <div class="text-6xl font-black text-white mb-2" id="kpi-total">0</div>
-                        <div class="text-sm text-slate-400 uppercase tracking-widest font-bold">Total Foods</div>
+                        <div class="text-xs text-slate-400 uppercase tracking-widest font-bold">Total Foods</div>
                     </div>
                     <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center border-t-4 border-purple-500">
                         <div class="text-6xl font-black text-white mb-2" id="kpi-countries">0</div>
-                        <div class="text-sm text-slate-400 uppercase tracking-widest font-bold">Countries</div>
+                        <div class="text-xs text-slate-400 uppercase tracking-widest font-bold">Countries</div>
                     </div>
                     <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center border-t-4 border-orange-500">
                         <div class="text-6xl font-black text-white mb-2" id="kpi-edges">0</div>
-                        <div class="text-sm text-slate-400 uppercase tracking-widest font-bold">Connections</div>
+                        <div class="text-xs text-slate-400 uppercase tracking-widest font-bold">Connections</div>
                     </div>
                      <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center border-t-4 border-emerald-500">
                         <div class="text-6xl font-black text-white mb-2" id="kpi-unesco">0</div>
-                        <div class="text-sm text-slate-400 uppercase tracking-widest font-bold">UNESCO Items</div>
+                        <div class="text-xs text-slate-400 uppercase tracking-widest font-bold">Heritage Listed</div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 h-96">
-                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col"><h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Top Influencers</h3><div class="flex-1 relative"><canvas id="chart-country"></canvas></div></div>
-                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col"><h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Connection Types</h3><div class="flex-1 relative flex justify-center"><canvas id="chart-type"></canvas></div></div>
-                </div>
-                
-                <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 h-64 mb-8">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Heritage Status Breakdown</h3>
-                    <div class="h-full relative"><canvas id="chart-unesco"></canvas></div>
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 h-80">
+                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Top Origins</h3>
+                        <div class="flex-1 relative"><canvas id="chart-country"></canvas></div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-3xl border border-slate-800 bg-[#0f172a]/50 flex flex-col">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Connection Types</h3>
+                        <div class="flex-1 relative flex justify-center"><canvas id="chart-type"></canvas></div>
+                    </div>
                 </div>
 
-                <div class="glass-panel rounded-3xl overflow-hidden border border-slate-800">
-                    <div class="p-6 bg-slate-900 border-b border-slate-800 font-bold text-white flex justify-between items-center">
-                        <span>Database Records</span>
-                        <input type="text" id="search-input" placeholder="Search..." class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1 text-sm font-normal text-white focus:border-cyan-500 outline-none">
+                <!-- Table -->
+                <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
+                    <div class="p-6 border-b border-slate-700 bg-slate-900/50 flex flex-wrap gap-4 justify-between items-center">
+                        <h3 class="font-bold text-white flex items-center"><i class="fas fa-database mr-3 text-slate-500"></i> Database</h3>
+                        <input type="text" id="search-input" placeholder="Search..." class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1 text-sm text-white w-64 focus:border-cyan-500 outline-none">
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-slate-300 text-sm">
-                            <thead class="bg-slate-800 text-xs uppercase font-bold text-slate-500"><tr><th class="p-4">Name</th><th class="p-4">Country</th><th class="p-4">Origin</th><th class="p-4 text-right">Action</th></tr></thead>
+                            <thead class="bg-slate-950 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                                <tr>
+                                    <th class="p-4 border-b border-slate-800">ID</th>
+                                    <th class="p-4 border-b border-slate-800">Name</th>
+                                    <th class="p-4 border-b border-slate-800">Country</th>
+                                    <th class="p-4 border-b border-slate-800">Origin</th>
+                                    <th class="p-4 border-b border-slate-800">Type</th>
+                                    <th class="p-4 border-b border-slate-800 text-right">Action</th>
+                                </tr>
+                            </thead>
                             <tbody id="table-body"></tbody>
                         </table>
                     </div>
@@ -237,135 +228,136 @@
 
             <!-- MAP TAB -->
             <div id="view-map" class="absolute inset-0 hidden">
-                <div id="map-container" class="h-full w-full z-0"></div>
-                <div id="picker-notification" class="absolute top-6 left-1/2 -translate-x-1/2 z-[3000] hidden flex-col items-center gap-2">
-                    <div class="bg-blue-600 text-white px-8 py-4 rounded-full shadow-2xl flex items-center gap-4 border-2 border-blue-400 animate-pulse">
-                        <i class="fas fa-map-pin text-xl"></i> <span id="picker-msg" class="font-bold text-lg">Select Location</span>
-                    </div>
-                    <div class="text-sm bg-black/80 text-white px-4 py-1.5 rounded-full backdrop-blur border border-white/20">Click map to drop pin</div>
-                    <button onclick="app.cancelPicker()" class="bg-white/20 hover:bg-white/30 text-white px-6 py-1.5 rounded-full text-xs font-bold transition">Cancel</button>
+                <div id="map-container" class="h-full w-full bg-[#020617] outline-none z-0"></div>
+                <div class="absolute top-6 right-6 z-[400] flex flex-col gap-3">
+                    <button onclick="mapLogic.resetZoom()" class="w-10 h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-xl flex items-center justify-center border border-slate-700"><i class="fas fa-crosshairs"></i></button>
                 </div>
-
-                <div class="absolute bottom-8 left-8 z-[400] glass-panel p-6 rounded-2xl text-sm text-slate-300 shadow-2xl bg-black/80">
-                    <div class="font-bold text-slate-500 uppercase mb-3 text-xs tracking-wider">Legend</div>
-                    <div class="flex items-center gap-3 mb-2"><span class="w-3 h-3 rounded-full bg-cyan-500 border border-cyan-300"></span> Local Food</div>
-                    <div class="flex items-center gap-3 mb-2"><span class="w-3 h-3 rounded-full bg-orange-500 border border-orange-700"></span> Origin Source</div>
-                    <div class="flex items-center gap-3"><span class="w-8 h-0 border-t-2 border-dashed border-slate-500"></span> Historical Path</div>
+                <div class="absolute bottom-8 left-8 z-[400] glass-panel p-5 rounded-2xl max-w-xs border border-slate-700/50 shadow-2xl bg-slate-900/90 text-sm">
+                    <div class="font-bold text-slate-500 uppercase mb-3 text-[10px]">Legend</div>
+                    <div class="flex items-center gap-3 mb-2"><span class="w-3 h-3 rounded-full bg-cyan-500"></span> <span class="text-slate-300">Local Food</span></div>
+                    <div class="flex items-center gap-3 mb-2"><span class="w-3 h-3 rounded-full bg-orange-500"></span> <span class="text-slate-300">Origin</span></div>
+                    <div class="flex items-center gap-3"><span class="w-8 h-0 border-t-2 border-dashed border-slate-500"></span> <span class="text-slate-300">Path</span></div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- MODALS -->
-
-    <!-- LOGIN -->
+    <!-- LOGIN MODAL -->
     <div id="login-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-        <div class="glass-panel w-full max-w-sm p-8 rounded-3xl bg-[#0f172a] border border-slate-700 shadow-2xl transform scale-100 transition-all">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-400 text-2xl border border-blue-500/20">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h3 class="text-2xl font-bold text-white">Admin Login</h3>
-                <p class="text-slate-500 text-xs mt-2">Sign in to edit data. STRICT SERVER CHECK.</p>
-            </div>
-            <div class="space-y-5">
-                <input type="text" id="login-username" placeholder="Username" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white text-sm focus:border-blue-500 outline-none">
-                <input type="password" id="login-password" placeholder="Password" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white text-sm focus:border-blue-500 outline-none">
-                <button onclick="app.submitLogin()" id="btn-login-submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg transition flex justify-center items-center gap-2">
-                    <span id="login-text">Login</span><i id="login-spinner" class="fas fa-circle-notch fa-spin hidden"></i>
-                </button>
-                <div class="text-center"><button onclick="app.testConnection()" class="text-[10px] text-cyan-500 hover:underline">Test Server Connection</button></div>
-                <button onclick="ui.closeModal('login-modal')" class="w-full py-2 text-slate-500 hover:text-white transition text-xs font-medium">Cancel</button>
-            </div>
+        <div class="glass-panel w-96 p-8 rounded-3xl border border-slate-700">
+            <h3 class="text-2xl font-bold text-white mb-6 text-center">Admin Access</h3>
+            <input type="text" id="login-user" placeholder="Username" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 mb-4 text-white outline-none focus:border-blue-500">
+            <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 mb-6 text-white outline-none focus:border-blue-500">
+            <button onclick="app.login()" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition shadow-lg">Login</button>
+            <button onclick="ui.closeModal('login-modal')" class="w-full mt-4 text-slate-500 text-sm hover:text-white">Cancel</button>
         </div>
     </div>
 
+    <!-- INPUT & DETAIL MODALS (Standard) -->
     <!-- INPUT -->
     <div id="input-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-        <div class="glass-panel w-full max-w-2xl rounded-2xl border border-slate-600 shadow-2xl flex flex-col max-h-[90vh] bg-[#0f172a]">
-            <div class="p-5 border-b border-slate-700 bg-slate-800/30 flex justify-between items-center">
-                <h3 id="modal-title" class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-plus-circle text-blue-400"></i> Data Entry</h3>
-                <button onclick="ui.closeModal('input-modal')" class="text-slate-400 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+        <div class="glass-panel w-full max-w-4xl h-[90vh] rounded-3xl flex flex-col relative bg-[#0f172a]">
+            <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-3xl">
+                <h3 id="input-title" class="text-xl font-bold text-white">Manage Data</h3>
+                <button onclick="ui.closeModal('input-modal')" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar space-y-5">
-                <div class="bg-blue-900/10 border border-blue-500/20 p-3 rounded-lg text-xs text-blue-300 flex gap-2"><i class="fas fa-database mt-0.5"></i><span><strong>Live Mode:</strong> Changes are saved ONLY if server confirms. No local cache.</span></div>
+            <div class="p-8 overflow-y-auto custom-scrollbar space-y-6 flex-1">
                 <input type="hidden" id="inp-id">
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="label-text">Food Name</label><input type="text" id="inp-food-name" class="input-field" placeholder="e.g. Rawon"></div>
-                    <div><label class="label-text">Country</label><input type="text" id="inp-country" class="input-field" placeholder="e.g. Indonesia"></div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div><label class="text-xs text-slate-500 font-bold block mb-1">Food Name</label><input type="text" id="inp-name" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
+                    <div><label class="text-xs text-slate-500 font-bold block mb-1">Country</label><input type="text" id="inp-country" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                 </div>
-                <div>
-                    <div class="flex justify-between items-end mb-1"><label class="label-text mb-0">Main Coordinates</label><button onclick="app.pickLocation('main')" class="text-[10px] text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 bg-cyan-900/20 px-2 py-1 rounded transition flex items-center gap-1"><i class="fas fa-map-marker-alt"></i> Pick on Map</button></div>
-                    <div class="grid grid-cols-2 gap-4"><input type="text" id="inp-lat" class="input-field" placeholder="Lat"><input type="text" id="inp-lng" class="input-field" placeholder="Lng"></div>
+                <div class="bg-slate-800/40 p-6 rounded-2xl border border-slate-700">
+                    <div class="flex justify-between items-center mb-4"><label class="text-sm text-cyan-400 font-bold">Main Location</label><div class="flex gap-2"><button onclick="app.pickLocation('main')" class="text-xs bg-cyan-600 px-3 py-1.5 rounded-lg text-white font-bold">Set Point</button><button onclick="geoEditor.start()" class="text-xs bg-purple-600 px-3 py-1.5 rounded-lg text-white font-bold">Draw Area</button></div></div>
+                    <div class="grid grid-cols-2 gap-4 mb-4"><input type="text" id="inp-lat" placeholder="Lat" class="bg-slate-900 border-slate-700 rounded-xl p-3 text-white text-sm"><input type="text" id="inp-lng" placeholder="Lng" class="bg-slate-900 border-slate-700 rounded-xl p-3 text-white text-sm"></div>
+                    <textarea id="inp-geometry" rows="2" class="w-full bg-black/30 border-slate-700 rounded-xl p-3 text-slate-500 text-xs font-mono" placeholder="Geometry JSON" readonly></textarea>
                 </div>
-                <div>
-                    <div class="flex justify-between items-end mb-1"><label class="label-text mb-0">Region Geometry</label><button onclick="geoEditor.start()" class="text-[10px] text-purple-400 hover:text-purple-300 border border-purple-500/30 bg-purple-900/20 px-2 py-1 rounded transition flex items-center gap-1"><i class="fas fa-draw-polygon"></i> Draw Area</button></div>
-                    <textarea id="inp-geometry" rows="1" class="input-field text-xs font-mono text-slate-500" placeholder="JSON Data" readonly></textarea>
-                </div>
-                <div><label class="label-text">Description</label><textarea id="inp-desc" rows="3" class="input-field" placeholder="Historical context..."></textarea></div>
-                <div class="grid grid-cols-2 gap-4">
-                     <div><label class="label-text">UNESCO Status</label><input type="text" id="inp-unesco" class="input-field" placeholder="e.g. National Heritage"></div>
-                     <div><label class="label-text">Research Links</label><input type="text" id="inp-research" class="input-field" placeholder="URL1, URL2"></div>
+                <div><label class="text-xs text-slate-500 font-bold block mb-1">Description</label><textarea id="inp-desc" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></textarea></div>
+                <div class="grid grid-cols-2 gap-6">
+                     <div><label class="text-xs text-slate-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
+                     <div><label class="text-xs text-slate-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                 </div>
                 <div class="pt-4 border-t border-slate-700/50">
-                    <div class="flex justify-between items-center mb-2"><label class="label-text mb-0 text-orange-400">Influence Source</label><button onclick="app.pickLocation('origin')" class="text-[10px] text-orange-400 hover:text-orange-300 border border-orange-500/30 bg-orange-900/20 px-2 py-1 rounded transition flex items-center gap-1"><i class="fas fa-map-marker-alt"></i> Pick Origin</button></div>
-                    <div class="grid grid-cols-2 gap-4"><input type="text" id="inp-origin-name" class="input-field" placeholder="Name"><input type="text" id="inp-origin-country" class="input-field" placeholder="Country"></div>
-                    <div class="grid grid-cols-2 gap-4 mt-2"><input type="text" id="inp-origin-lat" class="input-field" placeholder="Lat"><input type="text" id="inp-origin-lng" class="input-field" placeholder="Lng"></div>
+                    <div class="flex justify-between items-center mb-2"><label class="label-text mb-0 text-orange-400">Influence Source (Origin)</label><button onclick="app.pickLocation('origin')" class="text-[10px] text-orange-400 hover:text-orange-300 border border-orange-500/30 bg-orange-900/20 px-2 py-1 rounded transition flex items-center gap-1"><i class="fas fa-map-marker-alt"></i> Pick Origin</button></div>
+                    <div class="grid grid-cols-2 gap-4"><input type="text" id="inp-origin-name" class="input-field" placeholder="Origin Food Name"><input type="text" id="inp-origin-country" class="input-field" placeholder="Origin Country"></div>
+                    <div class="grid grid-cols-2 gap-4 mt-2"><input type="text" id="inp-origin-lat" class="input-field" placeholder="Origin Lat"><input type="text" id="inp-origin-lng" class="input-field" placeholder="Origin Lng"></div>
                     <div class="mt-4"><label class="label-text">Connection Type</label><select id="inp-conn-type" class="input-field bg-[#0f172a]"><option value="Trade">Trade</option><option value="Migration">Migration</option><option value="Colonialism">Colonialism</option></select></div>
                 </div>
             </div>
-            <div class="p-5 border-t border-slate-700 bg-slate-800/30 flex justify-end gap-3">
-                <button onclick="ui.closeModal('input-modal')" class="btn-secondary">Cancel</button>
-                <button onclick="app.submitData()" id="btn-save-data" class="btn-primary"><span id="save-text">Save to Cloud</span> <i id="save-spinner" class="fas fa-circle-notch fa-spin hidden ml-2"></i></button>
+            <div class="p-6 border-t border-slate-700 bg-slate-900 rounded-b-3xl flex justify-end gap-4">
+                <button onclick="ui.closeModal('input-modal')" class="px-6 py-3 text-slate-400 hover:text-white font-bold">Cancel</button>
+                <button onclick="app.saveData()" id="btn-save" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg">Save Changes</button>
             </div>
         </div>
     </div>
 
-    <!-- DETAIL MODAL -->
-    <div id="detail-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/95 backdrop-blur-xl p-0 md:p-8 transition-opacity duration-300">
-        <div class="bg-[#0f172a] w-full max-w-6xl h-full md:h-[90vh] md:rounded-3xl border border-slate-700 shadow-2xl flex flex-col relative overflow-hidden">
+    <!-- DETAIL -->
+    <div id="detail-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/95 backdrop-blur-xl p-4">
+        <div class="bg-[#0f172a] w-full max-w-6xl h-[90vh] rounded-3xl border border-slate-700 shadow-2xl flex flex-col relative overflow-hidden">
             <button onclick="ui.closeModal('detail-modal')" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/40 hover:bg-red-500 text-white rounded-full transition flex items-center justify-center border border-white/10"><i class="fas fa-times"></i></button>
-            <div id="detail-content" class="overflow-y-auto h-full p-6 md:p-10 custom-scrollbar" id="modal-content"></div>
+            <div id="detail-content" class="overflow-y-auto h-full p-8 custom-scrollbar"></div>
         </div>
     </div>
 
-    <!-- GEO EDITOR OVERLAY -->
+    <!-- GEO EDITOR -->
     <div id="geo-editor" class="fixed inset-0 z-picker hidden bg-black">
         <div id="geo-map" class="w-full h-full"></div>
         <div class="geo-controls absolute top-6 left-1/2 -translate-x-1/2 z-[3100] flex gap-4">
             <div class="bg-slate-900/90 text-white px-6 py-3 rounded-full border border-slate-700 shadow-2xl flex items-center gap-4">
-                <span class="text-xs font-bold text-purple-400"><i class="fas fa-draw-polygon mr-2"></i> DRAW MODE</span>
-                <div class="text-[10px] text-slate-300 border-l border-slate-600 pl-3">Drag points to adjust.<br>Click to add point.</div>
-                <button onclick="geoEditor.finish()" class="bg-green-600 px-4 py-1 rounded-full text-xs font-bold hover:bg-green-500 transition">Save Shape</button>
+                <span class="text-xs font-bold text-purple-400">DRAWING MODE</span>
+                <button onclick="geoEditor.finish()" class="bg-green-600 px-4 py-1 rounded-full text-xs font-bold hover:bg-green-500">Save</button>
                 <button onclick="geoEditor.cancel()" class="text-slate-400 hover:text-white text-xs">Cancel</button>
             </div>
         </div>
     </div>
 
     <script>
-        // === GLOBAL HELPERS & VARS (DEFINED FIRST) ===
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzHp10nUHMINcLtbXZrSqc29lrOnrmE248DupOenfPM8P_jFMWUOp5_QF0AwuOzTGgZ/exec'; 
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbx2DclhzYacLARlyM0bJs5KAQ6nhpxw0J1fBD0CMvjGRIiZ2jnJlVd0h9X8oJ8d79wT/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
-        const state = { data: [], role: 'guest', editId: null, pickerTarget: null, currentDetail: null, tempPickerLatLng: null, filter: { search: '' } };
+        const state = { data: [], role: 'guest', editId: null, pickerTarget: null, currentDetail: null, filter: { search: '' } };
 
-        function parseCoord(val) {
+        // --- SMART PARSER (THE SAVIOR) ---
+        function robustParse(val) {
             if (!val) return null;
             let str = String(val).trim();
-            if (str.includes(',') && !str.includes('.')) str = str.replace(',', '.');
-            const n = parseFloat(str);
-            return isNaN(n) ? null : n;
+            
+            // Step 1: Clean excessive dots (e.g., 1.003.543 -> 1003543)
+            if ((str.match(/\./g) || []).length > 1) {
+                str = str.replace(/\./g, '');
+            } else if (str.includes(',') && str.includes('.')) {
+                str = str.replace(/\./g, '').replace(',', '.');
+            } else if (str.includes(',')) {
+                str = str.replace(',', '.');
+            }
+
+            let n = parseFloat(str);
+            if (isNaN(n)) return null;
+
+            // Step 2: Auto-Correct Logic for Coordinates
+            // If Lat/Lng is massive (e.g., 1003543), divide by 10 until it fits Earth (-180 to 180)
+            while (Math.abs(n) > 180) {
+                n = n / 10;
+            }
+            return n;
         }
+
+        const getTypeBadge = (type) => {
+            if(!type) return '<span class="px-3 py-1 rounded-full bg-slate-800 text-slate-500 text-[10px] font-bold border border-slate-700">UNKNOWN</span>';
+            const t = type.toLowerCase();
+            if(t.includes('trade')) return '<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase badge-trade">TRADE</span>';
+            if(t.includes('migration')) return '<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase badge-migration">MIGRATION</span>';
+            if(t.includes('colonialism')) return '<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase badge-colonialism">COLONIALISM</span>';
+            return `<span class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold border border-slate-700">${type}</span>`;
+        };
 
         function extractYoutubeEmbed(url) {
             if (!url) return '';
             if (url.trim().startsWith('<iframe')) return url.replace(/width="[^"]*"/g, 'width="100%"').replace(/height="[^"]*"/g, 'height="100%"').replace('<iframe', '<iframe class="w-full h-full"');
-            let id = null, m;
-            const p = [/(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/, /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)/, /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)/];
-            for (let pat of p) { m = url.match(pat); if (m && m[1]) { id = m[1]; break; } }
-            if (id) {
-                const origin = window.location.origin;
-                return `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${id}?origin=${origin}&rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="rounded-xl w-full h-full"></iframe>`;
-            }
+            let id = null;
+            if(url.includes('v=')) id = url.split('v=')[1].split('&')[0];
+            else if(url.includes('youtu.be/')) id = url.split('youtu.be/')[1];
+            
+            if(id) return `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${id}?origin=${window.location.origin}" frameborder="0" allowfullscreen class="rounded-xl w-full h-full"></iframe>`;
             return '';
         }
 
@@ -377,7 +369,8 @@
 
         function transformData(item) {
              const get = (k) => item[Object.keys(item).find(x=>x.toLowerCase().includes(k))];
-             const parseN = (v) => { if(!v) return null; let n = parseFloat(String(v).replace(/\./g,'').replace(',','.')); while(Math.abs(n)>180) n/=10; return n; };
+             const parseN = robustParse; // Use the Smart Parser
+
              return {
                 id: get('id'), food_name: get('food_name')||get('name'), country: get('country'),
                 lat: parseN(get('lat')), lng: parseN(get('lng')),
@@ -394,33 +387,39 @@
         // --- UI MODULE ---
         const ui = {
             renderAuth: () => {
-                const html = state.role==='admin' 
-                ? `<div class="w-full p-2 bg-emerald-900/30 text-emerald-400 text-center rounded border border-emerald-500/30 mb-2 font-bold text-xs">ADMIN ACTIVE</div>
-                   <button onclick="app.initiateAddEntry()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold mb-2">Add New</button>
-                   <button onclick="app.logout()" class="w-full py-2 text-red-400 text-xs hover:text-white">Logout</button>`
-                : `<button onclick="app.enterAsContributor()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-bold">Admin Login</button>`;
-                document.getElementById('auth-status-container').innerHTML = html;
+                const sGuest = document.getElementById('status-guest');
+                const sAdmin = document.getElementById('status-admin');
+                const btnLogin = document.getElementById('btn-sidebar-login');
+                const btnAdd = document.getElementById('btn-sidebar-add');
+                const btnLogout = document.getElementById('btn-sidebar-logout');
+
+                if (state.role === 'admin') {
+                    sGuest.classList.add('hidden');
+                    sAdmin.classList.remove('hidden');
+                    btnLogin.classList.add('hidden');
+                    btnAdd.classList.remove('hidden');
+                    btnLogout.classList.remove('hidden');
+                } else {
+                    sGuest.classList.remove('hidden');
+                    sAdmin.classList.add('hidden');
+                    btnLogin.classList.remove('hidden');
+                    btnAdd.classList.add('hidden');
+                    btnLogout.classList.add('hidden');
+                }
             },
             loaded: () => {
                 document.getElementById('loading-container').classList.add('hidden');
-                document.getElementById('entry-buttons').classList.remove('hidden');
                 const btns = document.getElementById('entry-buttons');
-                btns.style.display = 'flex'; 
-                setTimeout(() => btns.classList.add('opacity-100', 'translate-y-0'), 100);
+                btns.classList.remove('hidden');
+                setTimeout(() => btns.classList.remove('opacity-0'), 50);
                 document.getElementById('dataset-info').classList.remove('hidden');
                 document.getElementById('record-count').innerText = state.data.length;
-            },
-            updateServerStatus: (s, m) => {
-                const el = document.getElementById('admin-server-status'), dot = document.getElementById('server-dot'), txt = document.getElementById('server-text');
-                if (s) { dot.className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"; txt.className="text-xs text-emerald-400 font-bold"; txt.textContent = m; }
-                else { dot.className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_red]"; txt.className="text-xs text-red-400 font-bold"; txt.textContent = m; }
             },
             openModal: (id) => document.getElementById(id).classList.remove('hidden'),
             closeModal: (id) => document.getElementById(id).classList.add('hidden'),
             showError: (msg) => {
                 document.getElementById('loading-container').classList.add('hidden');
                 document.getElementById('error-container').classList.remove('hidden');
-                console.error(msg);
             }
         };
 
@@ -463,18 +462,16 @@
                         const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], { color: '#cbd5e1', weight: 1.5, opacity: 0.4, dashArray: '4, 8' }).addTo(mapLogic.map);
                         mapLogic.lines.push(line);
                         const origin = L.circleMarker([d.origin_lat, d.origin_lng], { color: '#f97316', fillColor: '#f97316', fillOpacity: 0.8, radius: 4, weight: 1 }).addTo(mapLogic.map);
-                        origin.bindTooltip(`<div class="px-3 py-2 text-center"><div class="text-[9px] font-bold text-orange-400 tracking-widest uppercase mb-1">${d.connection_type || 'CONNECTION'}</div><div class="text-xs font-bold text-white">${d.origin_food_name}</div><div class="text-[9px] text-slate-400">${d.origin_country}</div></div>`, { direction: 'top', className: 'custom-tooltip', offset: [0, -5] });
-                        mapLogic.markers.push(origin); 
+                        mapLogic.layers.push(line, origin);
                     }
-                    const marker = L.circleMarker([d.lat, d.lng], { color: '#22d3ee', fillColor: '#22d3ee', fillOpacity: 0.9, radius: 6, weight: 1 }).addTo(mapLogic.map);
-                    marker.on('click', () => dashboard.showDetail(d));
-                    marker.bindTooltip(d.food_name, { direction: 'top', className: 'bg-slate-900 text-cyan-400 border border-cyan-900/50 px-2 py-1 rounded text-xs font-bold' });
-                    mapLogic.layers.push(marker);
+                    const m = L.circleMarker([d.lat, d.lng], { color: '#22d3ee', fillColor: '#22d3ee', fillOpacity: 0.8, radius: 6 }).addTo(mapLogic.map);
+                    m.on('click', () => dashboard.showDetail(d));
+                    m.bindTooltip(d.food_name, { direction: 'top', className: 'bg-slate-900 text-cyan-400 border border-cyan-900/50 px-2 py-1 rounded text-xs font-bold' });
+                    mapLogic.layers.push(m);
                 });
             }
         };
 
-        // --- GEO EDITOR ---
         const geoEditor = {
             map: null, layer: null, points: [], markers: [],
             start: () => {
@@ -489,16 +486,11 @@
                 geoEditor.markers.forEach(m => geoEditor.map.removeLayer(m));
                 geoEditor.markers = [];
                 if(geoEditor.layer) geoEditor.map.removeLayer(geoEditor.layer);
-                
-                const lat = parseFloat(document.getElementById('inp-lat').value);
-                const lng = parseFloat(document.getElementById('inp-lng').value);
-                if(!isNaN(lat)) geoEditor.map.setView([lat, lng], 10);
                 setTimeout(()=>geoEditor.map.invalidateSize(), 200);
             },
             addPoint: (latlng) => {
                 const m = L.marker(latlng, { draggable: true, icon: L.divIcon({ className: 'geo-marker-icon', iconSize: [12,12] }) }).addTo(geoEditor.map);
                 m.on('drag', () => geoEditor.updatePoly());
-                m.on('dragend', () => geoEditor.updatePoly());
                 geoEditor.markers.push(m);
                 geoEditor.updatePoly();
             },
@@ -518,18 +510,12 @@
             }
         };
 
-        // --- DASHBOARD LOGIC ---
         const dashboard = {
             chartCountry: null, chartType: null, chartUnesco: null,
             init: () => { dashboard.render(); dashboard.listeners(); }, 
             render: () => {
-                // IMPORTANT: CHECK VISIBILITY BEFORE RENDER TO AVOID CANVAS ERROR
-                const dashView = document.getElementById('view-dashboard');
-                if (dashView.classList.contains('hidden')) return;
-
-                dashboard.updateKPI(); 
-                dashboard.renderCharts(); 
-                dashboard.renderTable();
+                if(document.getElementById('view-dashboard').classList.contains('hidden')) return;
+                dashboard.updateKPI(); dashboard.renderCharts(); dashboard.renderTable();
             },
             updateKPI: () => {
                 const t = state.data.length, c = new Set([...state.data.map(d=>d.country), ...state.data.map(d=>d.origin_country).filter(x=>x)]).size, e = state.data.filter(d=>d.origin_food_name).length;
@@ -537,51 +523,41 @@
                 ['total','countries','edges','unesco'].forEach((k,i) => animateValue('kpi-'+k, 0, [t,c,e,u][i], 1000));
             },
             renderCharts: () => {
-                const o = {}; 
-                state.data.forEach(d => { if(d.origin_country) o[d.origin_country]=(o[d.origin_country]||0)+1; });
+                const o = {}; state.data.forEach(d => { if(d.origin_country) o[d.origin_country]=(o[d.origin_country]||0)+1; });
                 const so = Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,5);
-                
-                const t = {}; 
-                state.data.forEach(d => { if(d.connection_type) t[d.connection_type]=(t[d.connection_type]||0)+1; });
-
+                const t = {}; state.data.forEach(d => { if(d.connection_type) t[d.connection_type]=(t[d.connection_type]||0)+1; });
                 const u = { 'UNESCO': 0, 'National Heritage': 0, 'Cultural Icon': 0, 'Other': 0 };
                 state.data.forEach(d => {
                    const s = d.unesco_status ? d.unesco_status.toLowerCase() : '';
-                   if(s.includes('unesco')) u['UNESCO']++;
-                   else if(s.includes('national')) u['National Heritage']++;
-                   else if(s.includes('cultural')) u['Cultural Icon']++;
-                   else if (s && s !== 'unlisted') u['Other']++;
+                   if(s.includes('unesco')) u['UNESCO']++; else if(s.includes('national')) u['National Heritage']++; else if(s.includes('cultural')) u['Cultural Icon']++; else u['Other']++;
                 });
 
                 if(dashboard.chartCountry) dashboard.chartCountry.destroy();
-                if(dashboard.chartType) dashboard.chartType.destroy();
-                if(dashboard.chartUnesco) dashboard.chartUnesco.destroy();
-
-                const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#334155' } }, x: { grid: { display: false } } } };
-
                 dashboard.chartCountry = new Chart(document.getElementById('chart-country'), { 
-                    type: 'bar', data: { labels: so.map(x=>x[0]), datasets: [{ label: 'Count', data: so.map(x=>x[1]), backgroundColor: '#22d3ee', borderRadius: 4 }] }, options: commonOptions 
+                    type: 'bar', data: { labels: so.map(x=>x[0]), datasets: [{ label: 'Count', data: so.map(x=>x[1]), backgroundColor: '#22d3ee', borderRadius: 6 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#334155' } }, x: { grid: { display: false } } } } 
                 });
                 
+                if(dashboard.chartType) dashboard.chartType.destroy();
                 dashboard.chartType = new Chart(document.getElementById('chart-type'), { 
                     type: 'doughnut', data: { labels: Object.keys(t), datasets: [{ data: Object.values(t), backgroundColor: ['#facc15', '#4ade80', '#f87171'], borderWidth: 0 }] }, 
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: {size: 10} } } } } 
                 });
 
+                if(dashboard.chartUnesco) dashboard.chartUnesco.destroy();
                 dashboard.chartUnesco = new Chart(document.getElementById('chart-unesco'), { 
-                    type: 'bar', indexAxis: 'y', data: { labels: Object.keys(u), datasets: [{ label: 'Count', data: Object.values(u), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#64748b'], borderRadius: 4 }] }, options: commonOptions 
+                    type: 'bar', indexAxis: 'y', data: { labels: Object.keys(u), datasets: [{ label: 'Count', data: Object.values(u), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#64748b'], borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' } }, y: { grid: { display: false } } } } 
                 });
             },
             renderTable: () => {
                 const b = document.getElementById('table-body'); b.innerHTML='';
-                const search = state.filter && state.filter.search ? state.filter.search.toLowerCase() : '';
+                const search = state.filter.search.toLowerCase();
                 const f = state.data.filter(d => d.food_name && d.food_name.toLowerCase().includes(search));
-                const recent = [...f].reverse().slice(0, 20);
-                
-                recent.forEach(r => {
+                [...f].reverse().slice(0, 20).forEach(r => {
+                    const badge = getTypeBadge(r.connection_type);
                     const tr = document.createElement('tr'); tr.className = "hover:bg-slate-800 cursor-pointer border-b border-slate-800/50 transition";
                     tr.onclick = () => dashboard.showDetail(r);
-                    tr.innerHTML = `<td class="p-4 border-b border-slate-800">${r.id}</td><td class="p-4 border-b border-slate-800 font-bold text-white">${r.food_name}</td><td class="p-4 border-b border-slate-800 text-slate-400">${r.country}</td><td class="p-4 border-b border-slate-800 text-slate-500 text-xs">${r.origin_food_name||'-'}</td><td class="p-4 border-b border-slate-800"><span class="px-2 py-1 rounded bg-slate-800 text-slate-300 text-[10px] font-bold uppercase border border-slate-700">${r.connection_type||'LOCAL'}</span></td><td class="p-4 border-b border-slate-800 text-right"><i class="fas fa-chevron-right text-slate-600 text-xs"></i></td>`;
+                    tr.innerHTML = `<td class="p-4 border-b border-slate-800 text-slate-500 font-mono text-xs">${r.id}</td><td class="p-4 border-b border-slate-800 font-bold text-white">${r.food_name}</td><td class="p-4 border-b border-slate-800 text-slate-400">${r.country}</td><td class="p-4 border-b border-slate-800 text-slate-500 text-xs">${r.origin_food_name||'-'}</td><td class="p-4 border-b border-slate-800">${badge}</td><td class="p-4 border-b border-slate-800 text-right"><i class="fas fa-chevron-right text-slate-600 text-xs"></i></td>`;
                     b.appendChild(tr);
                 });
             },
@@ -590,159 +566,108 @@
             },
             showDetail: (d) => {
                 state.currentDetail = d;
-                let yt = '';
-                if(d.youtube_url && d.youtube_url.includes('iframe')) yt = d.youtube_url.replace(/width=".*?"/,'width="100%"').replace(/height=".*?"/,'height="100%"');
-                
-                let geoMapHtml = '';
-                if(d.geometry_json) {
-                    geoMapHtml = `<div id="detail-geo-map" class="h-48 w-full bg-black rounded-xl border border-slate-700 mt-4"></div>`;
-                    setTimeout(() => {
-                        const gMap = L.map('detail-geo-map', {zoomControl:false, dragging:false, scrollWheelZoom:false}).setView([d.lat, d.lng], 6);
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(gMap);
-                        try {
-                            const points = JSON.parse(d.geometry_json);
-                            L.polygon(points, {color:'#d946ef', fillOpacity:0.4}).addTo(gMap);
-                            gMap.fitBounds(points);
-                        } catch(e){}
-                    }, 500);
-                }
+                let yt = extractYoutubeEmbed(d.youtube_url) || '<div class="h-full flex items-center justify-center text-slate-500 text-xs">No Video Available</div>';
+                let geoMapHtml = d.geometry_json ? `<div id="detail-geo-map" class="h-48 w-full bg-black rounded-xl border border-slate-700 mt-4"></div>` : '';
 
                 const html = `
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
                         <div class="overflow-y-auto pr-2 flex flex-col gap-4">
                              <div class="aspect-video bg-slate-800 rounded-2xl mb-4 overflow-hidden border border-slate-700 relative">
                                 <img src="${d.image_url}" class="w-full h-full object-cover" onerror="this.style.display='none'">
-                                <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 to-transparent">
-                                    <h2 class="text-3xl font-black text-white">${d.food_name}</h2>
-                                    <span class="text-cyan-400 text-sm"><i class="fas fa-map-marker-alt mr-1"></i> ${d.country}</span>
+                                <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/90 to-transparent">
+                                    <h2 class="text-4xl font-black text-white leading-none">${d.food_name}</h2>
+                                    <span class="text-cyan-400 text-sm font-bold bg-black/50 px-2 py-1 rounded backdrop-blur mt-2 inline-block"><i class="fas fa-map-marker-alt mr-1"></i> ${d.country}</span>
                                 </div>
                              </div>
-                             <p class="text-slate-300 leading-relaxed text-justify mb-4">${d.description}</p>
-                             ${state.role==='admin' ? `<button onclick="app.openInputModal('edit')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold border border-slate-600">Edit Data</button>`:''}
+                             <div class="glass-panel p-6 rounded-2xl">
+                                <h3 class="text-xs font-bold text-slate-500 uppercase mb-3 border-b border-slate-700 pb-2">Narrative</h3>
+                                <p class="text-slate-300 leading-relaxed text-justify text-sm">${d.description || 'No description provided.'}</p>
+                             </div>
+                             <div class="glass-panel p-6 rounded-2xl">
+                                <h3 class="text-xs font-bold text-slate-500 uppercase mb-3 border-b border-slate-700 pb-2">Research Sources</h3>
+                                ${d.research_links ? d.research_links.split(',').map(l => `<a href="${l.trim()}" target="_blank" class="block truncate text-cyan-400 hover:underline text-xs mb-1"><i class="fas fa-link mr-1"></i> ${l.trim()}</a>`).join('') : '<span class="text-slate-500 italic">No sources.</span>'}
+                             </div>
                         </div>
-                        <div class="flex flex-col gap-4 overflow-y-auto">
-                            ${d.origin_food_name ? `
-                            <div class="p-4 rounded-xl border border-slate-700 bg-slate-800/30">
-                                <div class="text-xs text-orange-400 uppercase font-bold mb-1">Influenced By</div>
-                                <div class="text-xl font-bold text-white">${d.origin_food_name}</div>
-                                <div class="text-sm text-slate-400">from ${d.origin_country}</div>
-                            </div>`:''}
-                            
-                            <div class="bg-black rounded-xl overflow-hidden border border-slate-700 aspect-video flex items-center justify-center">
-                                ${yt || '<span class="text-slate-600 text-xs">No Video Available</span>'}
-                            </div>
-
-                            ${geoMapHtml}
+                        <div class="flex flex-col gap-4 overflow-y-auto pr-2">
+                             <div class="bg-black rounded-2xl overflow-hidden border border-slate-700 aspect-video shadow-2xl relative group">${yt}</div>
+                             ${geoMapHtml}
+                             ${state.role==='admin' ? `<button onclick="app.openInputModal('edit')" class="mt-4 w-full py-4 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl font-bold shadow-lg text-sm flex justify-center items-center gap-2"><i class="fas fa-edit"></i> Edit Data</button>`:''}
                         </div>
                     </div>
                 `;
                 document.getElementById('detail-content').innerHTML = html;
                 ui.openModal('detail-modal');
+                if(d.geometry_json) {
+                    setTimeout(() => {
+                        const gMap = L.map('detail-geo-map', {zoomControl:false}).setView([d.lat, d.lng], 6);
+                        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(gMap);
+                        try { const pts = JSON.parse(d.geometry_json); L.polygon(pts, {color:'#d946ef', fillOpacity:0.4}).addTo(gMap); gMap.fitBounds(pts); } catch(e){}
+                    }, 500);
+                }
             }
         };
 
-        // --- APP CONTROLLER ---
         const app = {
             init: () => {
                 ui.renderAuth();
-                window.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        const landing = document.getElementById('landing-page');
-                        if (landing && landing.style.display !== 'none' && !document.getElementById('loading-container').classList.contains('hidden') === false) {
-                             app.enterAsGuest();
-                        }
-                    }
-                });
-                
+                window.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const landing = document.getElementById('landing-page'); if (landing && landing.style.display !== 'none' && !document.getElementById('loading-container').classList.contains('hidden') === false) { app.enterAsGuest(); } } });
                 Papa.parse(CSV_URL, {
                     download: true, header: true, skipEmptyLines: true,
                     complete: (res) => {
                         if(res.data.length) {
                             state.data = res.data.map(transformData).filter(x => x.lat && x.lng);
-                            mapLogic.init(); ui.loaded(); 
-                            // Only init dashboard listeners, do NOT render if hidden
-                            dashboard.listeners(); 
+                            mapLogic.init(); dashboard.init(); ui.loaded();
                         } else alert('Data Empty');
                     },
                     error: (err) => ui.showError("Failed to Download Data")
                 });
             },
-            
             enterAsContributor: () => { if(state.role==='admin') return; ui.openModal('login-modal'); },
-            enterAsGuest: () => { 
-                document.getElementById('landing-page').style.display='none'; 
-                document.getElementById('main-app').classList.add('active'); 
-                app.switchTab('dashboard'); 
-                mapLogic.resize(); 
-            },
-            
+            enterAsGuest: () => { document.getElementById('landing-page').style.display='none'; document.getElementById('main-app').classList.add('active'); app.switchTab('dashboard'); mapLogic.resize(); },
             login: () => {
                 const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
                 const form = new URLSearchParams(); form.append('action', 'login'); form.append('username', u); form.append('password', p);
                 const btn = document.getElementById('btn-login'); btn.innerText='Verifying...';
-
-                fetch(GAS_URL, { method: 'POST', body: form })
-                .then(r => r.json())
-                .then(d => {
+                fetch(GAS_URL, { method: 'POST', body: form }).then(r => r.json()).then(d => {
                     btn.innerText='Login';
                     if(d.status==='success') { state.role='admin'; ui.renderAuth(); ui.closeModal('login-modal'); if(document.getElementById('landing-page').style.display!=='none') app.enterAsGuest(); } 
                     else alert(d.message);
-                })
-                .catch(e => { btn.innerText='Login'; alert('Server Error. Likely CORS issue.'); });
+                }).catch(e => { btn.innerText='Login'; alert('Server Error.'); });
             },
             logout: () => { state.role='guest'; ui.renderAuth(); alert('Logged Out'); },
             testConnection: () => {
                  const formData = new URLSearchParams(); formData.append('action', 'ping');
-                 fetch(GAS_URL, { method: 'POST', redirect: "follow", body: formData })
-                .then(res => res.json()).then(data => alert("Server Reachable! Status: " + data.status)).catch(e => alert("Server Unreachable."));
+                 fetch(GAS_URL, { method: 'POST', redirect: "follow", body: formData }).then(r => r.json()).then(data => alert("Server Reachable! Status: " + data.status)).catch(e => alert("Server Unreachable."));
             },
-
             initiateAddEntry: () => {
                 state.editId = null;
                 document.querySelectorAll('#input-modal input, #input-modal textarea').forEach(el => el.value = '');
-                app.switchTab('map');
-                app.pickLocation('main');
+                app.switchTab('map'); app.pickLocation('main');
             },
-
             openInputModal: (mode='create') => {
                 if(state.role!=='admin') return alert('Admin Only');
                 ui.closeModal('detail-modal'); 
-
                 const form = {
-                    id: document.getElementById('inp-id'),
-                    name: document.getElementById('inp-name'), country: document.getElementById('inp-country'),
-                    lat: document.getElementById('inp-lat'), lng: document.getElementById('inp-lng'),
-                    desc: document.getElementById('inp-desc'), geo: document.getElementById('inp-geometry'),
+                    id: document.getElementById('inp-id'), name: document.getElementById('inp-name'), country: document.getElementById('inp-country'),
+                    lat: document.getElementById('inp-lat'), lng: document.getElementById('inp-lng'), desc: document.getElementById('inp-desc'), geo: document.getElementById('inp-geometry'),
                     unesco: document.getElementById('inp-unesco'), res: document.getElementById('inp-research'),
                     oName: document.getElementById('inp-origin-name'), oCountry: document.getElementById('inp-origin-country'),
-                    oLat: document.getElementById('inp-origin-lat'), oLng: document.getElementById('inp-origin-lng'),
-                    type: document.getElementById('inp-conn-type')
+                    oLat: document.getElementById('inp-origin-lat'), oLng: document.getElementById('inp-origin-lng')
                 };
-
                 if(mode==='edit' && state.currentDetail) {
                     const d = state.currentDetail; state.editId = d.id;
-                    form.id.value = d.id;
-                    form.name.value=d.food_name; form.country.value=d.country;
-                    form.lat.value=d.lat; form.lng.value=d.lng;
-                    form.desc.value=d.description; form.geo.value=d.geometry_json||'';
-                    form.unesco.value=d.unesco_status||''; form.res.value=d.research_links||'';
-                    form.oName.value=d.origin_food_name||''; form.oCountry.value=d.origin_country||'';
-                    form.oLat.value=d.origin_lat||''; form.oLng.value=d.origin_lng||'';
-                    form.type.value = d.connection_type || 'Trade';
+                    form.id.value = d.id; form.name.value=d.food_name; form.country.value=d.country; form.lat.value=d.lat; form.lng.value=d.lng;
+                    form.desc.value=d.description; form.geo.value=d.geometry_json||''; form.unesco.value=d.unesco_status||''; form.res.value=d.research_links||'';
+                    form.oName.value=d.origin_food_name||''; form.oCountry.value=d.origin_country||''; form.oLat.value=d.origin_lat||''; form.oLng.value=d.origin_lng||'';
                     document.getElementById('input-title').innerText = 'Edit Data: ' + d.id;
                 } else {
-                    state.editId=null;
-                    form.id.value = '';
-                    Object.values(form).forEach(e=> { if(e.tagName) e.value='' }); // Clear inputs
+                    state.editId=null; form.id.value = ''; Object.values(form).forEach(e=> { if(e.tagName) e.value='' }); 
                     document.getElementById('input-title').innerText = 'New Data Entry';
                 }
                 ui.openModal('input-modal');
             },
-            
             pickLocation: (target) => {
-                state.pickerTarget = target;
-                ui.closeModal('input-modal');
-                document.getElementById('picker-notification').classList.remove('hidden');
+                state.pickerTarget = target; ui.closeModal('input-modal'); document.getElementById('picker-notification').classList.remove('hidden');
                 document.getElementById('picker-msg').innerText = target==='main'?'Select Location':'Select Origin';
                 mapLogic.enablePicker((lat, lng) => {
                     if(state.pickerTarget==='main') { document.getElementById('inp-lat').value=lat.toFixed(6); document.getElementById('inp-lng').value=lng.toFixed(6); }
@@ -750,73 +675,37 @@
                     app.cancelPicker();
                 });
             },
-            cancelPicker: () => {
-                document.getElementById('picker-notification').classList.add('hidden');
-                mapLogic.disablePicker();
-                ui.openModal('input-modal');
-            },
-            
+            cancelPicker: () => { document.getElementById('picker-notification').classList.add('hidden'); mapLogic.disablePicker(); ui.openModal('input-modal'); },
             saveData: () => {
                 const data = {
-                    id: state.editId || '', 
-                    food_name: document.getElementById('inp-name').value,
-                    country: document.getElementById('inp-country').value,
-                    lat: parseFloat(document.getElementById('inp-lat').value),
-                    lng: parseFloat(document.getElementById('inp-lng').value),
-                    description: document.getElementById('inp-desc').value,
-                    geometry_json: document.getElementById('inp-geometry').value,
-                    unesco_status: document.getElementById('inp-unesco').value,
-                    research_links: document.getElementById('inp-research').value,
-                    origin_food_name: document.getElementById('inp-origin-name').value,
-                    origin_country: document.getElementById('inp-origin-country').value,
-                    origin_lat: document.getElementById('inp-origin-lat').value,
-                    origin_lng: document.getElementById('inp-origin-lng').value,
+                    id: state.editId || '', food_name: document.getElementById('inp-name').value, country: document.getElementById('inp-country').value,
+                    lat: parseFloat(document.getElementById('inp-lat').value), lng: parseFloat(document.getElementById('inp-lng').value),
+                    description: document.getElementById('inp-desc').value, geometry_json: document.getElementById('inp-geometry').value,
+                    unesco_status: document.getElementById('inp-unesco').value, research_links: document.getElementById('inp-research').value,
+                    origin_food_name: document.getElementById('inp-origin-name').value, origin_country: document.getElementById('inp-origin-country').value,
+                    origin_lat: document.getElementById('inp-origin-lat').value, origin_lng: document.getElementById('inp-origin-lng').value,
                     connection_type: document.getElementById('inp-conn-type').value
                 };
-
                 const btn = document.getElementById('btn-save'); btn.innerText='Saving...';
-                
                 const action = state.editId ? 'update' : 'insert';
+                
+                if(state.editId) { const idx = state.data.findIndex(x=>x.id===state.editId); if(idx!==-1) state.data[idx] = {...state.data[idx], ...data}; } 
+                else { data.id = 'TEMP'; state.data.push(data); }
+                mapLogic.renderData(); dashboard.render();
 
-                // Optimistic Update
-                if(state.editId) {
-                    const idx = state.data.findIndex(x=>x.id===state.editId);
-                    if(idx!==-1) state.data[idx] = {...state.data[idx], ...data};
-                } else {
-                    data.id = 'TEMP'; 
-                    state.data.push(data);
-                }
-                mapLogic.renderData(); dashboard.render(); 
-
-                const form = new URLSearchParams();
-                form.append('action', action);
-                form.append('data', JSON.stringify(data));
-
-                fetch(GAS_URL, { method: 'POST', body: form })
-                .then(r=>r.json())
-                .then(d => { 
-                    if(d.status==='success') { 
-                        alert('Saved to Cloud!'); 
-                        if(!state.editId && d.id) { state.data[state.data.length-1].id = d.id; }
-                        ui.closeModal('input-modal'); 
-                    } 
+                const form = new URLSearchParams(); form.append('action', action); form.append('data', JSON.stringify(data));
+                fetch(GAS_URL, { method: 'POST', body: form }).then(r=>r.json()).then(d => { 
+                    if(d.status==='success') { alert('Saved to Cloud!'); if(!state.editId && d.id) { state.data[state.data.length-1].id = d.id; } ui.closeModal('input-modal'); } 
                     else alert('Error: '+d.message); 
-                })
-                .catch(e => alert('Offline Mode: Saved locally.'))
-                .finally(()=> btn.innerText='Save Changes');
+                }).catch(e => alert('Offline Mode: Saved locally.')).finally(()=> btn.innerText='Save Changes');
             },
-
             switchTab: (t) => {
-                document.getElementById('view-dashboard').classList.add('hidden');
-                document.getElementById('view-map').classList.add('hidden');
+                document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-map').classList.add('hidden');
                 document.getElementById('view-'+t).classList.remove('hidden');
                 if(t==='map') mapLogic.resize();
-                if(t==='dashboard') dashboard.render(); // Ensure dashboard renders on switch
+                if(t==='dashboard') dashboard.render();
             },
-            exportData: () => {
-                 const csv = Papa.unparse(state.data);
-                 const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURI(csv); a.download='foodways.csv'; a.click();
-            }
+            exportData: () => { const csv = Papa.unparse(state.data); const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURI(csv); a.download='foodways.csv'; a.click(); }
         };
 
         window.addEventListener('DOMContentLoaded', app.init);
