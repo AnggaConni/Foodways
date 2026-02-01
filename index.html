@@ -4,197 +4,524 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Foodways: Shared Heritage</title>
-    <!-- Tailwind -->
+    
+    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PapaParse -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
-    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
+    <!-- Custom Styles -->
     <style>
-        :root { --neon-cyan: #22d3ee; --neon-orange: #f97316; --glass-bg: rgba(15, 23, 42, 0.95); }
-        body { background-color: #020617; color: #e2e8f0; font-family: 'Inter', sans-serif; overflow: hidden; }
+        :root {
+            --neon-cyan: #22d3ee;
+            --neon-orange: #f97316;
+            --glass-bg: rgba(15, 23, 42, 0.95);
+            --glass-border: rgba(148, 163, 184, 0.1);
+        }
+        
+        body {
+            background-color: #020617; /* Slate 950 */
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; 
+        }
+
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-        
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Leaflet Map Customization */
         .leaflet-container { background: #020617; }
-        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid rgba(148, 163, 184, 0.1); }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: rgba(2, 6, 23, 0.95);
+            color: white;
+            border: 1px solid #334155;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.1);
+            border-radius: 0.75rem;
+        }
+        .leaflet-popup-content { margin: 12px; }
+        
+        .leaflet-container.picker-mode {
+            cursor: crosshair !important;
+        }
+        
+        /* Custom Tooltip Style */
+        .custom-tooltip {
+            background: rgba(15, 23, 42, 0.95) !important;
+            border: 1px solid var(--neon-orange) !important;
+            color: white !important;
+            border-radius: 6px !important;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3) !important;
+            font-family: 'Inter', sans-serif !important;
+            padding: 0 !important;
+        }
+        .custom-tooltip::before { border-top-color: var(--neon-orange) !important; }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
         .section-view { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
         .section-view.active { display: flex; opacity: 1; }
-        .z-modal { z-index: 2000; }
-        .z-picker { z-index: 3000; }
-        .picker-mode { cursor: crosshair !important; }
+
+        .z-modal-base { z-index: 1000; }
+        .z-modal-top { z-index: 1100; } 
+        .z-notification { z-index: 2000; }
         
-        .custom-tooltip {
-            background: rgba(15, 23, 42, 0.95) !important; border: 1px solid var(--neon-cyan) !important; 
-            color: white !important; border-radius: 4px; font-weight: bold; padding: 4px 8px;
-        }
-        .leaflet-tooltip-top:before { display: none; }
+        /* Animation */
+        @keyframes fadeInDown { from { opacity: 0; transform: translate3d(-50%, -20px, 0); } to { opacity: 1; transform: translate3d(-50%, 0, 0); } }
+        .animate-fade-in-down { animation: fadeInDown 0.5s ease-out forwards; }
         
-        /* Draggable Marker Style */
+        /* Geo Marker */
         .geo-marker-icon {
-            background-color: #d946ef; border: 2px solid white; border-radius: 50%; 
-            box-shadow: 0 0 10px rgba(217, 70, 239, 0.8); cursor: move;
+            background-color: #d946ef;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 12px !important;
+            height: 12px !important;
+            margin-left: -6px !important;
+            margin-top: -6px !important;
+            cursor: move;
+            box-shadow: 0 0 10px rgba(217, 70, 239, 0.8);
         }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col bg-black">
 
-    <!-- LANDING -->
+    <!-- 1. LANDING PAGE -->
     <div id="landing-page" class="section-view active h-full w-full relative z-50 bg-[#020617] items-center justify-center flex-col">
-        <div class="z-10 text-center space-y-6 glass-panel p-12 rounded-3xl max-w-2xl border-t border-cyan-500/30">
-            <h1 class="text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">Foodways</h1>
-            <p class="text-xl text-slate-400 tracking-widest uppercase">Shared Heritage Project</p>
-            <div id="loading-container" class="mt-8 flex justify-center"><i class="fas fa-circle-notch fa-spin text-cyan-400 text-2xl"></i></div>
-            <div id="entry-buttons" class="hidden flex justify-center gap-4 mt-8">
-                <button onclick="app.enterAsGuest()" class="px-6 py-3 bg-slate-800 rounded-xl hover:bg-slate-700 transition font-bold">Explore</button>
-                <button onclick="app.enterAsContributor()" class="px-6 py-3 bg-blue-600 rounded-xl hover:bg-blue-500 transition font-bold text-white shadow-lg">Admin</button>
+        <div class="absolute inset-0 z-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center"></div>
+        <div class="absolute inset-0 z-0 bg-gradient-to-b from-[#020617]/80 via-[#020617]/95 to-[#020617]"></div>
+
+        <div class="z-10 text-center space-y-8 glass-panel p-12 rounded-3xl max-w-4xl mx-4 relative overflow-hidden border-t border-cyan-500/30 shadow-2xl">
+            <h1 class="text-7xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mb-2 tracking-tight drop-shadow-2xl">Foodways</h1>
+            <p class="text-xl text-slate-400 tracking-[0.4em] uppercase font-light">Shared Heritage Project</p>
+            
+            <div id="loading-container" class="mt-12">
+                <div class="flex justify-center items-center gap-2 mb-3">
+                    <span class="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0s"></span>
+                    <span class="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                    <span class="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+                </div>
+                <div class="text-cyan-400 text-xs font-mono uppercase tracking-widest">Loading Database...</div>
             </div>
-            <div id="dataset-info" class="hidden mt-4 text-[10px] text-slate-600 font-mono uppercase">
-                v9.0 • <span id="record-count">0</span> Records
+
+            <div id="error-container" class="hidden mt-8 bg-red-500/10 border border-red-500/30 p-6 rounded-xl">
+                <i class="fas fa-exclamation-triangle text-red-400 text-3xl mb-2"></i>
+                <div class="text-red-200 font-bold mb-1">Connection Failed</div>
+                <div class="text-xs text-red-300/70 mb-4">Unable to fetch data from Google Sheets.</div>
+                <button onclick="location.reload()" class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-semibold transition">Retry</button>
+            </div>
+
+            <div id="entry-buttons" class="hidden flex flex-col sm:flex-row justify-center gap-4 mt-10 opacity-0 transition-all duration-700 transform translate-y-4">
+                <button onclick="app.enterAsGuest()" class="px-8 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-cyan-500/50 text-white rounded-xl font-bold transition flex items-center justify-center group shadow-lg">
+                    <i class="fas fa-globe-americas mr-3 text-slate-400 group-hover:text-cyan-400 transition"></i> Explore Map <span class="ml-2 text-xs opacity-50 font-normal">(Enter)</span>
+                </button>
+                <button onclick="app.enterAsContributor()" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold transition flex items-center justify-center shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40">
+                    <i class="fas fa-database mr-3"></i> Admin Login
+                </button>
+            </div>
+            
+            <div id="dataset-info" class="hidden mt-10">
+                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">
+                    v18.0 (Final Fix) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records Loaded
+                </div>
+                <div class="text-xs text-slate-400 font-bold tracking-widest border-t border-slate-800 pt-4">
+                    Angga Conni Saputra 2026
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- MAIN APP -->
+    <!-- 2. MAIN INTERFACE -->
     <div id="main-app" class="section-view h-full w-full overflow-hidden flex-row relative">
-        <aside class="w-64 bg-[#0f172a] border-r border-slate-800 flex flex-col justify-between z-40 shadow-2xl">
+        
+        <!-- PICKER NOTIFICATION -->
+        <div id="picker-notification" class="absolute top-6 left-1/2 -translate-x-1/2 z-notification hidden flex-col items-center w-96">
+            <div class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 border border-blue-400 animate-pulse cursor-pointer transition hover:bg-blue-500" onclick="app.cancelPicker()">
+                <i class="fas fa-crosshairs fa-lg"></i>
+                <div class="text-sm font-bold" id="picker-msg">Select Location</div>
+                <div class="bg-white/20 rounded-full w-6 h-6 flex items-center justify-center text-xs"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="mt-2 text-[10px] text-white/80 bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm">Click on map to confirm position</div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="w-20 lg:w-72 flex-shrink-0 bg-[#0f172a] border-r border-slate-800 flex flex-col justify-between z-40 shadow-2xl relative">
             <div>
-                <div class="h-16 flex items-center justify-center border-b border-slate-800 font-bold text-xl text-white">Foodways</div>
+                <div class="h-20 flex items-center justify-center border-b border-slate-800 bg-[#0f172a]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                            <i class="fas fa-utensils text-white text-lg"></i>
+                        </div>
+                        <span class="font-bold text-xl hidden lg:block tracking-tight text-white">Foodways</span>
+                    </div>
+                </div>
+                
                 <nav class="p-4 space-y-2">
-                    <button onclick="app.switchTab('dashboard')" id="nav-dashboard" class="w-full text-left p-3 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"><i class="fas fa-chart-pie mr-2"></i> Dashboard</button>
-                    <button onclick="app.switchTab('map')" id="nav-map" class="w-full text-left p-3 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"><i class="fas fa-map-marked-alt mr-2"></i> Global Map</button>
+                    <button onclick="app.switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center p-4 text-slate-400 hover:bg-slate-800 hover:text-cyan-400 rounded-xl transition-all duration-300 active-nav group">
+                        <i class="fas fa-chart-pie text-xl w-8 text-center group-hover:scale-110 transition-transform"></i>
+                        <span class="ml-3 hidden lg:block font-medium">Dashboard</span>
+                    </button>
+                    <button onclick="app.switchTab('map')" id="nav-map" class="w-full flex items-center p-4 text-slate-400 hover:bg-slate-800 hover:text-cyan-400 rounded-xl transition-all duration-300 group">
+                        <i class="fas fa-map-marked-alt text-xl w-8 text-center group-hover:scale-110 transition-transform"></i>
+                        <span class="ml-3 hidden lg:block font-medium">Global Map</span>
+                    </button>
                 </nav>
             </div>
-            <div class="p-4 border-t border-slate-800">
-                <div id="auth-status"></div>
+
+            <div class="p-6 border-t border-slate-800 bg-[#0f172a]">
+                <!-- CONNECTION STATUS INDICATOR -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between text-[10px] uppercase font-bold text-slate-500 mb-1">
+                        <span>Connection Status</span>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <!-- Public Data Status -->
+                        <div class="flex items-center gap-2 p-2 bg-slate-900 rounded border border-slate-800">
+                            <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"></div>
+                            <span class="text-xs text-slate-300">Public Data (Read-Only)</span>
+                        </div>
+                        <!-- Admin Server Status -->
+                        <div id="admin-server-status" class="flex items-center gap-2 p-2 bg-slate-900 rounded border border-slate-800">
+                            <div id="server-dot" class="w-2 h-2 rounded-full bg-slate-600"></div>
+                            <span id="server-text" class="text-xs text-slate-500">Admin Server (Idle)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="app.exportData()" class="w-full flex items-center justify-center p-3 mb-4 bg-emerald-900/30 text-emerald-400 rounded-xl hover:bg-emerald-900/50 border border-emerald-500/30 transition text-sm font-semibold group">
+                    <i class="fas fa-download mr-2 group-hover:translate-y-0.5 transition-transform"></i> <span class="hidden lg:inline">Download Data</span>
+                </button>
+                
+                <div id="auth-status-container">
+                    <!-- Injected by JS -->
+                </div>
             </div>
         </aside>
 
-        <main class="flex-1 relative bg-[#020617]">
-            <!-- DASHBOARD -->
-            <div id="view-dashboard" class="absolute inset-0 p-8 overflow-y-auto hidden">
-                <h2 class="text-3xl font-bold text-white mb-6">Culinary Analytics</h2>
-                <div class="grid grid-cols-3 gap-6 mb-8">
-                    <div class="glass-panel p-6 rounded-xl text-center"><div class="text-4xl font-bold text-white" id="kpi-total">0</div><div class="text-xs text-slate-400 uppercase">Total Foods</div></div>
-                    <div class="glass-panel p-6 rounded-xl text-center"><div class="text-4xl font-bold text-white" id="kpi-countries">0</div><div class="text-xs text-slate-400 uppercase">Countries</div></div>
-                    <div class="glass-panel p-6 rounded-xl text-center"><div class="text-4xl font-bold text-white" id="kpi-edges">0</div><div class="text-xs text-slate-400 uppercase">Connections</div></div>
+        <!-- Content Area -->
+        <main class="flex-1 relative overflow-hidden bg-[#020617] flex flex-col">
+            
+            <!-- DASHBOARD TAB -->
+            <div id="view-dashboard" class="absolute inset-0 overflow-y-auto p-6 lg:p-10 space-y-8 custom-scrollbar">
+                <header class="flex justify-between items-end pb-6 border-b border-slate-800">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white mb-1">Culinary Analytics</h2>
+                        <p class="text-slate-400 text-sm">Visualization of global culinary heritage data.</p>
+                    </div>
+                </header>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-9xl text-cyan-500/5"><i class="fas fa-utensils"></i></div>
+                        <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Total Foods</div>
+                        <div class="text-5xl font-black text-white font-mono" id="kpi-total">0</div>
+                    </div>
+                    
+                    <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-9xl text-purple-500/5"><i class="fas fa-network-wired"></i></div>
+                        <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Total Connections</div>
+                        <div class="text-5xl font-black text-white font-mono" id="kpi-edges">0</div>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-9xl text-orange-500/5"><i class="fas fa-flag"></i></div>
+                        <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Origin Countries</div>
+                        <div class="text-5xl font-black text-white font-mono" id="kpi-countries">0</div>
+                    </div>
                 </div>
-                <div class="glass-panel p-4 rounded-xl overflow-x-auto">
-                    <table class="w-full text-left text-slate-300 text-sm">
-                        <thead class="bg-slate-800 text-xs uppercase font-bold text-slate-500"><tr><th class="p-3">Name</th><th class="p-3">Country</th><th class="p-3">Origin</th><th class="p-3 text-right">View</th></tr></thead>
-                        <tbody id="table-body"></tbody>
-                    </table>
+
+                <!-- Charts Area -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-panel p-6 rounded-2xl border border-slate-800 bg-[#0f172a]/50">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 border-b border-slate-700/50 pb-2">Influencing Countries</h3>
+                        <div class="h-64 relative"><canvas id="chart-country"></canvas></div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl border border-slate-800 bg-[#0f172a]/50">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 border-b border-slate-700/50 pb-2">Interaction Types</h3>
+                        <div class="h-64 relative flex justify-center"><canvas id="chart-type"></canvas></div>
+                    </div>
                 </div>
+
+                <!-- D. UNESCO Breakdown Chart -->
+                <div class="glass-panel p-6 rounded-2xl border border-slate-800 bg-[#0f172a]/50 h-64 mb-8">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700/50 pb-2 flex justify-between">
+                        <span>Heritage Status Breakdown</span> <i class="fas fa-award text-emerald-500"></i>
+                    </h3>
+                    <div class="h-full relative"><canvas id="chart-unesco"></canvas></div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
+                    <div class="p-6 border-b border-slate-700 bg-slate-900/50 flex flex-wrap gap-4 justify-between items-center">
+                        <h3 class="font-bold text-white flex items-center"><i class="fas fa-table mr-3 text-slate-500"></i> Database</h3>
+                        <div class="relative w-full max-w-xs">
+                            <i class="fas fa-search absolute left-3 top-3 text-slate-500 text-xs"></i>
+                            <input type="text" id="search-input" placeholder="Search food..." class="w-full pl-9 bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none transition placeholder-slate-600">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-slate-300">
+                            <thead class="bg-slate-950 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                                <tr>
+                                    <th class="p-4 border-b border-slate-800">ID</th>
+                                    <th class="p-4 border-b border-slate-800">Food Name</th>
+                                    <th class="p-4 border-b border-slate-800">Country</th>
+                                    <th class="p-4 border-b border-slate-800">Influenced By</th>
+                                    <th class="p-4 border-b border-slate-800">Type</th>
+                                    <th class="p-4 border-b border-slate-800 text-right">Detail</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-slate-800 text-sm font-medium"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="h-12"></div>
             </div>
 
-            <!-- MAP -->
+            <!-- MAP TAB -->
             <div id="view-map" class="absolute inset-0 hidden">
-                <div id="map-container" class="h-full w-full z-0"></div>
-                <div id="picker-notification" class="absolute top-6 left-1/2 -translate-x-1/2 z-[3000] hidden flex-col items-center gap-2">
-                    <div class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 border border-blue-400 animate-pulse">
-                        <i class="fas fa-map-marker-alt"></i> <span id="picker-msg" class="font-bold text-sm">Select Location</span>
+                <div id="map-container" class="h-full w-full bg-[#020617] outline-none z-0"></div>
+                
+                <div class="absolute top-6 right-6 z-[400] flex flex-col gap-3">
+                    <button onclick="mapLogic.resize()" class="w-10 h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-xl flex items-center justify-center transition border border-slate-700" title="Reset View">
+                        <i class="fas fa-crosshairs"></i>
+                    </button>
+                </div>
+
+                <div class="absolute bottom-8 left-8 z-[400] glass-panel p-5 rounded-2xl max-w-xs border border-slate-700/50 shadow-2xl bg-slate-900/90">
+                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 pb-2 border-b border-slate-800">Map Legend</div>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <span class="w-3 h-3 rounded-full bg-cyan-500 border border-cyan-300"></span>
+                            <span class="text-xs text-slate-200 font-medium">Local Food (Zoom Sensitive)</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="w-3 h-3 rounded-full bg-orange-500 border border-orange-700 shadow-[0_0_10px_orange]"></span>
+                            <span class="text-xs text-slate-200 font-medium">Influence Source</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-0 border-t-2 border-dashed border-slate-500 opacity-50"></div>
+                            <span class="text-xs text-slate-400">Historical Path</span>
+                        </div>
                     </div>
-                    <div class="text-xs bg-black/60 text-white px-3 py-1 rounded backdrop-blur">Click map to drop pin</div>
-                    <button onclick="app.cancelPicker()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1 rounded-full text-xs backdrop-blur-md">Cancel</button>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- MODALS -->
-    <!-- LOGIN -->
-    <div id="login-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/90 backdrop-blur-sm">
-        <div class="glass-panel w-80 p-6 rounded-2xl">
-            <h3 class="text-xl font-bold text-white mb-4 text-center">Admin Access</h3>
-            <input type="text" id="login-user" placeholder="Username" class="w-full bg-slate-900 border border-slate-700 rounded p-2 mb-3 text-white">
-            <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-900 border border-slate-700 rounded p-2 mb-4 text-white">
-            <button onclick="app.login()" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded">Login</button>
-            <button onclick="ui.closeModal('login-modal')" class="w-full mt-2 text-slate-500 text-xs hover:text-white">Cancel</button>
+    <!-- LOGIN MODAL -->
+    <div id="login-modal" class="fixed inset-0 z-modal-top hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+        <div class="glass-panel w-full max-w-sm p-8 rounded-3xl bg-[#0f172a] border border-slate-700 shadow-2xl transform scale-100 transition-all">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-400 text-2xl border border-blue-500/20">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white">Admin Login</h3>
+                <p class="text-slate-500 text-xs mt-2">Sign in to edit data. STRICT SERVER CHECK.</p>
+            </div>
+            
+            <div class="space-y-5">
+                <input type="text" id="login-username" placeholder="Username" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white text-sm focus:border-blue-500 outline-none">
+                <input type="password" id="login-password" placeholder="Password" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white text-sm focus:border-blue-500 outline-none">
+                
+                <button onclick="app.submitLogin()" id="btn-login-submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg transition flex justify-center items-center gap-2">
+                    <span id="login-text">Login</span>
+                    <i id="login-spinner" class="fas fa-circle-notch fa-spin hidden"></i>
+                </button>
+                <div class="text-center">
+                    <button onclick="app.testConnection()" class="text-[10px] text-cyan-500 hover:underline">Test Server Connection</button>
+                </div>
+                <button onclick="ui.closeModal('login-modal')" class="w-full py-2 text-slate-500 hover:text-white transition text-xs font-medium">Cancel</button>
+            </div>
         </div>
     </div>
 
-    <!-- INPUT -->
-    <div id="input-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-        <div class="glass-panel w-full max-w-3xl h-[90vh] rounded-2xl flex flex-col relative">
-            <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-                <h3 class="font-bold text-white text-lg">Manage Data</h3>
-                <button onclick="ui.closeModal('input-modal')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+    <!-- INPUT MODAL -->
+    <div id="input-modal" class="fixed inset-0 z-modal-top hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="glass-panel w-full max-w-2xl rounded-2xl border border-slate-600 shadow-2xl flex flex-col max-h-[90vh] bg-[#0f172a]">
+            <div class="p-5 border-b border-slate-700 bg-slate-800/30 flex justify-between items-center">
+                <h3 id="modal-title" class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-plus-circle text-blue-400"></i> Data Entry</h3>
+                <button onclick="ui.closeModal('input-modal')" class="text-slate-400 hover:text-white"><i class="fas fa-times text-lg"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar space-y-4 flex-1">
+            
+            <div class="p-6 overflow-y-auto custom-scrollbar space-y-5">
+                <div class="bg-blue-900/10 border border-blue-500/20 p-3 rounded-lg text-xs text-blue-300 flex gap-2">
+                    <i class="fas fa-database mt-0.5"></i>
+                    <span><strong>Live Mode:</strong> Changes are saved ONLY if server confirms. No local cache.</span>
+                </div>
+                
+                <!-- HIDDEN ID FIELD -->
+                <input type="hidden" id="inp-id">
+
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="text" id="inp-name" placeholder="Name" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
-                    <input type="text" id="inp-country" placeholder="Country" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    <div><label class="label-text">Food Name</label><input type="text" id="inp-food-name" class="input-field" placeholder="e.g. Rawon"></div>
+                    <div><label class="label-text">Country</label><input type="text" id="inp-country" class="input-field" placeholder="e.g. Indonesia"></div>
                 </div>
-                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-xs text-cyan-400 font-bold">Location</label>
-                        <div class="flex gap-2">
-                            <button onclick="app.pickLocation('main')" class="text-xs bg-cyan-900/50 text-cyan-400 px-2 py-1 rounded border border-cyan-500/30">Pick Point</button>
-                            <button onclick="geoEditor.start()" class="text-xs bg-purple-900/50 text-purple-400 px-2 py-1 rounded border border-purple-500/30">Draw Area</button>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 mb-2">
-                        <input type="text" id="inp-lat" placeholder="Lat" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm">
-                        <input type="text" id="inp-lng" placeholder="Lng" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm">
-                    </div>
-                    <textarea id="inp-geometry" rows="2" class="w-full bg-black/50 border-slate-700 rounded p-2 text-slate-500 text-xs font-mono" placeholder="Geometry JSON" readonly></textarea>
-                </div>
-                <textarea id="inp-desc" rows="3" placeholder="Description" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"></textarea>
-                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-xs text-orange-400 font-bold">Influence Source</label>
-                        <button onclick="app.pickLocation('origin')" class="text-xs bg-orange-900/50 text-orange-400 px-2 py-1 rounded border border-orange-500/30">Pick Origin</button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 mb-2">
-                        <input type="text" id="inp-origin-name" placeholder="Origin Name" class="bg-slate-900 border-slate-700 rounded p-2 text-white text-sm">
-                        <input type="text" id="inp-origin-country" placeholder="Origin Country" class="bg-slate-900 border-slate-700 rounded p-2 text-white text-sm">
+                
+                <div>
+                    <div class="flex justify-between items-end mb-1">
+                        <label class="label-text mb-0">Main Coordinates</label>
+                        <button onclick="app.pickLocation('main')" class="text-[10px] text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 bg-cyan-900/20 px-2 py-1 rounded transition flex items-center gap-1">
+                            <i class="fas fa-map-marker-alt"></i> Pick on Map
+                        </button>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="inp-origin-lat" placeholder="Lat" class="bg-slate-900 border-slate-700 rounded p-2 text-white text-sm">
-                        <input type="text" id="inp-origin-lng" placeholder="Lng" class="bg-slate-900 border-slate-700 rounded p-2 text-white text-sm">
+                        <input type="text" id="inp-lat" class="input-field" placeholder="Lat (-7.250)">
+                        <input type="text" id="inp-lng" class="input-field" placeholder="Lng (112.768)">
+                    </div>
+                </div>
+
+                <!-- GEO & DESC -->
+                <div>
+                    <div class="flex justify-between items-end mb-1">
+                         <label class="label-text mb-0">Region Geometry</label>
+                         <button onclick="geoEditor.start()" class="text-[10px] text-purple-400 hover:text-purple-300 border border-purple-500/30 bg-purple-900/20 px-2 py-1 rounded transition flex items-center gap-1">
+                            <i class="fas fa-draw-polygon"></i> Draw Area
+                        </button>
+                    </div>
+                    <textarea id="inp-geometry" rows="1" class="input-field text-xs font-mono text-slate-500" placeholder="JSON Data" readonly></textarea>
+                </div>
+                <div><label class="label-text">Description</label><textarea id="inp-desc" rows="3" class="input-field" placeholder="Historical context..."></textarea></div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                     <div><label class="label-text">UNESCO Status</label><input type="text" id="inp-unesco" class="input-field" placeholder="e.g. National Heritage"></div>
+                     <div><label class="label-text">Research Links</label><input type="text" id="inp-research" class="input-field" placeholder="URL1, URL2"></div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-700/50">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="label-text mb-0 text-orange-400">Influence Source (Origin)</label>
+                        <button onclick="app.pickLocation('origin')" class="text-[10px] text-orange-400 hover:text-orange-300 border border-orange-500/30 bg-orange-900/20 px-2 py-1 rounded transition flex items-center gap-1">
+                            <i class="fas fa-map-marker-alt"></i> Pick Origin
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="text" id="inp-origin-name" class="input-field" placeholder="Origin Food Name">
+                        <input type="text" id="inp-origin-country" class="input-field" placeholder="Origin Country">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mt-2">
+                        <input type="text" id="inp-origin-lat" class="input-field" placeholder="Origin Lat">
+                        <input type="text" id="inp-origin-lng" class="input-field" placeholder="Origin Lng">
+                    </div>
+                    <div class="mt-4"><label class="label-text">Connection Type</label>
+                        <select id="inp-conn-type" class="input-field bg-[#0f172a]">
+                            <option value="Trade">Trade</option>
+                            <option value="Migration">Migration</option>
+                            <option value="Colonialism">Colonialism</option>
+                        </select>
                     </div>
                 </div>
             </div>
-            <div class="p-4 border-t border-slate-700 bg-slate-900 flex justify-end gap-3">
-                <button onclick="ui.closeModal('input-modal')" class="px-4 py-2 text-slate-400 text-sm">Cancel</button>
-                <button onclick="app.saveData()" id="btn-save" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold shadow-lg text-sm">Save Changes</button>
+            <div class="p-5 border-t border-slate-700 bg-slate-800/30 flex justify-end gap-3">
+                <button onclick="ui.closeModal('input-modal')" class="btn-secondary">Cancel</button>
+                <button onclick="app.submitData()" id="btn-save-data" class="btn-primary"><span id="save-text">Save to Cloud</span> <i id="save-spinner" class="fas fa-circle-notch fa-spin hidden ml-2"></i></button>
             </div>
         </div>
     </div>
 
-    <!-- GEO EDITOR -->
+    <!-- DETAIL MODAL -->
+    <div id="detail-modal" class="fixed inset-0 z-modal-base hidden flex items-center justify-center bg-black/95 backdrop-blur-xl p-0 md:p-8 transition-opacity duration-300">
+        <div class="bg-[#0f172a] w-full max-w-6xl h-full md:h-[90vh] md:rounded-3xl border border-slate-700 shadow-2xl flex flex-col relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 z-50"></div>
+            <button onclick="ui.closeModal('detail-modal')" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/40 hover:bg-red-500/80 rounded-full text-white transition flex items-center justify-center border border-white/10"><i class="fas fa-times"></i></button>
+            <div class="overflow-y-auto h-full p-6 md:p-10 custom-scrollbar" id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- GEO EDITOR OVERLAY -->
     <div id="geo-editor" class="fixed inset-0 z-picker hidden bg-black">
         <div id="geo-map" class="w-full h-full"></div>
         <div class="geo-controls absolute top-6 left-1/2 -translate-x-1/2 z-[3100] flex gap-4">
             <div class="bg-slate-900/90 text-white px-6 py-3 rounded-full border border-slate-700 shadow-2xl flex items-center gap-4">
-                <span class="text-xs font-bold text-purple-400">DRAWING MODE</span>
-                <div class="text-[10px] text-slate-300 border-l border-slate-600 pl-3">Drag points to adjust.<br>Click to add point.</div>
-                <button onclick="geoEditor.finish()" class="bg-green-600 px-3 py-1 rounded text-xs font-bold">Finish</button>
+                <span class="text-xs font-bold text-purple-400"><i class="fas fa-draw-polygon mr-2"></i> DRAW MODE</span>
+                <div class="text-[10px] text-slate-300 border-l border-slate-600 pl-3">
+                    Drag points to adjust.<br>Click to add point.
+                </div>
+                <button onclick="geoEditor.finish()" class="bg-green-600 px-4 py-1 rounded-full text-xs font-bold hover:bg-green-500 transition">Save Shape</button>
                 <button onclick="geoEditor.cancel()" class="text-slate-400 hover:text-white text-xs">Cancel</button>
             </div>
         </div>
     </div>
 
-    <!-- DETAIL -->
-    <div id="detail-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/95 backdrop-blur-xl p-4">
-        <div class="bg-[#0f172a] w-full max-w-5xl h-[85vh] rounded-3xl border border-slate-700 shadow-2xl flex flex-col relative overflow-hidden">
-            <button onclick="ui.closeModal('detail-modal')" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/40 hover:bg-red-500 text-white rounded-full transition flex items-center justify-center border border-white/10"><i class="fas fa-times"></i></button>
-            <div id="detail-content" class="overflow-y-auto h-full p-8 custom-scrollbar"></div>
-        </div>
-    </div>
+    <!-- Styles -->
+    <style>
+        .label-text { display: block; font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 0.25rem; }
+        .input-field { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 0.6rem; color: white; border-radius: 0.5rem; font-size: 0.875rem; outline: none; }
+        .input-field:focus { border-color: #3b82f6; }
+        .btn-primary { padding: 0.6rem 1.5rem; background: #2563eb; color: white; font-weight: 600; border-radius: 0.5rem; transition: background 0.2s; display: flex; align-items: center; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { padding: 0.6rem 1.5rem; color: #94a3b8; font-weight: 600; }
+        .btn-secondary:hover { color: white; }
+    </style>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzHp10nUHMINcLtbXZrSqc29lrOnrmE248DupOenfPM8P_jFMWUOp5_QF0AwuOzTGgZ/exec'; 
+        // === CONFIGURATION ===
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbx2DclhzYacLARlyM0bJs5KAQ6nhpxw0J1fBD0CMvjGRIiZ2jnJlVd0h9X8oJ8d79wT/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
-        const state = { data: [], role: 'guest', editId: null, pickerTarget: null, currentDetail: null };
 
+        const state = { data: [], role: 'guest', editId: null, pickerTarget: null, currentDetail: null, tempPickerLatLng: null, filter: { search: '' } };
+
+        // Helper: Parse Coordinate Safely
+        function parseCoord(val) {
+            if (!val) return null;
+            let str = String(val).trim();
+            if (str.includes(',') && !str.includes('.')) str = str.replace(',', '.');
+            const n = parseFloat(str);
+            return isNaN(n) ? null : n;
+        }
+
+        // Helper: Extract Youtube & Build Embed
+        function extractYoutubeEmbed(url) {
+            if (!url) return '';
+            if (url.trim().startsWith('<iframe')) return url.replace(/width="[^"]*"/g, 'width="100%"').replace(/height="[^"]*"/g, 'height="100%"').replace('<iframe', '<iframe class="w-full h-full"');
+            let id = null, m;
+            const p = [/(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/, /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)/, /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)/];
+            for (let pat of p) { m = url.match(pat); if (m && m[1]) { id = m[1]; break; } }
+            if (id) {
+                const origin = window.location.origin;
+                return `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${id}?origin=${origin}&rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="rounded-xl w-full h-full"></iframe>`;
+            }
+            return '';
+        }
+
+        function animateValue(id, start, end, duration) {
+            let obj = document.getElementById(id);
+            if(!obj) return;
+            let range = end - start, current = start, increment = end > start ? 1 : -1, step = Math.abs(Math.floor(duration / range)), timer = setInterval(() => { current += increment; obj.innerHTML = current; if (current == end) clearInterval(timer); }, step);
+        }
+
+        function transformData(item) {
+            const get = (k) => item[Object.keys(item).find(x=>x.toLowerCase().includes(k))];
+            const parseN = (v) => { if(!v) return null; let n = parseFloat(String(v).replace(/\./g,'').replace(',','.')); while(Math.abs(n)>180) n/=10; return n; };
+
+            return {
+                id: get('id'), food_name: get('food_name')||get('name'), country: get('country'),
+                lat: parseN(get('lat')), lng: parseN(get('lng')),
+                origin_food_name: get('origin_food_name')||get('origin_name'), 
+                origin_country: get('origin_country'),
+                origin_lat: parseN(get('origin_lat')), origin_lng: parseN(get('origin_lng')),
+                connection_type: get('connection_type')||get('type'), 
+                youtube_url: get('youtube_url'), image_url: get('image_url'), 
+                description: get('description'), geometry_json: get('geometry_json'),
+                unesco_status: get('unesco_status'), research_links: get('research_links')
+            };
+        }
+
+        // --- UI MODULE ---
         const ui = {
             renderAuth: () => {
                 const html = state.role==='admin' 
@@ -202,239 +529,88 @@
                    <button onclick="app.initiateAddEntry()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold mb-2">Add New</button>
                    <button onclick="app.logout()" class="w-full py-2 text-red-400 text-xs hover:text-white">Logout</button>`
                 : `<button onclick="app.enterAsContributor()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-bold">Admin Login</button>`;
-                document.getElementById('auth-status').innerHTML = html;
+                document.getElementById('auth-status-container').innerHTML = html;
             },
             loaded: () => {
                 document.getElementById('loading-container').classList.add('hidden');
                 document.getElementById('entry-buttons').classList.remove('hidden');
+                
+                // Show Entry Buttons with Animation FIX
+                const btns = document.getElementById('entry-buttons');
+                btns.classList.remove('hidden');
+                setTimeout(() => btns.classList.remove('opacity-0', 'translate-y-4'), 50);
+
                 document.getElementById('dataset-info').classList.remove('hidden');
                 document.getElementById('record-count').innerText = state.data.length;
             },
+            updateServerStatus: (s, m) => {
+                const el = document.getElementById('admin-server-status'), dot = document.getElementById('server-dot'), txt = document.getElementById('server-text');
+                if (s) { dot.className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"; txt.className="text-xs text-emerald-400 font-bold"; txt.textContent = m; }
+                else { dot.className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_red]"; txt.className="text-xs text-red-400 font-bold"; txt.textContent = m; }
+            },
             openModal: (id) => document.getElementById(id).classList.remove('hidden'),
-            closeModal: (id) => document.getElementById(id).classList.add('hidden')
+            closeModal: (id) => document.getElementById(id).classList.add('hidden'),
+            showError: (msg) => {
+                document.getElementById('loading-container').classList.add('hidden');
+                document.getElementById('error-container').classList.remove('hidden');
+                console.error(msg);
+            }
         };
 
+        // --- Map Logic ---
         const mapLogic = {
             map: null, layers: [], pickerHandler: null, pickerMarker: null,
             init: () => {
-                mapLogic.map = L.map('map-container', { zoomControl: false }).setView([20,0], 2);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(mapLogic.map);
+                mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false }).setView([20, 0], 2);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(mapLogic.map);
                 L.control.zoom({ position: 'topright' }).addTo(mapLogic.map);
-                mapLogic.render();
             },
-            render: () => {
-                mapLogic.layers.forEach(l => mapLogic.map.removeLayer(l));
-                mapLogic.layers = [];
-                state.data.forEach(d => {
-                    if(!d.lat || !d.lng) return;
-                    if(d.origin_lat) {
-                        const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], {color:'#64748b', dashArray:'4,8', weight:1}).addTo(mapLogic.map);
-                        const org = L.circleMarker([d.origin_lat, d.origin_lng], {color:'#f97316', radius:4}).addTo(mapLogic.map);
-                        mapLogic.layers.push(line, org);
-                    }
-                    const m = L.circleMarker([d.lat, d.lng], {color:'#22d3ee', fillColor:'#22d3ee', fillOpacity:0.8, radius:6}).addTo(mapLogic.map);
-                    m.on('click', () => app.showDetailById(d.id));
-                    m.bindTooltip(d.food_name, { direction:'top', className:'custom-tooltip' });
-                    mapLogic.layers.push(m);
-                });
-            },
-            resize: () => setTimeout(()=>mapLogic.map.invalidateSize(), 200),
+            resize: () => setTimeout(() => mapLogic.map.invalidateSize(), 200),
+            resetZoom: () => mapLogic.map.setView([20, 0], 2),
             enablePicker: (cb) => {
                 mapLogic.map.getContainer().classList.add('picker-mode');
                 mapLogic.pickerHandler = (e) => {
-                    if(mapLogic.pickerMarker) mapLogic.map.removeLayer(mapLogic.pickerMarker);
-                    const color = state.pickerTarget==='main'?'#22d3ee':'#f97316';
-                    mapLogic.pickerMarker = L.circleMarker(e.latlng, {color:color, fillColor:color, fillOpacity:1, radius:8}).addTo(mapLogic.map);
+                    if (mapLogic.pickerMarker) mapLogic.map.removeLayer(mapLogic.pickerMarker);
+                    const color = state.pickerTarget === 'main' ? '#22d3ee' : '#f97316';
+                    mapLogic.pickerMarker = L.circleMarker(e.latlng, { color: color, fillColor: color, fillOpacity: 1, radius: 8 }).addTo(mapLogic.map);
                     cb(e.latlng.lat, e.latlng.lng);
                 };
                 mapLogic.map.on('click', mapLogic.pickerHandler);
             },
             disablePicker: () => {
                 mapLogic.map.getContainer().classList.remove('picker-mode');
-                if(mapLogic.pickerHandler) mapLogic.map.off('click', mapLogic.pickerHandler);
-                if(mapLogic.pickerMarker) mapLogic.map.removeLayer(mapLogic.pickerMarker);
-            }
-        };
-
-        const dashboard = {
-            render: () => {
-                document.getElementById('kpi-total').innerText = state.data.length;
-                document.getElementById('kpi-countries').innerText = new Set(state.data.map(x=>x.country)).size;
-                document.getElementById('kpi-edges').innerText = state.data.filter(x=>x.origin_lat).length;
-                const tbody = document.getElementById('table-body');
-                tbody.innerHTML = state.data.map(d => `
-                    <tr class="border-b border-slate-800 hover:bg-slate-800/50 cursor-pointer" onclick="app.showDetailById('${d.id}')">
-                        <td class="p-3 font-bold text-white">${d.food_name}</td>
-                        <td class="p-3 text-slate-400">${d.country}</td>
-                        <td class="p-3 text-slate-500 text-xs">${d.origin_food_name||'-'}</td>
-                        <td class="p-3 text-right"><i class="fas fa-chevron-right text-slate-600"></i></td>
-                    </tr>
-                `).join('');
-            }
-        };
-
-        const app = {
-            init: () => {
-                ui.renderAuth();
-                Papa.parse(CSV_URL, {
-                    download: true, header: true, skipEmptyLines: true,
-                    complete: (res) => {
-                        if(res.data.length) {
-                            state.data = res.data.map(transformData).filter(x => x.lat && x.lng);
-                            mapLogic.init(); dashboard.render(); ui.loaded();
-                        } else alert('Data Empty');
+                if (mapLogic.pickerHandler) mapLogic.map.off('click', mapLogic.pickerHandler);
+                if (mapLogic.pickerMarker) mapLogic.map.removeLayer(mapLogic.pickerMarker);
+            },
+            clearMap: () => {
+                if(mapLogic.markers) mapLogic.markers.forEach(l => mapLogic.map.removeLayer(l));
+                if(mapLogic.lines) mapLogic.lines.forEach(l => mapLogic.map.removeLayer(l));
+                mapLogic.markers = []; mapLogic.lines = [];
+            },
+            renderData: () => {
+                state.data.forEach(item => {
+                    if (!item.lat || !item.lng) return;
+                    if (item.origin_lat && item.origin_lng) {
+                        const line = L.polyline([[item.origin_lat, item.origin_lng], [item.lat, item.lng]], { color: '#cbd5e1', weight: 1.5, opacity: 0.4, dashArray: '4, 8' }).addTo(mapLogic.map);
+                        mapLogic.lines.push(line);
+                        const origin = L.circleMarker([item.origin_lat, item.origin_lng], { color: '#f97316', fillColor: '#f97316', fillOpacity: 0.8, radius: 4, weight: 1 }).addTo(mapLogic.map);
+                        origin.bindTooltip(`<div class="px-3 py-2 text-center"><div class="text-[9px] font-bold text-orange-400 tracking-widest uppercase mb-1">${item.connection_type || 'CONNECTION'}</div><div class="text-xs font-bold text-white">${item.origin_food_name}</div><div class="text-[9px] text-slate-400">${item.origin_country}</div></div>`, { direction: 'top', className: 'custom-tooltip', offset: [0, -5] });
+                        mapLogic.markers.push(origin); 
                     }
+                    const marker = L.circleMarker([item.lat, item.lng], { color: '#22d3ee', fillColor: '#22d3ee', fillOpacity: 0.9, radius: 6, weight: 1 }).addTo(mapLogic.map);
+                    marker.on('click', () => dashboard.showDetail(item));
+                    marker.bindTooltip(item.food_name, { direction: 'top', className: 'bg-slate-900 text-cyan-400 border border-cyan-900/50 px-2 py-1 rounded text-xs font-bold' });
+                    mapLogic.markers.push(marker);
                 });
             },
-            enterAsContributor: () => { if(state.role==='admin') return; ui.openModal('login-modal'); },
-            enterAsGuest: () => { document.getElementById('landing-page').style.display='none'; document.getElementById('main-app').classList.add('active'); mapLogic.resize(); },
-            
-            login: () => {
-                const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
-                const form = new URLSearchParams(); form.append('action', 'login'); form.append('username', u); form.append('password', p);
-                const btn = document.getElementById('btn-login'); btn.innerText='Verifying...';
-
-                fetch(GAS_URL, { method: 'POST', body: form })
-                .then(r => r.json())
-                .then(d => {
-                    btn.innerText='Login';
-                    if(d.status==='success') { state.role='admin'; ui.renderAuth(); ui.closeModal('login-modal'); if(document.getElementById('landing-page').style.display!=='none') app.enterAsGuest(); } 
-                    else alert(d.message);
-                })
-                .catch(e => { btn.innerText='Login'; alert('Server Error. Likely CORS issue.'); });
-            },
-            logout: () => { state.role='guest'; ui.renderAuth(); alert('Logged Out'); },
-            testConnection: () => {
-                 const formData = new URLSearchParams(); formData.append('action', 'ping');
-                 fetch(GAS_URL, { method: 'POST', redirect: "follow", body: formData })
-                .then(res => res.json()).then(data => alert("Server Reachable! Status: " + data.status)).catch(e => alert("Server Unreachable."));
-            },
-            initiateAddEntry: () => {
-                app.switchTab('map');
-                state.editId = null;
-                document.querySelectorAll('#input-modal input, #input-modal textarea').forEach(el => el.value = '');
-                app.pickLocation('main');
-            },
-            showDetailById: (id) => {
-                const d = state.data.find(i => i.id === id);
-                if (d) {
-                    state.currentDetail = d;
-                    // Render detail modal content here (simplified for brevity)
-                    let yt = '';
-                    if(d.youtube_url) {
-                         if(d.youtube_url.includes('iframe')) yt = d.youtube_url.replace(/width=".*?"/,'width="100%"').replace(/height=".*?"/,'height="100%"');
-                         else yt = `<div class="h-full flex items-center justify-center bg-black"><a href="${d.youtube_url}" target="_blank" class="px-4 py-2 bg-red-600 text-white rounded font-bold">Watch on YouTube</a></div>`;
-                    }
-                    let geoMapHtml = d.geometry_json ? `<div id="mini-map-geo" class="h-48 w-full bg-slate-900 rounded-xl mt-4 z-0 border border-slate-700"></div>` : '';
-
-                    const html = `
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-                            <div class="overflow-y-auto pr-2">
-                                <h2 class="text-4xl font-black text-white mb-2">${d.food_name}</h2>
-                                <span class="text-cyan-400 text-sm"><i class="fas fa-map-marker-alt"></i> ${d.country}</span>
-                                <p class="text-slate-300 mt-4 leading-relaxed">${d.description}</p>
-                            </div>
-                            <div class="flex flex-col gap-4 overflow-y-auto">
-                                <div class="bg-black rounded-xl overflow-hidden border border-slate-700 aspect-video flex items-center justify-center">${yt}</div>
-                                ${geoMapHtml}
-                                ${state.role==='admin' ? `<button onclick="app.openInputModal('edit')" class="mt-4 w-full py-4 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl font-bold shadow-lg">Edit Data</button>`:''}
-                            </div>
-                        </div>
-                    `;
-                    document.getElementById('detail-content').innerHTML = html;
-                    ui.openModal('detail-modal');
-
-                    if(d.geometry_json) {
-                        setTimeout(() => {
-                            const mm = L.map('mini-map-geo', {zoomControl:false, dragging:false, scrollWheelZoom:false}).setView([d.lat, d.lng], 6);
-                            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(mm);
-                            try { const pts = JSON.parse(d.geometry_json); L.polygon(pts, {color:'#d946ef', fillOpacity:0.4}).addTo(mm); mm.fitBounds(pts); } catch(e){}
-                        }, 500);
-                    }
-                }
-            },
-            openInputModal: (mode='create') => {
-                if(state.role!=='admin') return alert('Admin Only');
-                ui.closeModal('detail-modal');
-                const form = {
-                    name: document.getElementById('inp-name'), country: document.getElementById('inp-country'),
-                    lat: document.getElementById('inp-lat'), lng: document.getElementById('inp-lng'),
-                    desc: document.getElementById('inp-desc'), geo: document.getElementById('inp-geometry'),
-                    oName: document.getElementById('inp-origin-name'), oCountry: document.getElementById('inp-origin-country'),
-                    oLat: document.getElementById('inp-origin-lat'), oLng: document.getElementById('inp-origin-lng')
-                };
-                if(mode==='edit' && state.currentDetail) {
-                    const d = state.currentDetail; state.editId = d.id;
-                    form.name.value=d.food_name; form.country.value=d.country;
-                    form.lat.value=d.lat; form.lng.value=d.lng;
-                    form.desc.value=d.description; form.geo.value=d.geometry_json||'';
-                    form.oName.value=d.origin_food_name||''; form.oCountry.value=d.origin_country||'';
-                    form.oLat.value=d.origin_lat||''; form.oLng.value=d.origin_lng||'';
-                } else { state.editId=null; Object.values(form).forEach(e=>e.value=''); }
-                ui.openModal('input-modal');
-            },
-            pickLocation: (target) => {
-                state.pickerTarget = target;
-                ui.closeModal('input-modal');
-                document.getElementById('picker-notification').classList.remove('hidden');
-                document.getElementById('picker-msg').innerText = target==='main'?'Select Location':'Select Origin';
-                mapLogic.enablePicker((lat, lng) => {
-                    if(state.pickerTarget==='main') { document.getElementById('inp-lat').value=lat.toFixed(6); document.getElementById('inp-lng').value=lng.toFixed(6); }
-                    else { document.getElementById('inp-origin-lat').value=lat.toFixed(6); document.getElementById('inp-origin-lng').value=lng.toFixed(6); }
-                    app.cancelPicker();
-                });
-            },
-            cancelPicker: () => {
-                document.getElementById('picker-notification').classList.add('hidden');
-                mapLogic.disablePicker();
-                ui.openModal('input-modal');
-            },
-            saveData: () => {
-                const data = {
-                    food_name: document.getElementById('inp-name').value,
-                    country: document.getElementById('inp-country').value,
-                    lat: parseFloat(document.getElementById('inp-lat').value),
-                    lng: parseFloat(document.getElementById('inp-lng').value),
-                    description: document.getElementById('inp-desc').value,
-                    geometry_json: document.getElementById('inp-geometry').value,
-                    origin_food_name: document.getElementById('inp-origin-name').value,
-                    origin_country: document.getElementById('inp-origin-country').value,
-                    origin_lat: document.getElementById('inp-origin-lat').value,
-                    origin_lng: document.getElementById('inp-origin-lng').value,
-                    connection_type: 'Trade',
-                    id: state.editId || 'TEMP-'+Date.now()
-                };
-                const btn = document.getElementById('btn-save'); btn.innerText='Saving...';
-                
-                if(state.editId) {
-                    const idx = state.data.findIndex(x=>x.id===state.editId);
-                    if(idx!==-1) state.data[idx] = {...state.data[idx], ...data};
-                } else state.data.push(data);
-                
-                mapLogic.render(); dashboard.render();
-
-                const form = new URLSearchParams();
-                form.append('action', state.editId?'update':'insert');
-                form.append('data', JSON.stringify(data));
-
-                fetch(GAS_URL, { method: 'POST', body: form })
-                .then(r=>r.json())
-                .then(d => { if(d.status==='success') { alert('Saved!'); ui.closeModal('input-modal'); } else alert('Error: '+d.message); })
-                .catch(e => alert('Offline Mode: Saved locally.'))
-                .finally(()=> btn.innerText='Save Changes');
-            },
-            switchTab: (t) => {
-                document.getElementById('view-dashboard').classList.add('hidden');
-                document.getElementById('view-map').classList.add('hidden');
-                document.getElementById('view-'+t).classList.remove('hidden');
-                if(t==='map') mapLogic.resize();
-            },
-            exportData: () => {
-                 const csv = Papa.unparse(state.data);
-                 const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURI(csv); a.download='foodways.csv'; a.click();
+            updateMarkerSize: () => {
+                const zoom = mapLogic.map.getZoom();
+                let r = zoom < 5 ? 2 : (zoom < 8 ? 4 : 8);
+                mapLogic.markers.forEach(m => m.setRadius(r));
             }
         };
 
+        // --- Geo Editor ---
         const geoEditor = {
             map: null, layer: null, points: [], markers: [],
             start: () => {
@@ -478,22 +654,303 @@
             }
         };
 
-        function transformData(item) {
-            const get = (k) => item[Object.keys(item).find(x=>x.toLowerCase().includes(k))];
-            const parseN = (v) => { if(!v) return null; let n = parseFloat(String(v).replace(/\./g,'').replace(',','.')); while(Math.abs(n)>180) n/=10; return n; };
+        // --- Dashboard ---
+        const dashboard = {
+            chartCountry: null, chartType: null, chartUnesco: null,
+            init: () => { dashboard.render(); dashboard.listeners(); }, 
+            render: () => {
+                dashboard.updateKPI(); 
+                dashboard.renderCharts(); 
+                dashboard.renderTable();
+            },
+            updateKPI: () => {
+                const t = state.data.length, c = new Set([...state.data.map(d=>d.country), ...state.data.map(d=>d.origin_country).filter(x=>x)]).size, e = state.data.filter(d=>d.origin_food_name).length;
+                const u = state.data.filter(d=>d.unesco_status && d.unesco_status.toLowerCase() !== 'unlisted' && d.unesco_status.trim() !== '').length;
+                ['total','countries','edges','unesco'].forEach((k,i) => animateValue('kpi-'+k, 0, [t,c,e,u][i], 1000));
+            },
+            renderCharts: () => {
+                // A. Top Origins
+                const o = {}; 
+                state.data.forEach(d => { if(d.origin_country) o[d.origin_country]=(o[d.origin_country]||0)+1; });
+                const so = Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,5);
+                
+                // B. Connection Types
+                const t = {}; 
+                state.data.forEach(d => { if(d.connection_type) t[d.connection_type]=(t[d.connection_type]||0)+1; });
 
-            return {
-                id: get('id'), food_name: get('food_name')||get('name'), country: get('country'),
-                lat: parseN(get('lat')), lng: parseN(get('lng')),
-                origin_food_name: get('origin_food_name')||get('origin_name'), 
-                origin_country: get('origin_country'),
-                origin_lat: parseN(get('origin_lat')), origin_lng: parseN(get('origin_lng')),
-                connection_type: get('connection_type')||get('type'), 
-                youtube_url: get('youtube_url'), image_url: get('image_url'), 
-                description: get('description'), geometry_json: get('geometry_json'),
-                unesco_status: get('unesco_status'), research_links: get('research_links')
-            };
-        }
+                // C. UNESCO Status
+                const u = { 'UNESCO': 0, 'National Heritage': 0, 'Cultural Icon': 0, 'Other': 0 };
+                state.data.forEach(d => {
+                   const s = d.unesco_status ? d.unesco_status.toLowerCase() : '';
+                   if(s.includes('unesco')) u['UNESCO']++;
+                   else if(s.includes('national')) u['National Heritage']++;
+                   else if(s.includes('cultural')) u['Cultural Icon']++;
+                   else if (s && s !== 'unlisted') u['Other']++;
+                });
+
+                if(dashboard.chartCountry) dashboard.chartCountry.destroy();
+                if(dashboard.chartType) dashboard.chartType.destroy();
+                if(dashboard.chartUnesco) dashboard.chartUnesco.destroy();
+
+                const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#334155' } }, x: { grid: { display: false } } } };
+
+                dashboard.chartCountry = new Chart(document.getElementById('chart-country'), { 
+                    type: 'bar', data: { labels: so.map(x=>x[0]), datasets: [{ label: 'Count', data: so.map(x=>x[1]), backgroundColor: '#22d3ee', borderRadius: 4 }] }, options: commonOptions 
+                });
+                
+                dashboard.chartType = new Chart(document.getElementById('chart-type'), { 
+                    type: 'doughnut', data: { labels: Object.keys(t), datasets: [{ data: Object.values(t), backgroundColor: ['#facc15', '#4ade80', '#f87171'], borderWidth: 0 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: {size: 10} } } } } 
+                });
+
+                dashboard.chartUnesco = new Chart(document.getElementById('chart-unesco'), { 
+                    type: 'bar', indexAxis: 'y', data: { labels: Object.keys(u), datasets: [{ label: 'Count', data: Object.values(u), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#64748b'], borderRadius: 4 }] }, options: commonOptions 
+                });
+            },
+            renderTable: () => {
+                const b = document.getElementById('table-body'); b.innerHTML='';
+                // Safely access search, default empty
+                const search = state.filter && state.filter.search ? state.filter.search.toLowerCase() : '';
+                const f = state.data.filter(d => d.food_name && d.food_name.toLowerCase().includes(search));
+                const recent = [...f].reverse().slice(0, 20);
+                
+                recent.forEach(r => {
+                    const tr = document.createElement('tr'); tr.className = "hover:bg-slate-800 cursor-pointer border-b border-slate-800/50 transition";
+                    tr.onclick = () => dashboard.showDetail(r);
+                    tr.innerHTML = `<td class="p-4 border-b border-slate-800">${r.id}</td><td class="p-4 border-b border-slate-800 font-bold text-white">${r.food_name}</td><td class="p-4 border-b border-slate-800 text-slate-400">${r.country}</td><td class="p-4 border-b border-slate-800 text-slate-500 text-xs">${r.origin_food_name||'-'}</td><td class="p-4 border-b border-slate-800"><span class="px-2 py-1 rounded bg-slate-800 text-slate-300 text-[10px] font-bold uppercase border border-slate-700">${r.connection_type||'LOCAL'}</span></td><td class="p-4 border-b border-slate-800 text-right"><i class="fas fa-chevron-right text-slate-600 text-xs"></i></td>`;
+                    b.appendChild(tr);
+                });
+            },
+            listeners: () => {
+                document.getElementById('search-input').addEventListener('keyup', (e)=>{state.filter.search=e.target.value; dashboard.renderTable()});
+            },
+            showDetail: (d) => {
+                state.currentDetail = d;
+                let yt = '';
+                if(d.youtube_url && d.youtube_url.includes('iframe')) yt = d.youtube_url.replace(/width=".*?"/,'width="100%"').replace(/height=".*?"/,'height="100%"');
+                
+                let geoMapHtml = '';
+                if(d.geometry_json) {
+                    geoMapHtml = `<div id="detail-geo-map" class="h-48 w-full bg-black rounded-xl border border-slate-700 mt-4"></div>`;
+                    setTimeout(() => {
+                        const gMap = L.map('detail-geo-map', {zoomControl:false, dragging:false, scrollWheelZoom:false}).setView([d.lat, d.lng], 6);
+                        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(gMap);
+                        try {
+                            const points = JSON.parse(d.geometry_json);
+                            L.polygon(points, {color:'#d946ef', fillOpacity:0.4}).addTo(gMap);
+                            gMap.fitBounds(points);
+                        } catch(e){}
+                    }, 500);
+                }
+
+                const html = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                        <div class="overflow-y-auto pr-2 flex flex-col gap-4">
+                             <div class="aspect-video bg-slate-800 rounded-2xl mb-4 overflow-hidden border border-slate-700 relative">
+                                <img src="${d.image_url}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 to-transparent">
+                                    <h2 class="text-3xl font-black text-white">${d.food_name}</h2>
+                                    <span class="text-cyan-400 text-sm"><i class="fas fa-map-marker-alt mr-1"></i> ${d.country}</span>
+                                </div>
+                             </div>
+                             <p class="text-slate-300 leading-relaxed text-justify mb-4">${d.description}</p>
+                             ${state.role==='admin' ? `<button onclick="app.openInputModal('edit')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold border border-slate-600">Edit Data</button>`:''}
+                        </div>
+                        <div class="flex flex-col gap-4 overflow-y-auto">
+                            ${d.origin_food_name ? `
+                            <div class="p-4 rounded-xl border border-slate-700 bg-slate-800/30">
+                                <div class="text-xs text-orange-400 uppercase font-bold mb-1">Influenced By</div>
+                                <div class="text-xl font-bold text-white">${d.origin_food_name}</div>
+                                <div class="text-sm text-slate-400">from ${d.origin_country}</div>
+                            </div>`:''}
+                            
+                            <div class="bg-black rounded-xl overflow-hidden border border-slate-700 aspect-video flex items-center justify-center">
+                                ${yt || '<span class="text-slate-600 text-xs">No Video Available</span>'}
+                            </div>
+
+                            ${geoMapHtml}
+                        </div>
+                    </div>
+                `;
+                document.getElementById('detail-content').innerHTML = html;
+                ui.openModal('detail-modal');
+            }
+        };
+
+        // --- App Controller ---
+        const app = {
+            init: () => {
+                ui.renderAuth();
+                // Enter Key Listener for Landing Page
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        const landing = document.getElementById('landing-page');
+                        if (landing && landing.style.display !== 'none' && !document.getElementById('loading-container').classList.contains('hidden') === false) {
+                             app.enterAsGuest();
+                        }
+                    }
+                });
+                
+                Papa.parse(CSV_URL, {
+                    download: true, header: true, skipEmptyLines: true,
+                    complete: (res) => {
+                        if(res.data.length) {
+                            state.data = res.data.map(transformData).filter(x => x.lat && x.lng);
+                            mapLogic.init(); dashboard.init(); ui.loaded(); // FIXED: Called dashboard.init()
+                        } else alert('Data Empty');
+                    },
+                    error: (err) => ui.showError("Failed to Download Data")
+                });
+            },
+            enterAsContributor: () => { if(state.role==='admin') return; ui.openModal('login-modal'); },
+            enterAsGuest: () => { 
+                document.getElementById('landing-page').style.display='none'; 
+                document.getElementById('main-app').classList.add('active'); 
+                app.switchTab('dashboard'); 
+                mapLogic.resize(); 
+            },
+            
+            login: () => {
+                const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
+                const form = new URLSearchParams(); form.append('action', 'login'); form.append('username', u); form.append('password', p);
+                const btn = document.getElementById('btn-login'); btn.innerText='Verifying...';
+
+                fetch(GAS_URL, { method: 'POST', body: form })
+                .then(r => r.json())
+                .then(d => {
+                    btn.innerText='Login';
+                    if(d.status==='success') { state.role='admin'; ui.renderAuth(); ui.closeModal('login-modal'); if(document.getElementById('landing-page').style.display!=='none') app.enterAsGuest(); } 
+                    else alert(d.message);
+                })
+                .catch(e => { btn.innerText='Login'; alert('Server Error. Likely CORS issue.'); });
+            },
+            logout: () => { state.role='guest'; ui.renderAuth(); alert('Logged Out'); },
+            testConnection: () => {
+                 const formData = new URLSearchParams(); formData.append('action', 'ping');
+                 fetch(GAS_URL, { method: 'POST', redirect: "follow", body: formData })
+                .then(res => res.json()).then(data => alert("Server Reachable! Status: " + data.status)).catch(e => alert("Server Unreachable."));
+            },
+
+            initiateAddEntry: () => {
+                state.editId = null;
+                document.querySelectorAll('#input-modal input, #input-modal textarea').forEach(el => el.value = '');
+                app.switchTab('map');
+                app.pickLocation('main');
+            },
+
+            openInputModal: (mode='create') => {
+                if(state.role!=='admin') return alert('Admin Only');
+                ui.closeModal('detail-modal'); 
+
+                const form = {
+                    id: document.getElementById('inp-id'),
+                    name: document.getElementById('inp-name'), country: document.getElementById('inp-country'),
+                    lat: document.getElementById('inp-lat'), lng: document.getElementById('inp-lng'),
+                    desc: document.getElementById('inp-desc'), geo: document.getElementById('inp-geometry'),
+                    unesco: document.getElementById('inp-unesco'), res: document.getElementById('inp-research'),
+                    oName: document.getElementById('inp-origin-name'), oCountry: document.getElementById('inp-origin-country'),
+                    oLat: document.getElementById('inp-origin-lat'), oLng: document.getElementById('inp-origin-lng'),
+                    type: document.getElementById('inp-conn-type')
+                };
+
+                if(mode==='edit' && state.currentDetail) {
+                    const d = state.currentDetail; state.editId = d.id;
+                    form.id.value = d.id;
+                    form.name.value=d.food_name; form.country.value=d.country;
+                    form.lat.value=d.lat; form.lng.value=d.lng;
+                    form.desc.value=d.description; form.geo.value=d.geometry_json||'';
+                    form.unesco.value=d.unesco_status||''; form.res.value=d.research_links||'';
+                    form.oName.value=d.origin_food_name||''; form.oCountry.value=d.origin_country||'';
+                    form.oLat.value=d.origin_lat||''; form.oLng.value=d.origin_lng||'';
+                    form.type.value = d.connection_type || 'Trade';
+                    document.getElementById('input-title').innerText = 'Edit Data: ' + d.id;
+                } else {
+                    state.editId=null;
+                    form.id.value = '';
+                    Object.values(form).forEach(e=> { if(e.tagName) e.value='' }); // Clear inputs
+                    document.getElementById('input-title').innerText = 'New Data Entry';
+                }
+                ui.openModal('input-modal');
+            },
+            
+            pickLocation: (target) => {
+                state.pickerTarget = target;
+                ui.closeModal('input-modal');
+                document.getElementById('picker-notification').classList.remove('hidden');
+                document.getElementById('picker-msg').innerText = target==='main'?'Select Location':'Select Origin';
+                mapLogic.enablePicker((lat, lng) => {
+                    if(state.pickerTarget==='main') { document.getElementById('inp-lat').value=lat.toFixed(6); document.getElementById('inp-lng').value=lng.toFixed(6); }
+                    else { document.getElementById('inp-origin-lat').value=lat.toFixed(6); document.getElementById('inp-origin-lng').value=lng.toFixed(6); }
+                    app.cancelPicker();
+                });
+            },
+            cancelPicker: () => {
+                document.getElementById('picker-notification').classList.add('hidden');
+                mapLogic.disablePicker();
+                ui.openModal('input-modal');
+            },
+            
+            saveData: () => {
+                const data = {
+                    id: state.editId || '', 
+                    food_name: document.getElementById('inp-name').value,
+                    country: document.getElementById('inp-country').value,
+                    lat: parseFloat(document.getElementById('inp-lat').value),
+                    lng: parseFloat(document.getElementById('inp-lng').value),
+                    description: document.getElementById('inp-desc').value,
+                    geometry_json: document.getElementById('inp-geometry').value,
+                    unesco_status: document.getElementById('inp-unesco').value,
+                    research_links: document.getElementById('inp-research').value,
+                    origin_food_name: document.getElementById('inp-origin-name').value,
+                    origin_country: document.getElementById('inp-origin-country').value,
+                    origin_lat: document.getElementById('inp-origin-lat').value,
+                    origin_lng: document.getElementById('inp-origin-lng').value,
+                    connection_type: document.getElementById('inp-conn-type').value
+                };
+
+                const btn = document.getElementById('btn-save'); btn.innerText='Saving...';
+                
+                const action = state.editId ? 'update' : 'insert';
+
+                // Optimistic Update
+                if(state.editId) {
+                    const idx = state.data.findIndex(x=>x.id===state.editId);
+                    if(idx!==-1) state.data[idx] = {...state.data[idx], ...data};
+                } else {
+                    data.id = 'TEMP'; 
+                    state.data.push(data);
+                }
+                mapLogic.renderData(); dashboard.render(); // Fixed: Using renderData to refresh map
+
+                const form = new URLSearchParams();
+                form.append('action', action);
+                form.append('data', JSON.stringify(data));
+
+                fetch(GAS_URL, { method: 'POST', body: form })
+                .then(r=>r.json())
+                .then(d => { 
+                    if(d.status==='success') { 
+                        alert('Saved to Cloud!'); 
+                        if(!state.editId && d.id) { state.data[state.data.length-1].id = d.id; }
+                        ui.closeModal('input-modal'); 
+                    } 
+                    else alert('Error: '+d.message); 
+                })
+                .catch(e => alert('Offline Mode: Saved locally.'))
+                .finally(()=> btn.innerText='Save Changes');
+            },
+
+            switchTab: (t) => {
+                document.getElementById('view-dashboard').classList.add('hidden');
+                document.getElementById('view-map').classList.add('hidden');
+                document.getElementById('view-'+t).classList.remove('hidden');
+                if(t==='map') mapLogic.resize();
+            },
+            exportData: () => {
+                 const csv = Papa.unparse(state.data);
+                 const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURI(csv); a.download='foodways.csv'; a.click();
+            }
+        };
 
         window.addEventListener('DOMContentLoaded', app.init);
     </script>
