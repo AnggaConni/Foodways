@@ -133,7 +133,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-8 pt-4 border-t border-slate-800 w-full text-center">
-                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v40.0 (Final Complete) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
+                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v42.0 (Live Deployed) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
                 <div class="text-xs text-slate-400 font-bold tracking-widest">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -226,7 +226,7 @@
                     <div class="relative w-full h-64"><canvas id="chart-unesco"></canvas></div>
                 </div>
 
-                <!-- Data Table -->
+                <!-- Data Table with Pagination -->
                 <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
                     <div class="p-6 border-b border-slate-700 bg-slate-900/50 flex flex-wrap gap-4 justify-between items-center">
                         <h3 class="font-bold text-white flex items-center"><i class="fas fa-database mr-3 text-slate-500"></i> Database</h3>
@@ -302,28 +302,40 @@
                 <h3 id="input-title" class="text-xl font-bold text-white">Manage Data</h3>
                 <button onclick="ui.closeModal('input-modal')" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             </div>
+            
             <div class="p-8 overflow-y-auto custom-scrollbar space-y-6 flex-1">
                 <input type="hidden" id="inp-id">
+                
+                <!-- ROW 1 -->
                 <div class="grid grid-cols-2 gap-6">
                     <div><label class="text-xs text-slate-500 font-bold block mb-1">Food Name</label><input type="text" id="inp-name" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                     <div><label class="text-xs text-slate-500 font-bold block mb-1">Country</label><input type="text" id="inp-country" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                 </div>
+
+                <!-- LOCATION -->
                 <div class="bg-slate-800/40 p-6 rounded-2xl border border-slate-700">
                     <div class="flex justify-between items-center mb-4"><label class="text-sm text-cyan-400 font-bold">Main Location</label><div class="flex gap-2"><button onclick="app.pickLocation('main')" class="text-xs bg-cyan-600 px-3 py-1.5 rounded-lg text-white font-bold">Set Point</button><button onclick="geoEditor.start()" class="text-xs bg-purple-600 px-3 py-1.5 rounded-lg text-white font-bold">Draw Area</button></div></div>
                     <div class="grid grid-cols-2 gap-4 mb-4"><input type="text" id="inp-lat" placeholder="Lat" class="bg-slate-900 border-slate-700 rounded-xl p-3 text-white text-sm"><input type="text" id="inp-lng" placeholder="Lng" class="bg-slate-900 border-slate-700 rounded-xl p-3 text-white text-sm"></div>
                     <textarea id="inp-geometry" rows="2" class="w-full bg-black/30 border-slate-700 rounded-xl p-3 text-slate-500 text-xs font-mono" placeholder="Geometry JSON" readonly></textarea>
                 </div>
-                <div><label class="text-xs text-slate-500 font-bold block mb-1">Description</label><textarea id="inp-desc" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></textarea></div>
+                
+                <!-- DESC with SCROLL -->
+                <div>
+                    <label class="text-xs text-slate-500 font-bold block mb-1">Description</label>
+                    <textarea id="inp-desc" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white max-h-32 overflow-y-auto custom-scrollbar"></textarea>
+                </div>
+
+                <!-- EXTRA FIELDS (Youtube & Image aligned) -->
                 <div class="grid grid-cols-2 gap-6">
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></div>
                 </div>
-                <!-- ADDED MISSING FIELDS -->
-                 <div class="grid grid-cols-1 gap-6 mt-4">
+                <div class="grid grid-cols-2 gap-6">
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">Image URL</label><input type="text" id="inp-image" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" placeholder="https://"></div>
                      <div><label class="text-xs text-slate-500 font-bold block mb-1">YouTube URL</label><input type="text" id="inp-youtube" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" placeholder="https://youtube.com/..."></div>
                 </div>
-
+                
+                <!-- ORIGIN -->
                 <div class="bg-slate-800/40 p-6 rounded-2xl border border-slate-700">
                     <div class="flex justify-between items-center mb-4">
                         <label class="text-sm text-orange-400 font-bold">Influence Source</label>
@@ -338,9 +350,14 @@
                     <div class="mt-4"><label class="text-xs text-slate-500 font-bold block mb-1">Type</label><select id="inp-conn-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"><option value="Trade">Trade</option><option value="Migration">Migration</option><option value="Colonialism">Colonialism</option></select></div>
                 </div>
             </div>
-            <div class="p-6 border-t border-slate-700 bg-slate-900 rounded-b-3xl flex justify-end gap-4">
-                <button onclick="ui.closeModal('input-modal')" class="px-6 py-3 text-slate-400 hover:text-white font-bold">Cancel</button>
-                <button onclick="app.saveData()" id="btn-save" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg">Save Changes</button>
+            
+            <!-- FOOTER WITH DELETE BUTTON -->
+            <div class="p-6 border-t border-slate-700 bg-slate-900 rounded-b-3xl flex justify-between items-center">
+                <button id="btn-delete" onclick="app.deleteData()" class="hidden px-4 py-3 bg-red-900/50 hover:bg-red-600 text-red-200 hover:text-white rounded-xl font-bold text-xs transition border border-red-800"><i class="fas fa-trash-alt mr-2"></i> Delete Entry</button>
+                <div class="flex gap-4 ml-auto">
+                    <button onclick="ui.closeModal('input-modal')" class="px-6 py-3 text-slate-400 hover:text-white font-bold transition">Cancel</button>
+                    <button onclick="app.saveData()" id="btn-save" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg transition">Save Changes</button>
+                </div>
             </div>
         </div>
     </div>
@@ -366,7 +383,7 @@
     </div>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbx2DclhzYacLARlyM0bJs5KAQ6nhpxw0J1fBD0CMvjGRIiZ2jnJlVd0h9X8oJ8d79wT/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz9C3b7Y967gih1r1D59DJ5pEdYlp6xcK_gw8KHhRFtuEo3LK9YEOtYeKB7NhuyGfW9/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
         const state = { data: [], role: 'guest', editId: null, pickerTarget: null, currentDetail: null, filter: { search: '' }, pagination: { page: 1, limit: 10 } };
 
@@ -592,7 +609,7 @@
             },
             updateKPI: () => {
                 const t = state.data.length, c = new Set([...state.data.map(d=>d.country), ...state.data.map(d=>d.origin_country).filter(x=>x)]).size, e = state.data.filter(d=>d.origin_food_name).length;
-                const u = state.data.filter(d=>d.unesco_status && d.unesco_status.toLowerCase() !== 'unlisted').length;
+                const u = state.data.filter(d=>d.unesco_status && d.unesco_status.toLowerCase() !== 'unlisted' && d.unesco_status.trim() !== '').length;
                 ['total','countries','edges','unesco'].forEach((k,i) => animateValue('kpi-'+k, 0, [t,c,e,u][i], 1000));
             },
             renderCharts: (ctx1, ctx2, ctx3) => {
@@ -622,6 +639,8 @@
                     type: 'bar', indexAxis: 'y', data: { labels: Object.keys(u), datasets: [{ label: 'Count', data: Object.values(u), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#64748b'], borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' } }, y: { grid: { display: false } } } } 
                 });
             },
+            
+            // --- PAGINATION LOGIC ---
             changePage: (step) => {
                 state.pagination.page += step;
                 dashboard.renderTable();
@@ -791,7 +810,7 @@
                 if(val.length < 2) { list.classList.add('hidden'); return; }
                 const matches = state.data.filter(d => d.food_name.toLowerCase().includes(val.toLowerCase())).slice(0, 5);
                 if(matches.length > 0) {
-                    list.innerHTML = matches.map(m => `<div class="suggestion-item" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="text-cyan-400">Link</span></div>`).join('');
+                    list.innerHTML = matches.map(m => `<div class="p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="text-cyan-400">Link</span></div>`).join('');
                     list.classList.remove('hidden');
                 } else list.classList.add('hidden');
             },
@@ -816,6 +835,9 @@
                     oLat: document.getElementById('inp-origin-lat'), oLng: document.getElementById('inp-origin-lng'),
                     type: document.getElementById('inp-conn-type'), image: document.getElementById('inp-image'), youtube: document.getElementById('inp-youtube')
                 };
+
+                const btnDelete = document.getElementById('btn-delete');
+
                 if(mode==='edit' && state.currentDetail) {
                     const d = state.currentDetail; state.editId = d.id;
                     form.id.value = d.id; form.name.value=d.food_name; form.country.value=d.country; form.lat.value=d.lat; form.lng.value=d.lng;
@@ -823,9 +845,15 @@
                     form.oName.value=d.origin_food_name||''; form.oCountry.value=d.origin_country||''; form.oLat.value=d.origin_lat||''; form.oLng.value=d.origin_lng||'';
                     form.type.value = d.connection_type || 'Trade'; form.image.value = d.image_url || ''; form.youtube.value = d.youtube_url || '';
                     document.getElementById('input-title').innerText = 'Edit Data: ' + d.id;
+                    
+                    // Show Delete Button
+                    btnDelete.classList.remove('hidden');
                 } else {
                     state.editId=null; form.id.value = ''; Object.values(form).forEach(e=> { if(e.tagName) e.value='' }); 
                     document.getElementById('input-title').innerText = 'New Data Entry';
+                    
+                    // Hide Delete Button
+                    btnDelete.classList.add('hidden');
                 }
                 ui.openModal('input-modal');
             },
@@ -863,6 +891,42 @@
                     else alert('Error: '+d.message); 
                 }).catch(e => alert('Offline Mode: Saved locally.')).finally(()=> btn.innerText='Save Changes');
             },
+            
+            // --- NEW: DELETE DATA ---
+            deleteData: () => {
+                if (!state.editId) return;
+                if (!confirm("Are you sure you want to DELETE this entry? This cannot be undone.")) return;
+
+                const btn = document.getElementById('btn-delete');
+                btn.innerText = 'Deleting...';
+                btn.disabled = true;
+
+                const form = new URLSearchParams();
+                form.append('action', 'delete');
+                form.append('id', state.editId);
+
+                fetch(GAS_URL, { method: 'POST', body: form })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.status === 'success') {
+                        // Remove from local state
+                        state.data = state.data.filter(item => item.id !== state.editId);
+                        
+                        mapLogic.render(); 
+                        dashboard.render();
+                        ui.closeModal('input-modal');
+                        alert("Data successfully deleted.");
+                    } else {
+                        alert("Delete Failed: " + d.message);
+                    }
+                })
+                .catch(e => alert("Network Error: Could not delete."))
+                .finally(() => {
+                    btn.innerText = 'Delete Entry';
+                    btn.disabled = false;
+                });
+            },
+
             switchTab: (t) => {
                 document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-map').classList.add('hidden');
                 document.getElementById('view-'+t).classList.remove('hidden');
