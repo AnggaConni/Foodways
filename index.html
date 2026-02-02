@@ -82,21 +82,15 @@
         }
         .leaflet-tooltip-top:before { display: none; }
         
-        /* Dropdown Suggestion */
-        #origin-suggestions {
-            max-height: 150px; overflow-y: auto;
-            background: #0f172a; border: 1px solid #334155;
-            position: absolute; width: 100%; z-index: 50;
-        }
-        .suggestion-item {
-            padding: 8px 12px; cursor: pointer; font-size: 12px; color: #cbd5e1;
-            border-bottom: 1px solid #1e293b;
-        }
-        .suggestion-item:hover { background: #1e293b; color: #22d3ee; }
-        
         /* Centering Fixes */
         .center-absolute {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+
+        /* SMOOTH LINE TRANSITION (The Rubber Effect) */
+        /* Targets SVG paths in Leaflet (lines & polygons) */
+        path.leaflet-interactive {
+            transition: stroke 0.3s ease-out, stroke-width 0.3s ease-out, stroke-opacity 0.3s ease-out;
         }
     </style>
 </head>
@@ -133,7 +127,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-8 pt-4 border-t border-slate-800 w-full text-center">
-                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v42.0 (Live Deployed) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
+                <div class="text-[10px] text-slate-500 font-mono uppercase mb-2">v43.0 (Smooth UI) • <span id="record-count" class="text-cyan-500 font-bold">0</span> Records</div>
                 <div class="text-xs text-slate-400 font-bold tracking-widest">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -226,7 +220,7 @@
                     <div class="relative w-full h-64"><canvas id="chart-unesco"></canvas></div>
                 </div>
 
-                <!-- Data Table with Pagination -->
+                <!-- Data Table -->
                 <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
                     <div class="p-6 border-b border-slate-700 bg-slate-900/50 flex flex-wrap gap-4 justify-between items-center">
                         <h3 class="font-bold text-white flex items-center"><i class="fas fa-database mr-3 text-slate-500"></i> Database</h3>
@@ -513,22 +507,37 @@
 
                 dataToRender.forEach(d => {
                     if (!d.lat || !d.lng) return;
+                    
+                    // Draw Line
                     if (d.origin_lat && d.origin_lng) {
-                        const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], { color: '#cbd5e1', weight: 1.5, opacity: 0.4, dashArray: '4, 8' }).addTo(mapLogic.map);
+                        const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], { 
+                            color: '#cbd5e1', 
+                            weight: 1.5, // Base weight
+                            opacity: 0.5, 
+                            dashArray: '4, 8',
+                            className: 'connection-line' // Add class for targeting if needed
+                        }).addTo(mapLogic.map);
+                        
+                        // HOVER EFFECT FOR LINES
+                        line.on('mouseover', function() {
+                            this.setStyle({ color: '#22d3ee', weight: 5, opacity: 1, dashArray: null }); // Thicker weight
+                            this.bringToFront();
+                            this.bindTooltip(`${d.origin_food_name} ➔ ${d.food_name}`, { sticky: true, direction: 'top' }).openTooltip();
+                        });
+                        line.on('mouseout', function() {
+                            this.setStyle({ color: '#cbd5e1', weight: 1.5, opacity: 0.5, dashArray: '4, 8' });
+                            this.closeTooltip();
+                        });
+
                         mapLogic.lines.push(line);
+                        mapLogic.layers.push(line);
+                        
                         const isBlueNode = state.data.some(n => Math.abs(n.lat - d.origin_lat) < 0.001 && Math.abs(n.lng - d.origin_lng) < 0.001);
                         if (!isBlueNode) {
                             const origin = L.circleMarker([d.origin_lat, d.origin_lng], { color: '#f97316', fillColor: '#f97316', fillOpacity: 0.8, radius: 4 }).addTo(mapLogic.map);
-                            origin.bindTooltip(`
-                                <div class="text-center px-2 py-1">
-                                    <div class="text-[9px] font-bold text-orange-400 tracking-widest uppercase">${d.connection_type || 'ORIGIN'}</div>
-                                    <div class="text-xs font-bold text-white">${d.origin_food_name}</div>
-                                    <div class="text-[9px] text-slate-400">${d.origin_country}</div>
-                                </div>
-                            `, { direction: 'top', className: 'custom-tooltip' });
+                            origin.bindTooltip(`Origin: ${d.origin_food_name}`, { direction: 'top', className: 'custom-tooltip' });
                             mapLogic.markers.push(origin); mapLogic.layers.push(origin);
                         }
-                        mapLogic.layers.push(line);
                     }
                     const m = L.circleMarker([d.lat, d.lng], { color: '#22d3ee', fillColor: '#22d3ee', fillOpacity: 0.8, radius: 6 }).addTo(mapLogic.map);
                     m.on('click', () => dashboard.showDetail(d));
