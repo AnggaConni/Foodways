@@ -1,115 +1,1028 @@
-const SHEET_DATA_NAME = "Nodes";
-const SHEET_USERS_NAME = "Users";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foodways: Shared Heritage</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-function doPost(e) {
-  const lock = LockService.getScriptLock();
-  lock.tryLock(10000);
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --opera-red: #ff1b2d;
+            --opera-dark: #000000;
+            --opera-gray: #f5f5f5;
+            --opera-text: #1a1a1a;
+        }
+        
+        body {
+            background-color: var(--opera-gray); 
+            color: var(--opera-text);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; 
+        }
 
-  try {
-    let params = {};
-    if (e.postData && e.postData.contents) {
-      try { params = JSON.parse(e.postData.contents); } catch (err) {}
-    }
-    if (e.parameter) { params = { ...params, ...e.parameter }; }
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #e0e0e0; }
+        ::-webkit-scrollbar-thumb { background: #999; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--opera-red); }
 
-    let inputData = params.data;
-    if (typeof inputData === 'string') {
-      try { inputData = JSON.parse(inputData); } catch (e) {}
-    }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    const action = params.action;
-    let result;
+        /* Leaflet & UI */
+        .leaflet-container { background: #e0e0e0; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            color: #333;
+        }
+        
+        .dark-panel {
+            background: #121212;
+            color: white;
+            border-right: 1px solid #333;
+        }
 
-    if (action === 'login') {
-      result = handleLogin(params.username, params.password);
-    } else if (action === 'insert') {
-      result = handleInsertData(inputData);
-    } else if (action === 'update') {
-      result = handleUpdateData(inputData);
-    } else if (action === 'delete') {
-      result = handleDeleteData(params.id); // ACTION BARU
-    } else if (action === 'ping') {
-      result = { "status": "success", "message": "Server Online" };
-    } else {
-      throw new Error("Action unknown");
-    }
+        .section-view { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
+        .section-view.active { display: flex; opacity: 1; }
+        .z-modal { z-index: 2000; }
+        .z-picker { z-index: 3000; }
+        .picker-mode { cursor: crosshair !important; }
+        
+        /* Badges Glow */
+        .badge-trade { background: #fffbe6; color: #b45309; border: 1px solid #fbbf24; }
+        .badge-migration { background: #f0fdf4; color: #15803d; border: 1px solid #4ade80; }
+        .badge-colonialism { background: #fef2f2; color: #b91c1c; border: 1px solid #f87171; }
 
-    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+        /* Tooltip */
+        .custom-tooltip {
+            background: white !important; 
+            border: 2px solid var(--opera-red) !important;
+            color: black !important;
+            border-radius: 4px !important;
+            font-weight: bold !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+        }
+        .leaflet-tooltip-top:before { display: none; }
+        
+        /* Animations */
+        @keyframes breath {
+            0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255, 27, 45, 0.3)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 10px rgba(255, 27, 45, 0.8)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255, 27, 45, 0.3)); }
+        }
+        .logo-breath { animation: breath 3s infinite ease-in-out; }
 
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": error.toString() })).setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
-  }
-}
+        .btn-opera {
+            background-color: var(--opera-red); color: white; transition: all 0.3s;
+        }
+        .btn-opera:hover {
+            background-color: #d40012; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 27, 45, 0.4);
+        }
 
-function handleLogin(u, p) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_USERS_NAME);
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(u) && String(data[i][1]) === String(p)) return { "status": "success" };
-  }
-  return { "status": "error", "message": "Invalid Credentials" };
-}
+        .input-dark { background-color: #2a2a2a; border: 1px solid #444; color: white; }
+        .input-dark:focus { border-color: var(--opera-red); outline: none; }
 
-function handleInsertData(d) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_DATA_NAME);
-  const lastRow = sheet.getLastRow();
-  let newId = "FH001";
-  if (lastRow > 1) {
-    const lastId = String(sheet.getRange(lastRow, 1).getValue());
-    if (lastId.startsWith("FH")) {
-      const num = parseInt(lastId.replace("FH","")) + 1;
-      newId = "FH" + ("000" + num).slice(-3);
-    }
-  }
-  const finalId = (d.id && d.id.startsWith('FH')) ? d.id : newId;
-  const row = buildRow(finalId, d);
-  sheet.appendRow(row);
-  return { "status": "success", "message": "Created", "id": finalId };
-}
+        /* Carousel Nav Buttons */
+        .carousel-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.8); color: #000;
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; z-index: 20;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .carousel-btn:hover { background: var(--opera-red); color: white; }
+        .carousel-btn.prev { left: 10px; }
+        .carousel-btn.next { right: 10px; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col bg-gray-50">
 
-function handleUpdateData(d) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_DATA_NAME);
-  const data = sheet.getDataRange().getValues();
-  let rowIndex = -1;
-  const targetId = String(d.id).trim().toUpperCase();
+    <!-- 1. LANDING PAGE -->
+    <div id="landing-page" class="section-view active h-full w-full relative z-50 bg-black items-center justify-center flex-col">
+        <div class="absolute inset-0 z-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1590947132387-155cc02f3212?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center"></div>
+        <div class="absolute inset-0 z-0 bg-gradient-to-b from-black/60 via-black/80 to-black"></div>
 
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]).trim().toUpperCase() === targetId) {
-      rowIndex = i + 1;
-      break;
-    }
-  }
+        <div class="z-10 text-center space-y-6 glass-panel p-12 rounded-3xl max-w-3xl border-t-4 border-[var(--opera-red)] shadow-2xl mx-4 flex flex-col items-center bg-white/10 backdrop-blur-md">
+            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-2 shadow-xl logo-breath">
+                <i class="fas fa-pepper-hot text-4xl text-[var(--opera-red)]"></i>
+            </div>
+            
+            <h1 class="text-6xl font-black text-white mb-2 drop-shadow-lg">Foodways</h1>
+            <p class="text-xl text-gray-200 tracking-widest uppercase font-light">Shared Heritage Project</p>
+            
+            <div id="loading-container" class="mt-8 flex justify-center h-8 items-center">
+                <i class="fas fa-circle-notch fa-spin text-[var(--opera-red)] text-2xl"></i>
+                <span class="ml-3 text-white font-mono text-sm">Connecting to Database...</span>
+            </div>
 
-  if (rowIndex === -1) return handleInsertData(d);
+            <!-- BUTTONS -->
+            <div id="entry-buttons" class="hidden flex-col items-center justify-center gap-4 mt-8 w-full">
+                <button onclick="app.enterAsGuest()" class="w-64 py-4 btn-opera rounded-full font-bold text-lg shadow-lg flex items-center justify-center gap-3">
+                    ENTER SYSTEM <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="flex gap-4 text-xs text-gray-400 mt-2 justify-center w-full">
+                    <button onclick="app.enterAsContributor()" class="hover:text-white transition underline">Admin Login</button>
+                </div>
+            </div>
+            
+            <div id="dataset-info" class="hidden mt-6 pt-4 border-t border-gray-700 w-full text-center text-gray-400 text-xs">
+                <div>v45.0 (Final Layout) • <span id="record-count" class="text-white font-bold">0</span> Records</div>
+                <div class="mt-1 font-bold">Angga Conni Saputra 2026</div>
+            </div>
+        </div>
+    </div>
 
-  const row = buildRow(d.id, d);
-  sheet.getRange(rowIndex, 1, 1, row.length).setValues([row]);
-  return { "status": "success", "message": "Updated" };
-}
+    <!-- 2. MAIN APP -->
+    <div id="main-app" class="section-view h-full w-full overflow-hidden flex-row relative text-gray-800">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-72 dark-panel flex flex-col justify-between z-40 shadow-2xl">
+            <div>
+                <div class="h-24 flex items-center justify-between px-6 border-b border-gray-800">
+                    <div class="flex items-center gap-3">
+                         <div class="w-8 h-8 bg-white rounded flex items-center justify-center logo-breath">
+                            <i class="fas fa-pepper-hot text-[var(--opera-red)] text-lg"></i>
+                        </div>
+                        <div class="font-bold text-xl tracking-tight">Foodways</div>
+                    </div>
+                    <button onclick="ui.toggleHelp()" class="text-gray-400 hover:text-white transition" title="Help / Guide">
+                        <i class="fas fa-question-circle text-lg"></i>
+                    </button>
+                </div>
+                <nav class="p-4 space-y-2">
+                    <button onclick="app.switchTab('dashboard')" id="nav-dashboard" class="w-full text-left p-4 rounded-xl hover:bg-gray-800 text-gray-400 hover:text-white transition flex items-center text-md group">
+                        <i class="fas fa-chart-pie w-8 group-hover:text-[var(--opera-red)] transition"></i> Dashboard
+                    </button>
+                    <button onclick="app.switchTab('map')" id="nav-map" class="w-full text-left p-4 rounded-xl hover:bg-gray-800 text-gray-400 hover:text-white transition flex items-center text-md group">
+                        <i class="fas fa-map-marked-alt w-8 group-hover:text-[var(--opera-red)] transition"></i> Global Map
+                    </button>
+                </nav>
+            </div>
+            
+            <!-- BOTTOM MENU -->
+            <div class="p-6 border-t border-gray-800 bg-black/20">
+                <div id="auth-status-ui" class="mb-4">
+                    <div id="status-guest" class="w-full p-2 bg-gray-800 text-gray-400 text-center rounded border border-gray-700 mb-3 text-xs font-bold uppercase">Guest Mode</div>
+                    <div id="status-admin" class="hidden w-full p-2 bg-[var(--opera-red)] text-white text-center rounded border border-red-700 mb-3 text-xs font-bold uppercase">Admin Active</div>
+                    
+                    <button id="btn-sidebar-login" onclick="app.enterAsContributor()" class="w-full py-2 bg-white text-black hover:bg-gray-200 rounded-lg text-xs font-bold transition">Admin Login</button>
+                    <button id="btn-sidebar-add" onclick="app.initiateAddEntry()" class="hidden w-full py-3 btn-opera rounded-lg text-sm font-bold transition mb-2 shadow-lg">
+                        <i class="fas fa-plus mr-2"></i> Add Data
+                    </button>
+                    <button id="btn-sidebar-logout" onclick="app.logout()" class="hidden w-full py-2 text-gray-500 hover:text-white text-xs transition">Sign Out</button>
+                </div>
+                <button onclick="app.exportData()" class="w-full mt-2 py-2 text-gray-500 hover:text-white text-[10px] font-bold border border-gray-800 rounded hover:bg-gray-800 transition">Download .CSV</button>
+            </div>
+        </aside>
 
-// FUNGSI DELETE BARU
-function handleDeleteData(id) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_DATA_NAME);
-  const data = sheet.getDataRange().getValues();
-  const targetId = String(id).trim().toUpperCase();
+        <!-- CONTENT -->
+        <main class="flex-1 relative overflow-hidden bg-[#f2f2f2] flex flex-col">
+            
+            <!-- DASHBOARD TAB -->
+            <div id="view-dashboard" class="absolute inset-0 p-8 overflow-y-auto hidden">
+                <!-- ... Dashboard content same as before ... -->
+                <header class="flex justify-between items-end pb-4 border-b border-gray-300 mb-8">
+                    <div>
+                        <h2 class="text-4xl font-black text-gray-900 mb-1">Culinary Analytics</h2>
+                        <p class="text-gray-500 text-sm">Global heritage data visualization.</p>
+                    </div>
+                </header>
+                <!-- KPI -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                    <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-[var(--opera-red)]">
+                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-total">0</div><div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Total Foods</div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-blue-500">
+                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-countries">0</div><div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Countries</div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-orange-500">
+                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-edges">0</div><div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Connections</div>
+                    </div>
+                     <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-green-600">
+                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-unesco">0</div><div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Heritage Listed</div>
+                    </div>
+                </div>
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                    <div class="glass-panel p-6 rounded-2xl flex flex-col min-h-[400px]">
+                        <h3 class="text-sm font-bold text-gray-600 uppercase mb-4 border-b pb-2">Influencing Countries</h3>
+                        <div class="relative w-full h-80"><canvas id="chart-country"></canvas></div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl flex flex-col min-h-[400px]">
+                        <h3 class="text-sm font-bold text-gray-600 uppercase mb-4 border-b pb-2">Interaction Types</h3>
+                        <div class="relative w-full h-80 flex justify-center"><canvas id="chart-type"></canvas></div>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl mb-8 min-h-[350px]">
+                    <h3 class="text-sm font-bold text-gray-600 uppercase mb-4 border-b pb-2">Heritage Status Breakdown</h3>
+                    <div class="relative w-full h-80"><canvas id="chart-unesco"></canvas></div>
+                </div>
+                <!-- TABLE -->
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <div class="p-5 bg-white border-b border-gray-200 flex flex-wrap gap-4 justify-between items-center">
+                        <h3 class="font-bold text-gray-800 flex items-center"><i class="fas fa-table mr-3 text-[var(--opera-red)]"></i> Database Records</h3>
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-xs"></i>
+                            <input type="text" id="search-input" placeholder="Search food..." class="pl-9 bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 w-64 focus:border-[var(--opera-red)] outline-none transition">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm"><thead class="bg-gray-100 text-gray-500 text-xs uppercase font-bold"><tr><th class="p-4">ID</th><th class="p-4">Name</th><th class="p-4">Country</th><th class="p-4">Origin</th><th class="p-4">Type</th><th class="p-4 text-right">Action</th></tr></thead><tbody id="table-body" class="divide-y divide-gray-100 bg-white"></tbody></table>
+                    </div>
+                    <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center text-sm">
+                        <span class="text-gray-500 text-xs font-mono uppercase" id="pagination-info">Showing 0-0</span>
+                        <div class="flex gap-2"><button id="btn-prev" onclick="dashboard.changePage(-1)" class="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 rounded border border-gray-300 disabled:opacity-50 text-xs transition shadow-sm">Prev</button><button id="btn-next" onclick="dashboard.changePage(1)" class="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 rounded border border-gray-300 disabled:opacity-50 text-xs transition shadow-sm">Next</button></div>
+                    </div>
+                </div>
+                <div class="h-12"></div>
+            </div>
 
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]).trim().toUpperCase() === targetId) {
-      sheet.deleteRow(i + 1); // Hapus baris
-      return { "status": "success", "message": "Deleted" };
-    }
-  }
-  return { "status": "error", "message": "ID Not Found" };
-}
+            <!-- MAP TAB -->
+            <div id="view-map" class="absolute inset-0 hidden">
+                <div id="map-container" class="h-full w-full bg-gray-200 outline-none z-0"></div>
+                
+                <div class="absolute top-6 right-6 z-[400] flex flex-col gap-3">
+                    <button onclick="mapLogic.resetZoom()" class="w-12 h-12 bg-white hover:bg-gray-100 text-gray-800 rounded-xl shadow-lg flex items-center justify-center border border-gray-300 transition" title="Reset View">
+                        <i class="fas fa-compress-arrows-alt text-lg"></i>
+                    </button>
+                </div>
+                <!-- Search Map & Legend same as before -->
+                 <div class="absolute top-6 left-6 z-[400]">
+                    <div class="relative shadow-2xl">
+                        <input type="text" id="map-search" placeholder="Search Map..." class="bg-white border-none text-gray-800 rounded-xl px-5 py-3 text-sm w-72 shadow-lg focus:ring-2 focus:ring-[var(--opera-red)] outline-none" oninput="app.updateMapFilter(this.value)">
+                        <i class="fas fa-search absolute right-4 top-3.5 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
-function buildRow(id, d) {
-  const c = (v) => String(v || '').replace(',', '.'); 
-  return [
-    id, d.food_name, d.country, c(d.lat), c(d.lng), 
-    d.origin_food_name, d.origin_country, c(d.origin_lat), c(d.origin_lng), 
-    d.connection_type, d.geometry_json || '', d.youtube_url || '', 
-    d.unesco_status || '', d.research_links || '', d.image_url || '', d.description || ''
-  ];
-}
+    <!-- MODALS (Help, Login, Input same as before) -->
+     <!-- HELP MODAL -->
+    <div id="help-modal" class="fixed inset-0 z-[2500] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg text-gray-800"><i class="fas fa-book-reader mr-2 text-[var(--opera-red)]"></i> Panduan / Guide</h3>
+                <button onclick="ui.closeModal('help-modal')" class="text-gray-400 hover:text-black"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <div class="grid grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="font-bold text-[var(--opera-red)] mb-2 border-b pb-1">🇮🇩 Bahasa Indonesia</h4>
+                        <ul class="text-sm space-y-2 text-gray-600 list-disc ml-4">
+                            <li><strong>Dashboard:</strong> Statistik penyebaran makanan.</li>
+                            <li><strong>Peta Global:</strong> Geser peta. Garis = jalur sejarah.</li>
+                            <li><strong>Cari:</strong> Gunakan kotak pencarian di peta/tabel.</li>
+                            <li><strong>Detail:</strong> Klik titik peta untuk lihat foto/sejarah.</li>
+                            <li><strong>Admin:</strong> Login untuk edit data.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-blue-600 mb-2 border-b pb-1">🇺🇸 English</h4>
+                        <ul class="text-sm space-y-2 text-gray-600 list-disc ml-4">
+                            <li><strong>Dashboard:</strong> Global food stats.</li>
+                            <li><strong>Global Map:</strong> Lines show history path.</li>
+                            <li><strong>Search:</strong> Filter items instantly.</li>
+                            <li><strong>Details:</strong> Click dots for info.</li>
+                            <li><strong>Admin:</strong> Login to manage data.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- LOGIN -->
+    <div id="login-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-[#1a1a1a] w-96 p-8 rounded-2xl border border-gray-800 shadow-2xl text-white">
+            <h3 class="text-2xl font-bold mb-6 text-center">Admin Access</h3>
+            <input type="text" id="login-user" placeholder="Username" class="input-dark w-full rounded-lg p-3 mb-4 text-sm">
+            <input type="password" id="login-pass" placeholder="Password" class="input-dark w-full rounded-lg p-3 mb-6 text-sm">
+            <button onclick="app.login()" id="btn-login" class="w-full btn-opera py-3 rounded-lg font-bold shadow-lg">Login</button>
+            <button onclick="ui.closeModal('login-modal')" class="w-full mt-4 text-gray-500 text-xs hover:text-white transition">Cancel</button>
+        </div>
+    </div>
+    
+     <!-- INPUT -->
+    <div id="input-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-[#1a1a1a] w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col relative text-white border border-gray-800 shadow-2xl">
+            <div class="p-6 border-b border-gray-800 flex justify-between items-center bg-[#222] rounded-t-2xl">
+                <h3 id="input-title" class="text-lg font-bold flex items-center gap-2"><i class="fas fa-edit text-[var(--opera-red)]"></i> Manage Data</h3>
+                <button onclick="ui.closeModal('input-modal')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-8 overflow-y-auto custom-scrollbar space-y-6 flex-1">
+                <input type="hidden" id="inp-id">
+                <div class="grid grid-cols-2 gap-6">
+                    <div><label class="text-xs text-gray-500 font-bold block mb-1">Food Name</label><input type="text" id="inp-name" class="input-dark w-full rounded-lg p-3"></div>
+                    <div><label class="text-xs text-gray-500 font-bold block mb-1">Country</label><input type="text" id="inp-country" class="input-dark w-full rounded-lg p-3"></div>
+                </div>
+                
+                <div class="bg-[#222] p-6 rounded-xl border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <label class="text-sm text-[var(--opera-red)] font-bold">Main Location</label>
+                        <div class="flex gap-2">
+                            <button onclick="app.pickLocation('main')" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded transition">Pick Point</button>
+                            <button onclick="geoEditor.start()" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded transition">Draw Area</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <input type="text" id="inp-lat" placeholder="Lat" class="input-dark w-full rounded-lg p-3 text-sm">
+                        <input type="text" id="inp-lng" placeholder="Lng" class="input-dark w-full rounded-lg p-3 text-sm">
+                    </div>
+                    <textarea id="inp-geometry" rows="2" class="input-dark w-full rounded-lg p-3 text-xs font-mono text-gray-400" placeholder="Geometry JSON (Auto-filled)" readonly></textarea>
+                </div>
+
+                <div><label class="text-xs text-gray-500 font-bold block mb-1">Description</label><textarea id="inp-desc" rows="3" class="input-dark w-full rounded-lg p-3"></textarea></div>
+
+                <div class="grid grid-cols-2 gap-6">
+                     <div><label class="text-xs text-gray-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="input-dark w-full rounded-lg p-3"></div>
+                     <div><label class="text-xs text-gray-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="input-dark w-full rounded-lg p-3"></div>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-2">
+                     <div><label class="text-xs text-gray-500 font-bold block mb-1">Image URLs (Comma separated)</label><input type="text" id="inp-image" class="input-dark w-full rounded-lg p-3" placeholder="https://image1.jpg, https://image2.jpg"></div>
+                     <div><label class="text-xs text-gray-500 font-bold block mb-1">YouTube URLs (Comma separated)</label><input type="text" id="inp-youtube" class="input-dark w-full rounded-lg p-3" placeholder="https://youtube.com/v1, https://youtube.com/v2"></div>
+                </div>
+                
+                <div class="bg-[#222] p-6 rounded-xl border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <label class="text-sm text-orange-400 font-bold">Influence Source</label>
+                        <button onclick="app.pickLocation('origin')" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded transition">Pick Origin</button>
+                    </div>
+                    <div class="relative mb-4">
+                         <input type="text" id="inp-origin-name" placeholder="Origin Food Name (Type to search)" class="input-dark w-full rounded-lg p-3 text-sm" oninput="app.handleOriginSearch(this.value)">
+                         <div id="origin-suggestions" class="hidden absolute top-full left-0 w-full bg-[#333] border border-gray-600 rounded-b-lg z-50 max-h-40 overflow-y-auto shadow-xl"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4"><input type="text" id="inp-origin-country" placeholder="Country" class="input-dark w-full rounded-lg p-3 text-sm"></div>
+                    <div class="grid grid-cols-2 gap-4"><input type="text" id="inp-origin-lat" placeholder="Lat" class="input-dark w-full rounded-lg p-3 text-sm"><input type="text" id="inp-origin-lng" placeholder="Lng" class="input-dark w-full rounded-lg p-3 text-sm"></div>
+                    <div class="mt-4"><label class="text-xs text-gray-500 font-bold block mb-1">Connection Type</label><select id="inp-conn-type" class="input-dark w-full rounded-lg p-3"><option value="Trade">Trade</option><option value="Migration">Migration</option><option value="Colonialism">Colonialism</option></select></div>
+                </div>
+            </div>
+            
+            <div class="p-6 border-t border-gray-800 bg-[#222] rounded-b-2xl flex justify-between items-center">
+                <button id="btn-delete" onclick="app.deleteData()" class="hidden px-4 py-2 bg-red-900/30 text-red-400 hover:text-white rounded-lg text-xs font-bold border border-red-900 hover:bg-red-900/50 transition">Delete</button>
+                <div class="flex gap-3 ml-auto">
+                    <button onclick="ui.closeModal('input-modal')" class="px-6 py-2 text-gray-400 hover:text-white font-bold transition text-sm">Cancel</button>
+                    <button onclick="app.saveData()" id="btn-save" class="px-8 py-2 btn-opera rounded-lg font-bold shadow-lg transition text-sm">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- DETAIL MODAL - IMPROVED LAYOUT -->
+    <div id="detail-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl flex flex-col relative overflow-hidden text-gray-800">
+            <button onclick="ui.closeModal('detail-modal')" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/10 hover:bg-red-500 hover:text-white text-black rounded-full transition flex items-center justify-center"><i class="fas fa-times"></i></button>
+            <div id="detail-content" class="overflow-y-auto h-full p-8 custom-scrollbar"></div>
+        </div>
+    </div>
+
+    <script>
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz9C3b7Y967gih1r1D59DJ5pEdYlp6xcK_gw8KHhRFtuEo3LK9YEOtYeKB7NhuyGfW9/exec';
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
+        const state = { data: [], role: 'guest', editId: null, pickerTarget: null, currentDetail: null, filter: { search: '' }, pagination: { page: 1, limit: 10 } };
+
+        function robustParse(val) {
+            if (!val) return null;
+            let str = String(val).trim();
+            if ((str.match(/\./g) || []).length > 1) str = str.replace(/\./g, ''); 
+            else if (str.includes(',') && str.includes('.')) str = str.replace(/\./g, '').replace(',', '.'); 
+            else if (str.includes(',')) str = str.replace(',', '.'); 
+            let n = parseFloat(str);
+            if (isNaN(n)) return null;
+            while (Math.abs(n) > 180) { n = n / 10; }
+            return n;
+        }
+
+        const getTypeBadge = (type) => {
+            if(!type) return '<span class="px-2 py-0.5 rounded text-[10px] font-bold border border-gray-300 bg-gray-100 text-gray-500">UNKNOWN</span>';
+            const t = type.toLowerCase();
+            if(t.includes('trade')) return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase badge-trade">TRADE</span>';
+            if(t.includes('migration')) return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase badge-migration">MIGRATION</span>';
+            if(t.includes('colonialism')) return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase badge-colonialism">COLONIALISM</span>';
+            return `<span class="px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-bold border border-gray-300">${type}</span>`;
+        };
+
+        function extractYoutubeEmbeds(urlStr) {
+            if (!urlStr) return '';
+            const urls = urlStr.split(',').map(u => u.trim()).filter(u => u);
+            let html = '<div class="flex overflow-x-auto gap-4 pb-4 snap-x no-scrollbar">'; // Carousel Container
+            let hasVideo = false;
+            
+            urls.forEach(url => {
+                 let id = null;
+                 let embedSrc = '';
+                 if (url.includes('iframe')) { 
+                    const cleanUrl = url.match(/src="([^"]+)"/);
+                    if(cleanUrl && cleanUrl[1]) embedSrc = cleanUrl[1];
+                 } else if(url.includes('v=')) {
+                    id = url.split('v=')[1].split('&')[0];
+                    embedSrc = `https://www.youtube.com/embed/${id}?origin=${window.location.origin}`;
+                 } else if(url.includes('youtu.be/')) {
+                    id = url.split('youtu.be/')[1];
+                    embedSrc = `https://www.youtube.com/embed/${id}?origin=${window.location.origin}`;
+                 }
+                 
+                 if(embedSrc) {
+                     hasVideo = true;
+                     html += `
+                        <div class="snap-center shrink-0 w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-black relative">
+                             <iframe width="100%" height="100%" src="${embedSrc}" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                     `;
+                 }
+            });
+            html += '</div>';
+            return hasVideo ? html : '<div class="h-24 flex items-center justify-center text-gray-400 text-xs bg-gray-100 rounded-xl">No Video Available</div>';
+        }
+
+        // CAROUSEL LOGIC
+        function extractImages(urlStr) {
+             if(!urlStr) return '';
+             const urls = urlStr.split(',').map(u => u.trim()).filter(u => u);
+             if(urls.length === 0) return '';
+             const cid = "car-" + Math.floor(Math.random() * 10000);
+             
+             return `
+                <div class="relative group">
+                    <div onclick="scrollCarousel('${cid}', -1)" class="carousel-btn prev hover:scale-110"><i class="fas fa-chevron-left"></i></div>
+                    <div id="${cid}" class="flex overflow-x-auto gap-4 pb-4 snap-x no-scrollbar scroll-smooth">
+                        ${urls.map(u => `
+                            <div class="snap-center shrink-0 w-full sm:w-80 h-64 rounded-xl overflow-hidden shadow-md border border-gray-200 relative bg-gray-100">
+                                <img src="${u}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=No+Image'">
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div onclick="scrollCarousel('${cid}', 1)" class="carousel-btn next hover:scale-110"><i class="fas fa-chevron-right"></i></div>
+                </div>
+             `;
+        }
+
+        function scrollCarousel(id, direction) {
+            const container = document.getElementById(id);
+            if(container) {
+                const scrollAmount = 320; // Width of image + gap
+                container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+            }
+        }
+
+        function animateValue(id, start, end, duration) {
+            let obj = document.getElementById(id);
+            if(!obj) return;
+            let range = end - start, current = start, increment = end > start ? 1 : -1, step = Math.abs(Math.floor(duration / range)), timer = setInterval(() => { current += increment; obj.innerHTML = current; if (current == end) clearInterval(timer); }, step);
+        }
+
+        function transformData(item) {
+             const get = (k) => item[Object.keys(item).find(x=>x.toLowerCase().includes(k))];
+             const parseN = robustParse;
+             return {
+                id: get('id'), food_name: get('food_name')||get('name'), country: get('country'),
+                lat: parseN(get('lat')), lng: parseN(get('lng')),
+                origin_food_name: get('origin_food_name')||get('origin_name'), 
+                origin_country: get('origin_country'),
+                origin_lat: parseN(get('origin_lat')), origin_lng: parseN(get('origin_lng')),
+                connection_type: get('connection_type')||get('type'), 
+                youtube_url: get('youtube_url'), image_url: get('image_url'), 
+                description: get('description'), geometry_json: get('geometry_json'),
+                unesco_status: get('unesco_status'), research_links: get('research_links')
+            };
+        }
+
+        // ... [UI, MapLogic, Dashboard, GeoEditor, App code same as previous v44 - No logic changes, just layout in showDetail] ...
+        
+        // --- UI MODULE ---
+        const ui = {
+            renderAuth: () => {
+                const sGuest = document.getElementById('status-guest');
+                const sAdmin = document.getElementById('status-admin');
+                const btnLogin = document.getElementById('btn-sidebar-login');
+                const btnAdd = document.getElementById('btn-sidebar-add');
+                const btnLogout = document.getElementById('btn-sidebar-logout');
+
+                if(!sGuest) return; 
+
+                if (state.role === 'admin') {
+                    sGuest.classList.add('hidden'); sAdmin.classList.remove('hidden');
+                    btnLogin.classList.add('hidden'); btnAdd.classList.remove('hidden'); btnLogout.classList.remove('hidden');
+                } else {
+                    sGuest.classList.remove('hidden'); sAdmin.classList.add('hidden');
+                    btnLogin.classList.remove('hidden'); btnAdd.classList.add('hidden'); btnLogout.classList.add('hidden');
+                }
+            },
+            toggleHelp: () => {
+                const el = document.getElementById('help-modal');
+                el.classList.toggle('hidden');
+            },
+            loaded: () => {
+                document.getElementById('loading-container').classList.add('hidden');
+                document.getElementById('entry-buttons').classList.remove('hidden');
+                setTimeout(() => document.getElementById('entry-buttons').classList.remove('opacity-0'), 50);
+                document.getElementById('dataset-info').classList.remove('hidden');
+                document.getElementById('record-count').innerText = state.data.length;
+            },
+            updateServerStatus: (s, m) => {
+                const el = document.getElementById('admin-server-status'), dot = document.getElementById('server-dot'), txt = document.getElementById('server-text');
+                if (s) { dot.className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"; txt.className="text-xs text-emerald-400 font-bold"; txt.textContent = m; }
+                else { dot.className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_red]"; txt.className="text-xs text-red-400 font-bold"; txt.textContent = m; }
+            },
+            openModal: (id) => document.getElementById(id).classList.remove('hidden'),
+            closeModal: (id) => document.getElementById(id).classList.add('hidden'),
+            showError: (msg) => {
+                document.getElementById('loading-container').classList.add('hidden');
+                document.getElementById('error-container').classList.remove('hidden');
+            }
+        };
+
+        const mapLogic = {
+            map: null, layers: [], lines: [], markers: [],
+            init: () => {
+                mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false, maxBounds: [[-90, -180], [90, 180]], maxBoundsViscosity: 1.0, minZoom: 2 }).setView([20, 0], 2);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, noWrap: true, bounds: [[-90, -180], [90, 180]] }).addTo(mapLogic.map);
+                L.control.zoom({ position: 'topright' }).addTo(mapLogic.map);
+            },
+            resize: () => setTimeout(() => mapLogic.map.invalidateSize(), 200),
+            resetZoom: () => {
+                if (mapLogic.layers.length > 0) { const group = new L.featureGroup(mapLogic.layers); mapLogic.map.fitBounds(group.getBounds().pad(0.1)); } 
+                else mapLogic.map.setView([20, 0], 2);
+            },
+            render: () => { 
+                mapLogic.layers.forEach(l => mapLogic.map.removeLayer(l));
+                mapLogic.lines.forEach(l => mapLogic.map.removeLayer(l));
+                mapLogic.markers.forEach(l => mapLogic.map.removeLayer(l));
+                mapLogic.layers = []; mapLogic.lines = []; mapLogic.markers = [];
+                
+                const search = state.filter.search.toLowerCase();
+                const filteredData = state.data.filter(d => 
+                    d.food_name.toLowerCase().includes(search) || 
+                    d.country.toLowerCase().includes(search) ||
+                    (d.origin_country && d.origin_country.toLowerCase().includes(search))
+                );
+
+                const visibleIds = new Set(filteredData.map(d => d.id));
+                filteredData.forEach(d => {
+                   if (d.origin_food_name) {
+                       const originNode = state.data.find(n => n.food_name === d.origin_food_name);
+                       if (originNode) visibleIds.add(originNode.id);
+                   }
+                });
+
+                const dataToRender = state.data.filter(d => visibleIds.has(d.id));
+
+                dataToRender.forEach(d => {
+                    if (!d.lat || !d.lng) return;
+                    
+                    if (d.origin_lat && d.origin_lng) {
+                        const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], { 
+                            color: '#ff1b2d', 
+                            weight: 1.5, opacity: 0.4, dashArray: '4, 8' 
+                        }).addTo(mapLogic.map);
+                        
+                         line.on('mouseover', function() {
+                            this.setStyle({ color: '#d40012', weight: 4, opacity: 1, dashArray: null });
+                            this.bringToFront();
+                            this.bindTooltip(`${d.origin_food_name} ➔ ${d.food_name}`, { sticky: true }).openTooltip();
+                        });
+                        line.on('mouseout', function() {
+                            this.setStyle({ color: '#ff1b2d', weight: 1.5, opacity: 0.4, dashArray: '4, 8' });
+                            this.closeTooltip();
+                        });
+
+                        mapLogic.lines.push(line);
+                        
+                        const isBlueNode = state.data.some(n => Math.abs(n.lat - d.origin_lat) < 0.001 && Math.abs(n.lng - d.origin_lng) < 0.001);
+                        if (!isBlueNode) {
+                            const origin = L.circleMarker([d.origin_lat, d.origin_lng], { color: '#fb923c', fillColor: '#fb923c', fillOpacity: 0.8, radius: 4 }).addTo(mapLogic.map);
+                            origin.bindTooltip(`Origin: ${d.origin_food_name}`, { direction: 'top', className: 'custom-tooltip' });
+                            mapLogic.markers.push(origin); mapLogic.layers.push(origin);
+                        }
+                        mapLogic.layers.push(line);
+                    }
+                    const m = L.circleMarker([d.lat, d.lng], { color: '#ff1b2d', fillColor: '#ff1b2d', fillOpacity: 0.8, radius: 6 }).addTo(mapLogic.map);
+                    m.on('click', () => dashboard.showDetail(d));
+                    m.bindTooltip(d.food_name, { direction: 'top', className: 'custom-tooltip' });
+                    mapLogic.layers.push(m);
+                });
+                setTimeout(mapLogic.resetZoom, 500); 
+            },
+            enablePicker: (cb) => {
+                mapLogic.map.getContainer().classList.add('picker-mode');
+                mapLogic.pickerHandler = (e) => {
+                    if (mapLogic.pickerMarker) mapLogic.map.removeLayer(mapLogic.pickerMarker);
+                    const color = state.pickerTarget === 'main' ? '#ff1b2d' : '#fb923c';
+                    mapLogic.pickerMarker = L.circleMarker(e.latlng, { color: color, fillColor: color, fillOpacity: 1, radius: 8 }).addTo(mapLogic.map);
+                    cb(e.latlng.lat, e.latlng.lng);
+                };
+                mapLogic.map.on('click', mapLogic.pickerHandler);
+            },
+            disablePicker: () => {
+                mapLogic.map.getContainer().classList.remove('picker-mode');
+                if (mapLogic.pickerHandler) mapLogic.map.off('click', mapLogic.pickerHandler);
+                if (mapLogic.pickerMarker) mapLogic.map.removeLayer(mapLogic.pickerMarker);
+            }
+        };
+
+        const geoEditor = {
+            map: null, layer: null, points: [], markers: [],
+            start: () => {
+                ui.closeModal('input-modal');
+                document.getElementById('geo-editor').classList.remove('hidden');
+                if(!geoEditor.map) {
+                    geoEditor.map = L.map('geo-map').setView([0,0], 2);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(geoEditor.map);
+                    geoEditor.map.on('click', e => geoEditor.addPoint(e.latlng));
+                }
+                geoEditor.points = [];
+                geoEditor.markers.forEach(m => geoEditor.map.removeLayer(m));
+                geoEditor.markers = [];
+                if(geoEditor.layer) geoEditor.map.removeLayer(geoEditor.layer);
+                setTimeout(()=>geoEditor.map.invalidateSize(), 200);
+            },
+            addPoint: (latlng) => {
+                const m = L.marker(latlng, { draggable: true, icon: L.divIcon({ className: 'geo-marker-icon' }) }).addTo(geoEditor.map);
+                m.on('drag', () => geoEditor.updatePoly());
+                geoEditor.markers.push(m);
+                geoEditor.updatePoly();
+            },
+            updatePoly: () => {
+                geoEditor.points = geoEditor.markers.map(m => [m.getLatLng().lat, m.getLatLng().lng]);
+                if(geoEditor.layer) geoEditor.map.removeLayer(geoEditor.layer);
+                if(geoEditor.points.length > 2) geoEditor.layer = L.polygon(geoEditor.points, {color:'#ff1b2d', weight:2}).addTo(geoEditor.map);
+                else if(geoEditor.points.length > 1) geoEditor.layer = L.polyline(geoEditor.points, {color:'#ff1b2d', weight:2}).addTo(geoEditor.map);
+            },
+            finish: () => {
+                if(geoEditor.points.length > 0) document.getElementById('inp-geometry').value = JSON.stringify(geoEditor.points);
+                geoEditor.cancel();
+            },
+            cancel: () => {
+                document.getElementById('geo-editor').classList.add('hidden');
+                ui.openModal('input-modal');
+            }
+        };
+
+        const dashboard = {
+            chartCountry: null, chartType: null, chartUnesco: null,
+            init: () => { dashboard.render(); dashboard.listeners(); }, 
+            render: () => {
+                if(document.getElementById('view-dashboard').classList.contains('hidden')) return;
+                const ctx1 = document.getElementById('chart-country')?.getContext('2d');
+                const ctx2 = document.getElementById('chart-type')?.getContext('2d');
+                const ctx3 = document.getElementById('chart-unesco')?.getContext('2d');
+                if (!ctx1 || !ctx2 || !ctx3) return;
+
+                dashboard.updateKPI(); 
+                dashboard.renderCharts(ctx1, ctx2, ctx3); 
+                dashboard.renderTable();
+            },
+            updateKPI: () => {
+                const t = state.data.length, c = new Set([...state.data.map(d=>d.country), ...state.data.map(d=>d.origin_country).filter(x=>x)]).size, e = state.data.filter(d=>d.origin_food_name).length;
+                const u = state.data.filter(d=>d.unesco_status && d.unesco_status.toLowerCase() !== 'unlisted').length;
+                ['total','countries','edges','unesco'].forEach((k,i) => animateValue('kpi-'+k, 0, [t,c,e,u][i], 1000));
+            },
+            renderCharts: (ctx1, ctx2, ctx3) => {
+                const o = {}; state.data.forEach(d => { if(d.origin_country) o[d.origin_country]=(o[d.origin_country]||0)+1; });
+                const so = Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,5);
+                const t = {}; state.data.forEach(d => { if(d.connection_type) t[d.connection_type]=(t[d.connection_type]||0)+1; });
+                const u = { 'UNESCO': 0, 'National': 0, 'Icon': 0, 'Other': 0 };
+                state.data.forEach(d => {
+                   const s = d.unesco_status ? d.unesco_status.toLowerCase() : '';
+                   if(s.includes('unesco')) u['UNESCO']++; else if(s.includes('national')) u['National']++; else if(s.includes('cultural')) u['Icon']++; else u['Other']++;
+                });
+
+                if(dashboard.chartCountry) dashboard.chartCountry.destroy();
+                dashboard.chartCountry = new Chart(ctx1, { 
+                    type: 'bar', data: { labels: so.map(x=>x[0]), datasets: [{ label: 'Count', data: so.map(x=>x[1]), backgroundColor: '#ff1b2d', borderRadius: 4 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } 
+                });
+                
+                if(dashboard.chartType) dashboard.chartType.destroy();
+                dashboard.chartType = new Chart(ctx2, { 
+                    type: 'doughnut', data: { labels: Object.keys(t), datasets: [{ data: Object.values(t), backgroundColor: ['#fbbf24', '#4ade80', '#f87171'], borderWidth: 0 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } 
+                });
+
+                if(dashboard.chartUnesco) dashboard.chartUnesco.destroy();
+                dashboard.chartUnesco = new Chart(ctx3, { 
+                    type: 'bar', indexAxis: 'y', data: { labels: Object.keys(u), datasets: [{ label: 'Count', data: Object.values(u), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#9ca3af'], borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' } }, y: { grid: { display: false } } } } 
+                });
+            },
+            changePage: (step) => {
+                state.pagination.page += step;
+                dashboard.renderTable();
+            },
+            renderTable: () => {
+                const b = document.getElementById('table-body'); b.innerHTML='';
+                const search = state.filter.search.toLowerCase();
+                const f = state.data.filter(d => d.food_name && d.food_name.toLowerCase().includes(search));
+                
+                const total = f.length;
+                const totalPages = Math.ceil(total / state.pagination.limit);
+                if(state.pagination.page < 1) state.pagination.page = 1;
+                if(state.pagination.page > totalPages && totalPages > 0) state.pagination.page = totalPages;
+
+                const start = (state.pagination.page - 1) * state.pagination.limit;
+                const end = start + state.pagination.limit;
+                const pageData = f.reverse().slice(start, end);
+
+                pageData.forEach(r => {
+                    const badge = getTypeBadge(r.connection_type);
+                    const tr = document.createElement('tr'); tr.className = "hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition";
+                    tr.onclick = () => dashboard.showDetail(r);
+                    tr.innerHTML = `<td class="p-4 text-gray-500 font-mono text-xs">${r.id}</td><td class="p-4 font-bold text-gray-900">${r.food_name}</td><td class="p-4 text-gray-600">${r.country}</td><td class="p-4 text-gray-500 text-xs">${r.origin_food_name||'-'}</td><td class="p-4">${badge}</td><td class="p-4 text-right"><i class="fas fa-chevron-right text-gray-400 text-xs"></i></td>`;
+                    b.appendChild(tr);
+                });
+
+                document.getElementById('pagination-info').innerText = `Showing ${start+1}-${Math.min(end, total)} of ${total}`;
+                document.getElementById('btn-prev').disabled = state.pagination.page <= 1;
+                document.getElementById('btn-next').disabled = state.pagination.page >= totalPages || totalPages === 0;
+            },
+            listeners: () => {
+                document.getElementById('search-input').addEventListener('keyup', (e)=>{
+                    state.filter.search=e.target.value; 
+                    state.pagination.page = 1; 
+                    dashboard.renderTable();
+                });
+                const mapSearch = document.getElementById('map-search');
+                if(mapSearch) {
+                    mapSearch.addEventListener('keyup', (e)=>{
+                        state.filter.search = e.target.value;
+                        mapLogic.render(); 
+                    });
+                }
+            },
+            updateSearch: (val) => {
+                 state.filter.search = val;
+                 dashboard.renderTable();
+            },
+            showDetail: (d) => {
+                state.currentDetail = d;
+                let images = extractImages(d.image_url);
+                let videos = extractYoutubeEmbeds(d.youtube_url);
+                let geoMapHtml = d.geometry_json ? `<div id="detail-geo-map" class="h-48 w-full bg-gray-100 rounded-xl border border-gray-200 mt-4"></div>` : '';
+
+                const html = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                        <div class="overflow-y-auto pr-2 flex flex-col gap-6">
+                             <div>
+                                <h2 class="text-4xl font-black text-gray-900 mb-2 leading-tight">${d.food_name}</h2>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="text-[var(--opera-red)] text-sm font-bold bg-red-50 px-3 py-1 rounded-full border border-red-100"><i class="fas fa-map-marker-alt mr-2"></i> ${d.country}</span>
+                                    ${d.unesco_status ? `<span class="text-green-700 text-sm font-bold bg-green-50 px-3 py-1 rounded-full border border-green-100"><i class="fas fa-award mr-2"></i> ${d.unesco_status}</span>` : ''}
+                                </div>
+                             </div>
+                             
+                             ${images}
+
+                             ${d.origin_food_name ? `
+                             <div class="glass-panel p-6 rounded-2xl border-l-4 border-orange-400 bg-orange-50/50">
+                                <h3 class="text-xs font-bold text-orange-600 uppercase mb-3 tracking-wider flex items-center"><i class="fas fa-history mr-2"></i> Cultural Roots</h3>
+                                <div class="flex items-center gap-4">
+                                    <div>
+                                        <div class="text-lg font-bold text-gray-800">${d.origin_food_name}</div>
+                                        <div class="text-xs text-gray-500">from ${d.origin_country}</div>
+                                    </div>
+                                    <div class="flex-1 border-t-2 border-dashed border-orange-300 relative text-center">
+                                        <span class="absolute -top-3 bg-white px-2 text-[10px] font-bold text-orange-400 uppercase">${d.connection_type}</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-lg font-bold text-[var(--opera-red)]">${d.food_name}</div>
+                                        <div class="text-xs text-gray-500">in ${d.country}</div>
+                                    </div>
+                                </div>
+                             </div>` : ''}
+
+                             <div class="prose prose-sm max-w-none text-gray-600">
+                                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide border-b pb-2 mb-3">Historical Narrative</h3>
+                                <div class="max-h-40 overflow-y-auto custom-scrollbar pr-2">
+                                    <p class="leading-relaxed">${d.description || 'No historical data available.'}</p>
+                                </div>
+                             </div>
+                             
+                             ${d.research_links ? `
+                             <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                <h3 class="text-xs font-bold text-gray-500 uppercase mb-2">Sources</h3>
+                                <div class="flex flex-col gap-1 text-xs text-blue-600 truncate">
+                                    ${d.research_links.split(',').map(l => `<a href="${l.trim()}" target="_blank" class="hover:underline"><i class="fas fa-external-link-alt mr-1"></i> ${l.trim()}</a>`).join('')}
+                                </div>
+                             </div>` : ''}
+                        </div>
+                        
+                        <div class="flex flex-col gap-6 overflow-y-auto pr-2">
+                             <div class="space-y-4">
+                                ${videos}
+                             </div>
+                             ${geoMapHtml}
+                             
+                             ${state.role==='admin' ? `
+                             <div class="mt-auto pt-6 border-t border-gray-200 text-right">
+                                <button onclick="app.openInputModal('edit')" class="btn-opera px-6 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 ml-auto">
+                                    <i class="fas fa-edit"></i> Edit / Update Data
+                                </button>
+                             </div>` : ''}
+                        </div>
+                    </div>
+                `;
+                document.getElementById('detail-content').innerHTML = html;
+                ui.openModal('detail-modal');
+                if(d.geometry_json) {
+                    setTimeout(() => {
+                        const gMap = L.map('detail-geo-map', {zoomControl:false}).setView([d.lat, d.lng], 6);
+                        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(gMap);
+                        try { const pts = JSON.parse(d.geometry_json); L.polygon(pts, {color:'#ff1b2d', fillOpacity:0.2}).addTo(gMap); gMap.fitBounds(pts); } catch(e){}
+                    }, 500);
+                }
+            }
+        };
+
+        const app = {
+            init: () => {
+                ui.renderAuth();
+                window.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const landing = document.getElementById('landing-page'); if (landing && landing.style.display !== 'none' && !document.getElementById('loading-container').classList.contains('hidden') === false) { app.enterAsGuest(); } } });
+                Papa.parse(CSV_URL, {
+                    download: true, header: true, skipEmptyLines: true,
+                    complete: (res) => {
+                        if(res.data.length) {
+                            state.data = res.data.map(transformData).filter(x => x.lat && x.lng);
+                            mapLogic.init(); dashboard.init(); ui.loaded();
+                            mapLogic.render(); // Force Initial Map Render
+                        } else alert('Data Empty');
+                    },
+                    error: (err) => ui.showError("Failed to Download Data")
+                });
+            },
+            enterAsContributor: () => { if(state.role==='admin') return; ui.openModal('login-modal'); },
+            enterAsGuest: () => { 
+                document.getElementById('landing-page').style.display='none'; 
+                document.getElementById('main-app').classList.add('active'); 
+                app.switchTab('dashboard'); 
+                mapLogic.resize(); 
+            },
+            login: () => {
+                const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
+                const form = new URLSearchParams(); form.append('action', 'login'); form.append('username', u); form.append('password', p);
+                const btn = document.getElementById('btn-login'); btn.innerText='Verifying...';
+                fetch(GAS_URL, { method: 'POST', body: form }).then(r => r.json()).then(d => {
+                    btn.innerText='Login';
+                    if(d.status==='success') { state.role='admin'; ui.renderAuth(); ui.closeModal('login-modal'); if(document.getElementById('landing-page').style.display!=='none') app.enterAsGuest(); } 
+                    else alert(d.message);
+                }).catch(e => { btn.innerText='Login'; alert('Server Error.'); });
+            },
+            logout: () => { state.role='guest'; ui.renderAuth(); alert('Logged Out'); },
+            testConnection: () => {
+                 const formData = new URLSearchParams(); formData.append('action', 'ping');
+                 fetch(GAS_URL, { method: 'POST', redirect: "follow", body: formData }).then(r => r.json()).then(data => alert("Server Reachable! Status: " + data.status)).catch(e => alert("Server Unreachable."));
+            },
+            initiateAddEntry: () => {
+                state.editId = null;
+                document.querySelectorAll('#input-modal input, #input-modal textarea').forEach(el => el.value = '');
+                app.switchTab('map'); app.pickLocation('main');
+            },
+            
+            // --- NEW: Autocomplete Logic ---
+            handleOriginSearch: (val) => {
+                const list = document.getElementById('origin-suggestions');
+                if(val.length < 2) { list.classList.add('hidden'); return; }
+                const matches = state.data.filter(d => d.food_name.toLowerCase().includes(val.toLowerCase())).slice(0, 5);
+                if(matches.length > 0) {
+                    list.innerHTML = matches.map(m => `<div class="p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="text-[var(--opera-red)]">Link</span></div>`).join('');
+                    list.classList.remove('hidden');
+                } else list.classList.add('hidden');
+            },
+            selectOriginNode: (id) => {
+                const node = state.data.find(d => d.id === id);
+                if(node) {
+                    document.getElementById('inp-origin-name').value = node.food_name;
+                    document.getElementById('inp-origin-country').value = node.country;
+                    document.getElementById('inp-origin-lat').value = node.lat;
+                    document.getElementById('inp-origin-lng').value = node.lng;
+                    document.getElementById('origin-suggestions').classList.add('hidden');
+                }
+            },
+            openInputModal: (mode='create') => {
+                if(state.role!=='admin') return alert('Admin Only');
+                ui.closeModal('detail-modal'); 
+                const form = {
+                    id: document.getElementById('inp-id'), name: document.getElementById('inp-name'), country: document.getElementById('inp-country'),
+                    lat: document.getElementById('inp-lat'), lng: document.getElementById('inp-lng'), desc: document.getElementById('inp-desc'), geo: document.getElementById('inp-geometry'),
+                    unesco: document.getElementById('inp-unesco'), res: document.getElementById('inp-research'),
+                    oName: document.getElementById('inp-origin-name'), oCountry: document.getElementById('inp-origin-country'),
+                    oLat: document.getElementById('inp-origin-lat'), oLng: document.getElementById('inp-origin-lng'),
+                    type: document.getElementById('inp-conn-type'), image: document.getElementById('inp-image'), youtube: document.getElementById('inp-youtube')
+                };
+
+                const btnDelete = document.getElementById('btn-delete');
+
+                if(mode==='edit' && state.currentDetail) {
+                    const d = state.currentDetail; state.editId = d.id;
+                    form.id.value = d.id; form.name.value=d.food_name; form.country.value=d.country; form.lat.value=d.lat; form.lng.value=d.lng;
+                    form.desc.value=d.description; form.geo.value=d.geometry_json||''; form.unesco.value=d.unesco_status||''; form.res.value=d.research_links||'';
+                    form.oName.value=d.origin_food_name||''; form.oCountry.value=d.origin_country||''; form.oLat.value=d.origin_lat||''; form.oLng.value=d.origin_lng||'';
+                    form.type.value = d.connection_type || 'Trade'; form.image.value = d.image_url || ''; form.youtube.value = d.youtube_url || '';
+                    document.getElementById('input-title').innerHTML = `<i class="fas fa-edit mr-2 text-[var(--opera-red)]"></i> Edit Data: ${d.id}`;
+                    btnDelete.classList.remove('hidden');
+                } else {
+                    state.editId=null; form.id.value = ''; Object.values(form).forEach(e=> { if(e.tagName) e.value='' }); 
+                    document.getElementById('input-title').innerHTML = '<i class="fas fa-plus-circle mr-2 text-[var(--opera-red)]"></i> New Entry';
+                    btnDelete.classList.add('hidden');
+                }
+                ui.openModal('input-modal');
+            },
+            pickLocation: (target) => {
+                state.pickerTarget = target; ui.closeModal('input-modal'); document.getElementById('picker-notification').classList.remove('hidden');
+                document.getElementById('picker-msg').innerText = target==='main'?'Select Location':'Select Origin';
+                mapLogic.enablePicker((lat, lng) => {
+                    if(state.pickerTarget==='main') { document.getElementById('inp-lat').value=lat.toFixed(6); document.getElementById('inp-lng').value=lng.toFixed(6); }
+                    else { document.getElementById('inp-origin-lat').value=lat.toFixed(6); document.getElementById('inp-origin-lng').value=lng.toFixed(6); }
+                    app.cancelPicker();
+                });
+            },
+            cancelPicker: () => { document.getElementById('picker-notification').classList.add('hidden'); mapLogic.disablePicker(); ui.openModal('input-modal'); },
+            saveData: () => {
+                const data = {
+                    id: state.editId || '', food_name: document.getElementById('inp-name').value, country: document.getElementById('inp-country').value,
+                    lat: parseFloat(document.getElementById('inp-lat').value), lng: parseFloat(document.getElementById('inp-lng').value),
+                    description: document.getElementById('inp-desc').value, geometry_json: document.getElementById('inp-geometry').value,
+                    unesco_status: document.getElementById('inp-unesco').value, research_links: document.getElementById('inp-research').value,
+                    image_url: document.getElementById('inp-image').value, youtube_url: document.getElementById('inp-youtube').value,
+                    origin_food_name: document.getElementById('inp-origin-name').value, origin_country: document.getElementById('inp-origin-country').value,
+                    origin_lat: document.getElementById('inp-origin-lat').value, origin_lng: document.getElementById('inp-origin-lng').value,
+                    connection_type: document.getElementById('inp-conn-type').value
+                };
+                const btn = document.getElementById('btn-save'); btn.innerText='Saving...';
+                const action = state.editId ? 'update' : 'insert';
+                
+                if(state.editId) { const idx = state.data.findIndex(x=>x.id===state.editId); if(idx!==-1) state.data[idx] = {...state.data[idx], ...data}; } 
+                else { data.id = 'TEMP'; state.data.push(data); }
+                mapLogic.render(); dashboard.render();
+
+                const form = new URLSearchParams(); form.append('action', action); form.append('data', JSON.stringify(data));
+                fetch(GAS_URL, { method: 'POST', body: form }).then(r=>r.json()).then(d => { 
+                    if(d.status==='success') { alert('Saved to Cloud!'); if(!state.editId && d.id) { state.data[state.data.length-1].id = d.id; } ui.closeModal('input-modal'); } 
+                    else alert('Error: '+d.message); 
+                }).catch(e => alert('Offline Mode: Saved locally.')).finally(()=> btn.innerText='Save Changes');
+            },
+            
+            // --- NEW: DELETE DATA ---
+            deleteData: () => {
+                if (!state.editId) return;
+                if (!confirm("Are you sure you want to DELETE this entry? This cannot be undone.")) return;
+
+                const btn = document.getElementById('btn-delete');
+                btn.innerText = 'Deleting...';
+                btn.disabled = true;
+
+                const form = new URLSearchParams();
+                form.append('action', 'delete');
+                form.append('id', state.editId);
+
+                fetch(GAS_URL, { method: 'POST', body: form })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.status === 'success') {
+                        // Remove from local state
+                        state.data = state.data.filter(item => item.id !== state.editId);
+                        
+                        mapLogic.render(); 
+                        dashboard.render();
+                        ui.closeModal('input-modal');
+                        alert("Data successfully deleted.");
+                    } else {
+                        alert("Delete Failed: " + d.message);
+                    }
+                })
+                .catch(e => alert("Network Error: Could not delete."))
+                .finally(() => {
+                    btn.innerText = 'Delete Entry';
+                    btn.disabled = false;
+                });
+            },
+
+            switchTab: (t) => {
+                document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-map').classList.add('hidden');
+                document.getElementById('view-'+t).classList.remove('hidden');
+                if(t==='map') mapLogic.resize();
+                // Lazy render for charts to ensure canvas is visible
+                if(t==='dashboard') setTimeout(() => dashboard.render(), 100);
+            },
+            exportData: () => { const csv = Papa.unparse(state.data); const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURI(csv); a.download='foodways.csv'; a.click(); }
+        };
+
+        window.addEventListener('DOMContentLoaded', app.init);
+    </script>
+</body>
+</html>
