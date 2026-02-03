@@ -17,7 +17,7 @@
     <style>
         :root {
             --opera-red: #ff1b2d;
-            --opera-dark: #000000;
+            --opera-dark: #121212;
             --opera-gray: #f5f5f5;
             --opera-text: #1a1a1a;
         }
@@ -40,6 +40,7 @@
 
         /* Leaflet & UI */
         .leaflet-container { background: #e0e0e0; }
+        
         .glass-panel {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -49,23 +50,24 @@
         }
         
         .dark-panel {
-            background: #121212;
+            background: var(--opera-dark);
             color: white;
             border-right: 1px solid #333;
         }
 
+        /* Transitions */
         .section-view { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
         .section-view.active { display: flex; opacity: 1; }
         .z-modal { z-index: 2000; }
         .z-picker { z-index: 3000; }
         .picker-mode { cursor: crosshair !important; }
         
-        /* Badges Glow */
+        /* Badges Glow - High Contrast */
         .badge-trade { background: #fffbe6; color: #b45309; border: 1px solid #fbbf24; }
         .badge-migration { background: #f0fdf4; color: #15803d; border: 1px solid #4ade80; }
         .badge-colonialism { background: #fef2f2; color: #b91c1c; border: 1px solid #f87171; }
 
-        /* Tooltip */
+        /* Tooltip - Light Mode */
         .custom-tooltip {
             background: white !important; 
             border: 2px solid var(--opera-red) !important;
@@ -91,17 +93,24 @@
             background-color: #d40012; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 27, 45, 0.4);
         }
 
+        /* Light Mode Inputs */
+        .input-light { 
+            background-color: #f9fafb; border: 1px solid #d1d5db; color: #111827; 
+        }
+        .input-light:focus { border-color: var(--opera-red); outline: none; ring: 1px ring var(--opera-red); }
+        
+        /* Dark Mode Inputs for Sidebar */
         .input-dark { background-color: #2a2a2a; border: 1px solid #444; color: white; }
         .input-dark:focus { border-color: var(--opera-red); outline: none; }
 
         /* Carousel Nav Buttons */
         .carousel-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.8); color: #000;
+            background: rgba(255, 255, 255, 0.9); color: #000;
             width: 40px; height: 40px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all 0.2s; z-index: 20;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             border: 1px solid rgba(0,0,0,0.1);
         }
         .carousel-btn:hover { background: var(--opera-red); color: white; }
@@ -140,7 +149,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-6 pt-4 border-t border-gray-700 w-full text-center text-gray-400 text-xs">
-                <div>v45.0 (Final Layout) • <span id="record-count" class="text-white font-bold">0</span> Records</div>
+                <div>v48.0 (Final Light) • <span id="record-count" class="text-white font-bold">0</span> Records</div>
                 <div class="mt-1 font-bold">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -149,7 +158,17 @@
     <!-- 2. MAIN APP -->
     <div id="main-app" class="section-view h-full w-full overflow-hidden flex-row relative text-gray-800">
         
-        <!-- SIDEBAR -->
+        <!-- PICKER NOTIFICATION -->
+        <div id="picker-notification" class="absolute top-6 left-1/2 -translate-x-1/2 z-[3000] hidden flex-col items-center w-96">
+            <div class="bg-white text-gray-800 px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 border-2 border-[var(--opera-red)] animate-pulse cursor-pointer" onclick="app.cancelPicker()">
+                <i class="fas fa-crosshairs fa-lg text-[var(--opera-red)]"></i>
+                <div class="text-sm font-bold" id="picker-msg">Select Location</div>
+                <div class="bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center text-xs text-gray-500"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="mt-2 text-[10px] text-gray-800 bg-white/80 px-3 py-1 rounded-full backdrop-blur-sm shadow-md font-bold">Click map to confirm</div>
+        </div>
+
+        <!-- SIDEBAR (DARK) -->
         <aside class="w-72 dark-panel flex flex-col justify-between z-40 shadow-2xl">
             <div>
                 <div class="h-24 flex items-center justify-between px-6 border-b border-gray-800">
@@ -189,34 +208,39 @@
             </div>
         </aside>
 
-        <!-- CONTENT -->
+        <!-- CONTENT (LIGHT) -->
         <main class="flex-1 relative overflow-hidden bg-[#f2f2f2] flex flex-col">
             
             <!-- DASHBOARD TAB -->
             <div id="view-dashboard" class="absolute inset-0 p-8 overflow-y-auto hidden">
-                <!-- ... Dashboard content same as before ... -->
                 <header class="flex justify-between items-end pb-4 border-b border-gray-300 mb-8">
                     <div>
                         <h2 class="text-4xl font-black text-gray-900 mb-1">Culinary Analytics</h2>
                         <p class="text-gray-500 text-sm">Global heritage data visualization.</p>
                     </div>
                 </header>
-                <!-- KPI -->
+
+                <!-- KPI CARDS -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
                     <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-[var(--opera-red)]">
-                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-total">0</div><div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Total Foods</div>
+                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-total">0</div>
+                        <div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Total Foods</div>
                     </div>
                     <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-blue-500">
-                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-countries">0</div><div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Countries</div>
+                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-countries">0</div>
+                        <div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Countries</div>
                     </div>
                     <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-orange-500">
-                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-edges">0</div><div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Connections</div>
+                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-edges">0</div>
+                        <div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Connections</div>
                     </div>
                      <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-green-600">
-                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-unesco">0</div><div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Heritage Listed</div>
+                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-unesco">0</div>
+                        <div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Heritage Listed</div>
                     </div>
                 </div>
-                <!-- Charts -->
+
+                <!-- CHARTS -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
                     <div class="glass-panel p-6 rounded-2xl flex flex-col min-h-[400px]">
                         <h3 class="text-sm font-bold text-gray-600 uppercase mb-4 border-b pb-2">Influencing Countries</h3>
@@ -227,11 +251,13 @@
                         <div class="relative w-full h-80 flex justify-center"><canvas id="chart-type"></canvas></div>
                     </div>
                 </div>
+
                 <div class="glass-panel p-6 rounded-2xl mb-8 min-h-[350px]">
                     <h3 class="text-sm font-bold text-gray-600 uppercase mb-4 border-b pb-2">Heritage Status Breakdown</h3>
                     <div class="relative w-full h-80"><canvas id="chart-unesco"></canvas></div>
                 </div>
-                <!-- TABLE -->
+
+                <!-- DATA TABLE -->
                 <div class="glass-panel rounded-2xl overflow-hidden">
                     <div class="p-5 bg-white border-b border-gray-200 flex flex-wrap gap-4 justify-between items-center">
                         <h3 class="font-bold text-gray-800 flex items-center"><i class="fas fa-table mr-3 text-[var(--opera-red)]"></i> Database Records</h3>
@@ -241,11 +267,26 @@
                         </div>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm"><thead class="bg-gray-100 text-gray-500 text-xs uppercase font-bold"><tr><th class="p-4">ID</th><th class="p-4">Name</th><th class="p-4">Country</th><th class="p-4">Origin</th><th class="p-4">Type</th><th class="p-4 text-right">Action</th></tr></thead><tbody id="table-body" class="divide-y divide-gray-100 bg-white"></tbody></table>
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-100 text-gray-500 text-xs uppercase font-bold">
+                                <tr>
+                                    <th class="p-4">ID</th>
+                                    <th class="p-4">Name</th>
+                                    <th class="p-4">Country</th>
+                                    <th class="p-4">Origin</th>
+                                    <th class="p-4">Type</th>
+                                    <th class="p-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-gray-100 bg-white"></tbody>
+                        </table>
                     </div>
                     <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center text-sm">
                         <span class="text-gray-500 text-xs font-mono uppercase" id="pagination-info">Showing 0-0</span>
-                        <div class="flex gap-2"><button id="btn-prev" onclick="dashboard.changePage(-1)" class="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 rounded border border-gray-300 disabled:opacity-50 text-xs transition shadow-sm">Prev</button><button id="btn-next" onclick="dashboard.changePage(1)" class="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 rounded border border-gray-300 disabled:opacity-50 text-xs transition shadow-sm">Next</button></div>
+                        <div class="flex gap-2">
+                            <button id="btn-prev" onclick="dashboard.changePage(-1)" class="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 rounded border border-gray-300 disabled:opacity-50 text-xs transition shadow-sm">Prev</button>
+                            <button id="btn-next" onclick="dashboard.changePage(1)" class="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 rounded border border-gray-300 disabled:opacity-50 text-xs transition shadow-sm">Next</button>
+                        </div>
                     </div>
                 </div>
                 <div class="h-12"></div>
@@ -260,8 +301,16 @@
                         <i class="fas fa-compress-arrows-alt text-lg"></i>
                     </button>
                 </div>
-                <!-- Search Map & Legend same as before -->
-                 <div class="absolute top-6 left-6 z-[400]">
+
+                <div class="absolute bottom-8 left-8 z-[400] glass-panel p-5 rounded-xl max-w-xs shadow-2xl bg-white/95">
+                    <div class="font-bold text-gray-800 uppercase mb-3 text-[10px] tracking-wider border-b pb-1">Map Legend</div>
+                    <div class="flex items-center gap-3 mb-2"><span class="w-3 h-3 rounded-full bg-[var(--opera-red)] border border-white shadow"></span> <span class="text-xs text-gray-600 font-bold">Local Food</span></div>
+                    <div class="flex items-center gap-3 mb-2"><span class="w-3 h-3 rounded-full bg-orange-400 border border-white shadow"></span> <span class="text-xs text-gray-600 font-bold">Origin Source</span></div>
+                    <div class="flex items-center gap-3"><span class="w-8 h-0 border-t-2 border-dashed border-gray-400"></span> <span class="text-xs text-gray-500">History Path</span></div>
+                </div>
+
+                <!-- Map Search -->
+                <div class="absolute top-6 left-6 z-[400]">
                     <div class="relative shadow-2xl">
                         <input type="text" id="map-search" placeholder="Search Map..." class="bg-white border-none text-gray-800 rounded-xl px-5 py-3 text-sm w-72 shadow-lg focus:ring-2 focus:ring-[var(--opera-red)] outline-none" oninput="app.updateMapFilter(this.value)">
                         <i class="fas fa-search absolute right-4 top-3.5 text-gray-400"></i>
@@ -271,8 +320,9 @@
         </main>
     </div>
 
-    <!-- MODALS (Help, Login, Input same as before) -->
-     <!-- HELP MODAL -->
+    <!-- MODALS -->
+
+    <!-- HELP MODAL -->
     <div id="help-modal" class="fixed inset-0 z-[2500] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
             <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
@@ -308,88 +358,99 @@
     
     <!-- LOGIN -->
     <div id="login-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-        <div class="bg-[#1a1a1a] w-96 p-8 rounded-2xl border border-gray-800 shadow-2xl text-white">
-            <h3 class="text-2xl font-bold mb-6 text-center">Admin Access</h3>
-            <input type="text" id="login-user" placeholder="Username" class="input-dark w-full rounded-lg p-3 mb-4 text-sm">
-            <input type="password" id="login-pass" placeholder="Password" class="input-dark w-full rounded-lg p-3 mb-6 text-sm">
+        <div class="bg-white w-96 p-8 rounded-2xl border border-gray-300 shadow-2xl text-gray-800">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900">Admin Access</h3>
+            <input type="text" id="login-user" placeholder="Username" class="input-light w-full rounded-lg p-3 mb-4 text-sm">
+            <input type="password" id="login-pass" placeholder="Password" class="input-light w-full rounded-lg p-3 mb-6 text-sm">
             <button onclick="app.login()" id="btn-login" class="w-full btn-opera py-3 rounded-lg font-bold shadow-lg">Login</button>
-            <button onclick="ui.closeModal('login-modal')" class="w-full mt-4 text-gray-500 text-xs hover:text-white transition">Cancel</button>
+            <button onclick="ui.closeModal('login-modal')" class="w-full mt-4 text-gray-500 text-xs hover:text-gray-900 transition">Cancel</button>
         </div>
     </div>
-    
-     <!-- INPUT -->
+
+    <!-- INPUT -->
     <div id="input-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-        <div class="bg-[#1a1a1a] w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col relative text-white border border-gray-800 shadow-2xl">
-            <div class="p-6 border-b border-gray-800 flex justify-between items-center bg-[#222] rounded-t-2xl">
+        <div class="bg-white w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col relative text-gray-800 border border-gray-300 shadow-2xl">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl">
                 <h3 id="input-title" class="text-lg font-bold flex items-center gap-2"><i class="fas fa-edit text-[var(--opera-red)]"></i> Manage Data</h3>
-                <button onclick="ui.closeModal('input-modal')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                <button onclick="ui.closeModal('input-modal')" class="text-gray-500 hover:text-black"><i class="fas fa-times text-xl"></i></button>
             </div>
             
             <div class="p-8 overflow-y-auto custom-scrollbar space-y-6 flex-1">
                 <input type="hidden" id="inp-id">
                 <div class="grid grid-cols-2 gap-6">
-                    <div><label class="text-xs text-gray-500 font-bold block mb-1">Food Name</label><input type="text" id="inp-name" class="input-dark w-full rounded-lg p-3"></div>
-                    <div><label class="text-xs text-gray-500 font-bold block mb-1">Country</label><input type="text" id="inp-country" class="input-dark w-full rounded-lg p-3"></div>
+                    <div><label class="text-xs text-gray-500 font-bold block mb-1">Food Name</label><input type="text" id="inp-name" class="input-light w-full rounded-lg p-3"></div>
+                    <div><label class="text-xs text-gray-500 font-bold block mb-1">Country</label><input type="text" id="inp-country" class="input-light w-full rounded-lg p-3"></div>
                 </div>
                 
-                <div class="bg-[#222] p-6 rounded-xl border border-gray-700">
+                <div class="bg-gray-100 p-6 rounded-xl border border-gray-200">
                     <div class="flex justify-between items-center mb-4">
                         <label class="text-sm text-[var(--opera-red)] font-bold">Main Location</label>
                         <div class="flex gap-2">
-                            <button onclick="app.pickLocation('main')" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded transition">Pick Point</button>
-                            <button onclick="geoEditor.start()" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded transition">Draw Area</button>
+                            <button onclick="app.pickLocation('main')" class="text-xs bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded transition">Pick Point</button>
+                            <button onclick="geoEditor.start()" class="text-xs bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded transition">Draw Area</button>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 mb-4">
-                        <input type="text" id="inp-lat" placeholder="Lat" class="input-dark w-full rounded-lg p-3 text-sm">
-                        <input type="text" id="inp-lng" placeholder="Lng" class="input-dark w-full rounded-lg p-3 text-sm">
+                        <input type="text" id="inp-lat" placeholder="Lat" class="input-light w-full rounded-lg p-3 text-sm">
+                        <input type="text" id="inp-lng" placeholder="Lng" class="input-light w-full rounded-lg p-3 text-sm">
                     </div>
-                    <textarea id="inp-geometry" rows="2" class="input-dark w-full rounded-lg p-3 text-xs font-mono text-gray-400" placeholder="Geometry JSON (Auto-filled)" readonly></textarea>
+                    <textarea id="inp-geometry" rows="2" class="input-light w-full rounded-lg p-3 text-xs font-mono text-gray-400" placeholder="Geometry JSON (Auto-filled)" readonly></textarea>
                 </div>
 
-                <div><label class="text-xs text-gray-500 font-bold block mb-1">Description</label><textarea id="inp-desc" rows="3" class="input-dark w-full rounded-lg p-3"></textarea></div>
+                <div><label class="text-xs text-gray-500 font-bold block mb-1">Description</label><textarea id="inp-desc" rows="3" class="input-light w-full rounded-lg p-3"></textarea></div>
 
                 <div class="grid grid-cols-2 gap-6">
-                     <div><label class="text-xs text-gray-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="input-dark w-full rounded-lg p-3"></div>
-                     <div><label class="text-xs text-gray-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="input-dark w-full rounded-lg p-3"></div>
+                     <div><label class="text-xs text-gray-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="input-light w-full rounded-lg p-3"></div>
+                     <div><label class="text-xs text-gray-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="input-light w-full rounded-lg p-3"></div>
                 </div>
                 
-                <div class="grid grid-cols-1 gap-2">
-                     <div><label class="text-xs text-gray-500 font-bold block mb-1">Image URLs (Comma separated)</label><input type="text" id="inp-image" class="input-dark w-full rounded-lg p-3" placeholder="https://image1.jpg, https://image2.jpg"></div>
-                     <div><label class="text-xs text-gray-500 font-bold block mb-1">YouTube URLs (Comma separated)</label><input type="text" id="inp-youtube" class="input-dark w-full rounded-lg p-3" placeholder="https://youtube.com/v1, https://youtube.com/v2"></div>
+                <div class="grid grid-cols-1 gap-4">
+                     <div><label class="text-xs text-gray-500 font-bold block mb-1">Image URLs (Comma separated)</label><input type="text" id="inp-image" class="input-light w-full rounded-lg p-3" placeholder="https://img1.jpg, https://img2.jpg"></div>
+                     <div><label class="text-xs text-gray-500 font-bold block mb-1">YouTube URLs (Comma separated)</label><input type="text" id="inp-youtube" class="input-light w-full rounded-lg p-3" placeholder="https://youtube.com/v1, https://youtube.com/v2"></div>
                 </div>
                 
-                <div class="bg-[#222] p-6 rounded-xl border border-gray-700">
+                <div class="bg-gray-100 p-6 rounded-xl border border-gray-200">
                     <div class="flex justify-between items-center mb-4">
-                        <label class="text-sm text-orange-400 font-bold">Influence Source</label>
-                        <button onclick="app.pickLocation('origin')" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded transition">Pick Origin</button>
+                        <label class="text-sm text-orange-500 font-bold">Influence Source</label>
+                        <button onclick="app.pickLocation('origin')" class="text-xs bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded transition">Pick Origin</button>
                     </div>
                     <div class="relative mb-4">
-                         <input type="text" id="inp-origin-name" placeholder="Origin Food Name (Type to search)" class="input-dark w-full rounded-lg p-3 text-sm" oninput="app.handleOriginSearch(this.value)">
-                         <div id="origin-suggestions" class="hidden absolute top-full left-0 w-full bg-[#333] border border-gray-600 rounded-b-lg z-50 max-h-40 overflow-y-auto shadow-xl"></div>
+                         <input type="text" id="inp-origin-name" placeholder="Origin Food Name (Type to search)" class="input-light w-full rounded-lg p-3 text-sm" oninput="app.handleOriginSearch(this.value)">
+                         <div id="origin-suggestions" class="hidden absolute top-full left-0 w-full bg-white border border-gray-300 rounded-b-lg z-50 max-h-40 overflow-y-auto shadow-xl"></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 mb-4"><input type="text" id="inp-origin-country" placeholder="Country" class="input-dark w-full rounded-lg p-3 text-sm"></div>
-                    <div class="grid grid-cols-2 gap-4"><input type="text" id="inp-origin-lat" placeholder="Lat" class="input-dark w-full rounded-lg p-3 text-sm"><input type="text" id="inp-origin-lng" placeholder="Lng" class="input-dark w-full rounded-lg p-3 text-sm"></div>
-                    <div class="mt-4"><label class="text-xs text-gray-500 font-bold block mb-1">Connection Type</label><select id="inp-conn-type" class="input-dark w-full rounded-lg p-3"><option value="Trade">Trade</option><option value="Migration">Migration</option><option value="Colonialism">Colonialism</option></select></div>
+                    <div class="grid grid-cols-2 gap-4 mb-4"><input type="text" id="inp-origin-country" placeholder="Country" class="input-light w-full rounded-lg p-3 text-sm"></div>
+                    <div class="grid grid-cols-2 gap-4"><input type="text" id="inp-origin-lat" placeholder="Lat" class="input-light w-full rounded-lg p-3 text-sm"><input type="text" id="inp-origin-lng" placeholder="Lng" class="input-light w-full rounded-lg p-3 text-sm"></div>
+                    <div class="mt-4"><label class="text-xs text-gray-500 font-bold block mb-1">Connection Type</label><select id="inp-conn-type" class="input-light w-full rounded-lg p-3"><option value="Trade">Trade</option><option value="Migration">Migration</option><option value="Colonialism">Colonialism</option></select></div>
                 </div>
             </div>
             
-            <div class="p-6 border-t border-gray-800 bg-[#222] rounded-b-2xl flex justify-between items-center">
-                <button id="btn-delete" onclick="app.deleteData()" class="hidden px-4 py-2 bg-red-900/30 text-red-400 hover:text-white rounded-lg text-xs font-bold border border-red-900 hover:bg-red-900/50 transition">Delete</button>
+            <div class="p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-between items-center">
+                <button id="btn-delete" onclick="app.deleteData()" class="hidden px-4 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg text-xs font-bold border border-red-200 transition">Delete</button>
                 <div class="flex gap-3 ml-auto">
-                    <button onclick="ui.closeModal('input-modal')" class="px-6 py-2 text-gray-400 hover:text-white font-bold transition text-sm">Cancel</button>
+                    <button onclick="ui.closeModal('input-modal')" class="px-6 py-2 text-gray-500 hover:text-black font-bold transition text-sm">Cancel</button>
                     <button onclick="app.saveData()" id="btn-save" class="px-8 py-2 btn-opera rounded-lg font-bold shadow-lg transition text-sm">Save Changes</button>
                 </div>
             </div>
         </div>
     </div>
 
-
-    <!-- DETAIL MODAL - IMPROVED LAYOUT -->
+    <!-- DETAIL -->
     <div id="detail-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl flex flex-col relative overflow-hidden text-gray-800">
             <button onclick="ui.closeModal('detail-modal')" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/10 hover:bg-red-500 hover:text-white text-black rounded-full transition flex items-center justify-center"><i class="fas fa-times"></i></button>
             <div id="detail-content" class="overflow-y-auto h-full p-8 custom-scrollbar"></div>
+        </div>
+    </div>
+
+    <!-- GEO EDITOR -->
+    <div id="geo-editor" class="fixed inset-0 z-picker hidden bg-black/90">
+        <div id="geo-map" class="w-full h-full"></div>
+        <div class="geo-controls absolute top-6 left-1/2 -translate-x-1/2 z-[3100] flex gap-4">
+            <div class="bg-white text-black px-6 py-3 rounded-full shadow-2xl flex items-center gap-4">
+                <span class="text-xs font-bold text-purple-600">DRAWING MODE</span>
+                <button onclick="geoEditor.finish()" class="bg-green-600 px-4 py-1 rounded-full text-xs text-white font-bold hover:bg-green-700">Save</button>
+                <button onclick="geoEditor.cancel()" class="text-gray-500 hover:text-black text-xs">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -398,6 +459,7 @@
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
         const state = { data: [], role: 'guest', editId: null, pickerTarget: null, currentDetail: null, filter: { search: '' }, pagination: { page: 1, limit: 10 } };
 
+        // --- ROBUST PARSER ---
         function robustParse(val) {
             if (!val) return null;
             let str = String(val).trim();
@@ -419,52 +481,53 @@
             return `<span class="px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-bold border border-gray-300">${type}</span>`;
         };
 
+        // Updated Video Carousel with Navigation
         function extractYoutubeEmbeds(urlStr) {
             if (!urlStr) return '';
             const urls = urlStr.split(',').map(u => u.trim()).filter(u => u);
-            let html = '<div class="flex overflow-x-auto gap-4 pb-4 snap-x no-scrollbar">'; // Carousel Container
-            let hasVideo = false;
+            if(urls.length === 0) return '';
+            const cid = "vid-car-" + Math.floor(Math.random() * 10000);
             
-            urls.forEach(url => {
-                 let id = null;
-                 let embedSrc = '';
-                 if (url.includes('iframe')) { 
-                    const cleanUrl = url.match(/src="([^"]+)"/);
-                    if(cleanUrl && cleanUrl[1]) embedSrc = cleanUrl[1];
-                 } else if(url.includes('v=')) {
-                    id = url.split('v=')[1].split('&')[0];
-                    embedSrc = `https://www.youtube.com/embed/${id}?origin=${window.location.origin}`;
-                 } else if(url.includes('youtu.be/')) {
-                    id = url.split('youtu.be/')[1];
-                    embedSrc = `https://www.youtube.com/embed/${id}?origin=${window.location.origin}`;
-                 }
-                 
-                 if(embedSrc) {
-                     hasVideo = true;
-                     html += `
-                        <div class="snap-center shrink-0 w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-black relative">
-                             <iframe width="100%" height="100%" src="${embedSrc}" frameborder="0" allowfullscreen></iframe>
-                        </div>
-                     `;
-                 }
-            });
-            html += '</div>';
-            return hasVideo ? html : '<div class="h-24 flex items-center justify-center text-gray-400 text-xs bg-gray-100 rounded-xl">No Video Available</div>';
+            return `
+                <div class="relative group">
+                    <div onclick="scrollCarousel('${cid}', -1)" class="carousel-btn prev hover:scale-110"><i class="fas fa-chevron-left"></i></div>
+                    <div id="${cid}" class="flex overflow-x-auto gap-4 pb-4 snap-x no-scrollbar scroll-smooth">
+                        ${urls.map(url => {
+                             let id = null;
+                             let embedSrc = '';
+                             if (url.includes('iframe')) { 
+                                const cleanUrl = url.match(/src="([^"]+)"/);
+                                if(cleanUrl && cleanUrl[1]) embedSrc = cleanUrl[1];
+                             } else if(url.includes('v=')) {
+                                id = url.split('v=')[1].split('&')[0];
+                                embedSrc = `https://www.youtube.com/embed/${id}?origin=${window.location.origin}`;
+                             } else if(url.includes('youtu.be/')) {
+                                id = url.split('youtu.be/')[1];
+                                embedSrc = `https://www.youtube.com/embed/${id}?origin=${window.location.origin}`;
+                             }
+                             return embedSrc ? `
+                                <div class="snap-center shrink-0 w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-black relative">
+                                     <iframe width="100%" height="100%" src="${embedSrc}" frameborder="0" allowfullscreen></iframe>
+                                </div>` : '';
+                        }).join('')}
+                    </div>
+                    <div onclick="scrollCarousel('${cid}', 1)" class="carousel-btn next hover:scale-110"><i class="fas fa-chevron-right"></i></div>
+                </div>
+             `;
         }
 
-        // CAROUSEL LOGIC
         function extractImages(urlStr) {
              if(!urlStr) return '';
              const urls = urlStr.split(',').map(u => u.trim()).filter(u => u);
              if(urls.length === 0) return '';
-             const cid = "car-" + Math.floor(Math.random() * 10000);
+             const cid = "img-car-" + Math.floor(Math.random() * 10000);
              
              return `
                 <div class="relative group">
                     <div onclick="scrollCarousel('${cid}', -1)" class="carousel-btn prev hover:scale-110"><i class="fas fa-chevron-left"></i></div>
                     <div id="${cid}" class="flex overflow-x-auto gap-4 pb-4 snap-x no-scrollbar scroll-smooth">
                         ${urls.map(u => `
-                            <div class="snap-center shrink-0 w-full sm:w-80 h-64 rounded-xl overflow-hidden shadow-md border border-gray-200 relative bg-gray-100">
+                            <div class="snap-center shrink-0 w-full sm:w-96 h-64 rounded-xl overflow-hidden shadow-md border border-gray-200 relative bg-gray-100">
                                 <img src="${u}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=No+Image'">
                             </div>
                         `).join('')}
@@ -474,10 +537,13 @@
              `;
         }
 
+        // Shared Scroll Function
         function scrollCarousel(id, direction) {
             const container = document.getElementById(id);
             if(container) {
-                const scrollAmount = 320; // Width of image + gap
+                // Determine scroll amount based on first child width or default
+                const item = container.firstElementChild;
+                const scrollAmount = item ? item.offsetWidth + 16 : 300; 
                 container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
             }
         }
@@ -504,9 +570,6 @@
             };
         }
 
-        // ... [UI, MapLogic, Dashboard, GeoEditor, App code same as previous v44 - No logic changes, just layout in showDetail] ...
-        
-        // --- UI MODULE ---
         const ui = {
             renderAuth: () => {
                 const sGuest = document.getElementById('status-guest');
@@ -538,8 +601,8 @@
             },
             updateServerStatus: (s, m) => {
                 const el = document.getElementById('admin-server-status'), dot = document.getElementById('server-dot'), txt = document.getElementById('server-text');
-                if (s) { dot.className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"; txt.className="text-xs text-emerald-400 font-bold"; txt.textContent = m; }
-                else { dot.className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_red]"; txt.className="text-xs text-red-400 font-bold"; txt.textContent = m; }
+                if (s) { dot.className="w-2 h-2 rounded-full bg-emerald-500"; txt.className="text-xs text-emerald-600 font-bold"; txt.textContent = m; }
+                else { dot.className="w-2 h-2 rounded-full bg-red-500"; txt.className="text-xs text-red-500 font-bold"; txt.textContent = m; }
             },
             openModal: (id) => document.getElementById(id).classList.remove('hidden'),
             closeModal: (id) => document.getElementById(id).classList.add('hidden'),
@@ -552,6 +615,7 @@
         const mapLogic = {
             map: null, layers: [], lines: [], markers: [],
             init: () => {
+                // FIXED: Light Mode Tiles
                 mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false, maxBounds: [[-90, -180], [90, 180]], maxBoundsViscosity: 1.0, minZoom: 2 }).setView([20, 0], 2);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, noWrap: true, bounds: [[-90, -180], [90, 180]] }).addTo(mapLogic.map);
                 L.control.zoom({ position: 'topright' }).addTo(mapLogic.map);
@@ -589,8 +653,8 @@
                     
                     if (d.origin_lat && d.origin_lng) {
                         const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], { 
-                            color: '#ff1b2d', 
-                            weight: 1.5, opacity: 0.4, dashArray: '4, 8' 
+                            color: '#ff1b2d', // Opera Red
+                            weight: 1.5, opacity: 0.4, dashArray: '4, 8', className: 'leaflet-interactive' 
                         }).addTo(mapLogic.map);
                         
                          line.on('mouseover', function() {
@@ -604,6 +668,7 @@
                         });
 
                         mapLogic.lines.push(line);
+                        mapLogic.layers.push(line);
                         
                         const isBlueNode = state.data.some(n => Math.abs(n.lat - d.origin_lat) < 0.001 && Math.abs(n.lng - d.origin_lng) < 0.001);
                         if (!isBlueNode) {
@@ -611,7 +676,6 @@
                             origin.bindTooltip(`Origin: ${d.origin_food_name}`, { direction: 'top', className: 'custom-tooltip' });
                             mapLogic.markers.push(origin); mapLogic.layers.push(origin);
                         }
-                        mapLogic.layers.push(line);
                     }
                     const m = L.circleMarker([d.lat, d.lng], { color: '#ff1b2d', fillColor: '#ff1b2d', fillOpacity: 0.8, radius: 6 }).addTo(mapLogic.map);
                     m.on('click', () => dashboard.showDetail(d));
@@ -654,7 +718,7 @@
                 setTimeout(()=>geoEditor.map.invalidateSize(), 200);
             },
             addPoint: (latlng) => {
-                const m = L.marker(latlng, { draggable: true, icon: L.divIcon({ className: 'geo-marker-icon' }) }).addTo(geoEditor.map);
+                const m = L.marker(latlng, { draggable: true, icon: L.divIcon({ className: 'geo-marker-icon', iconSize: [12,12] }) }).addTo(geoEditor.map);
                 m.on('drag', () => geoEditor.updatePoly());
                 geoEditor.markers.push(m);
                 geoEditor.updatePoly();
@@ -718,7 +782,7 @@
 
                 if(dashboard.chartUnesco) dashboard.chartUnesco.destroy();
                 dashboard.chartUnesco = new Chart(ctx3, { 
-                    type: 'bar', indexAxis: 'y', data: { labels: Object.keys(u), datasets: [{ label: 'Count', data: Object.values(u), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#9ca3af'], borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' } }, y: { grid: { display: false } } } } 
+                    type: 'bar', indexAxis: 'y', data: { labels: Object.keys(u), datasets: [{ label: 'Count', data: Object.values(u), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#9ca3af'], borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
                 });
             },
             changePage: (step) => {
@@ -899,7 +963,7 @@
                 if(val.length < 2) { list.classList.add('hidden'); return; }
                 const matches = state.data.filter(d => d.food_name.toLowerCase().includes(val.toLowerCase())).slice(0, 5);
                 if(matches.length > 0) {
-                    list.innerHTML = matches.map(m => `<div class="p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="text-[var(--opera-red)]">Link</span></div>`).join('');
+                    list.innerHTML = matches.map(m => `<div class="p-2 hover:bg-gray-100 cursor-pointer text-xs" onclick="app.selectOriginNode('${m.id}')">${m.food_name} (${m.country}) <span class="text-[var(--opera-red)]">Link</span></div>`).join('');
                     list.classList.remove('hidden');
                 } else list.classList.add('hidden');
             },
@@ -924,9 +988,7 @@
                     oLat: document.getElementById('inp-origin-lat'), oLng: document.getElementById('inp-origin-lng'),
                     type: document.getElementById('inp-conn-type'), image: document.getElementById('inp-image'), youtube: document.getElementById('inp-youtube')
                 };
-
                 const btnDelete = document.getElementById('btn-delete');
-
                 if(mode==='edit' && state.currentDetail) {
                     const d = state.currentDetail; state.editId = d.id;
                     form.id.value = d.id; form.name.value=d.food_name; form.country.value=d.country; form.lat.value=d.lat; form.lng.value=d.lng;
@@ -937,7 +999,7 @@
                     btnDelete.classList.remove('hidden');
                 } else {
                     state.editId=null; form.id.value = ''; Object.values(form).forEach(e=> { if(e.tagName) e.value='' }); 
-                    document.getElementById('input-title').innerHTML = '<i class="fas fa-plus-circle mr-2 text-[var(--opera-red)]"></i> New Entry';
+                    document.getElementById('input-title').innerText = 'New Data Entry';
                     btnDelete.classList.add('hidden');
                 }
                 ui.openModal('input-modal');
@@ -976,42 +1038,18 @@
                     else alert('Error: '+d.message); 
                 }).catch(e => alert('Offline Mode: Saved locally.')).finally(()=> btn.innerText='Save Changes');
             },
-            
-            // --- NEW: DELETE DATA ---
             deleteData: () => {
                 if (!state.editId) return;
                 if (!confirm("Are you sure you want to DELETE this entry? This cannot be undone.")) return;
-
-                const btn = document.getElementById('btn-delete');
-                btn.innerText = 'Deleting...';
-                btn.disabled = true;
-
-                const form = new URLSearchParams();
-                form.append('action', 'delete');
-                form.append('id', state.editId);
-
-                fetch(GAS_URL, { method: 'POST', body: form })
-                .then(r => r.json())
-                .then(d => {
+                const btn = document.getElementById('btn-delete'); btn.innerText = 'Deleting...'; btn.disabled = true;
+                const form = new URLSearchParams(); form.append('action', 'delete'); form.append('id', state.editId);
+                fetch(GAS_URL, { method: 'POST', body: form }).then(r => r.json()).then(d => {
                     if (d.status === 'success') {
-                        // Remove from local state
                         state.data = state.data.filter(item => item.id !== state.editId);
-                        
-                        mapLogic.render(); 
-                        dashboard.render();
-                        ui.closeModal('input-modal');
-                        alert("Data successfully deleted.");
-                    } else {
-                        alert("Delete Failed: " + d.message);
-                    }
-                })
-                .catch(e => alert("Network Error: Could not delete."))
-                .finally(() => {
-                    btn.innerText = 'Delete Entry';
-                    btn.disabled = false;
-                });
+                        mapLogic.render(); dashboard.render(); ui.closeModal('input-modal'); alert("Data successfully deleted.");
+                    } else { alert("Delete Failed: " + d.message); }
+                }).catch(e => alert("Network Error: Could not delete.")).finally(() => { btn.innerText = 'Delete'; btn.disabled = false; });
             },
-
             switchTab: (t) => {
                 document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-map').classList.add('hidden');
                 document.getElementById('view-'+t).classList.remove('hidden');
