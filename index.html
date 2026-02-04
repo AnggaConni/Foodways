@@ -363,13 +363,13 @@
     <div id="help-modal" class="fixed inset-0 z-[2500] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
             <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-lg text-gray-800"><i class="fas fa-book-reader mr-2 text-[var(--opera-red)]"></i> Panduan / Guide</h3>
+                <h3 class="font-bold text-lg text-gray-800"><i class="fas fa-book-reader mr-2 text-[var(--opera-red)]"></i> User Guide</h3>
                 <button onclick="ui.closeModal('help-modal')" class="text-gray-400 hover:text-black"><i class="fas fa-times"></i></button>
             </div>
             <div class="p-6 overflow-y-auto">
                 <div class="grid grid-cols-2 gap-8">
                     <div>
-                        <h4 class="font-bold text-[var(--opera-red)] mb-2 border-b pb-1">🇮🇩 Bahasa Indonesia</h4>
+                        <h4 class="font-bold text-[var(--opera-red)] mb-2 border-b pb-1">🇮🇩 Indonesian</h4>
                         <ul class="text-sm space-y-2 text-gray-600 list-disc ml-4">
                             <li><strong>Dashboard:</strong> Statistik penyebaran makanan.</li>
                             <li><strong>Peta Global:</strong> Geser peta. Garis = jalur sejarah.</li>
@@ -379,7 +379,7 @@
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-bold text-blue-600 mb-2 border-b pb-1">🇺🇸 English</h4>
+                        <h4 class="font-bold text-blue-600 mb-2 border-b pb-1">🇺🇸 English (US)</h4>
                         <ul class="text-sm space-y-2 text-gray-600 list-disc ml-4">
                             <li><strong>Dashboard:</strong> Global food stats.</li>
                             <li><strong>Global Map:</strong> Lines show history path.</li>
@@ -995,7 +995,7 @@
                         
                         <!-- TABS -->
                         <div class="flex gap-6 border-b border-gray-200 mt-4">
-                            <button onclick="ui.switchModalTab('overview')" id="tab-btn-overview" class="tab-btn active">Ringkasan / Overview</button>
+                            <button onclick="ui.switchModalTab('overview')" id="tab-btn-overview" class="tab-btn active">Overview</button>
                             <button onclick="ui.switchModalTab('multimedia')" id="tab-btn-multimedia" class="tab-btn">Multimedia & Data</button>
                         </div>
                     </div>
@@ -1187,8 +1187,14 @@
                 ui.openModal('input-modal');
             },
             pickLocation: (target) => {
-                state.pickerTarget = target; ui.closeModal('input-modal'); document.getElementById('picker-notification').classList.remove('hidden');
+                // --- FIX: Switch ke Tab Map otomatis saat Pick Point diklik ---
+                app.switchTab('map'); 
+                
+                state.pickerTarget = target; 
+                ui.closeModal('input-modal'); 
+                document.getElementById('picker-notification').classList.remove('hidden');
                 document.getElementById('picker-msg').innerText = target==='main'?'Select Location':'Select Origin';
+                
                 mapLogic.enablePicker((lat, lng) => {
                     if(state.pickerTarget==='main') { document.getElementById('inp-lat').value=lat.toFixed(6); document.getElementById('inp-lng').value=lng.toFixed(6); }
                     else { document.getElementById('inp-origin-lat').value=lat.toFixed(6); document.getElementById('inp-origin-lng').value=lng.toFixed(6); }
