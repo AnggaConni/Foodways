@@ -539,7 +539,7 @@
             const cid = "vid-car-" + Math.floor(Math.random() * 10000);
 
             return `
-               <div class="relative group w-full mb-6">
+                <div class="relative group w-full mb-6">
                     <div onclick="scrollCarousel('${cid}', -1)" class="carousel-btn prev hover:scale-110"><i class="fas fa-chevron-left"></i></div>
                     <div id="${cid}" class="flex overflow-x-auto gap-4 pb-4 snap-x no-scrollbar scroll-smooth">
                         ${urls.map(url => {
@@ -671,16 +671,31 @@
                 document.getElementById(`tab-content-${tabName}`).classList.add('active');
 
                 // If map tab, resize leaflet
-                if(tabName === 'multimedia' && state.currentDetail?.geometry_json) {
-                    setTimeout(() => {
-                        // Re-trigger map resize if needed
+                if(tabName === 'multimedia') {
+                     // Resize Geo Map
+                     setTimeout(() => {
                         const mapDiv = document.getElementById('detail-geo-map');
                         if (mapDiv && mapDiv._leaflet_map) {
                            mapDiv._leaflet_map.invalidateSize();
-                           // Re-fit bounds
                            try {
                                const pts = JSON.parse(state.currentDetail.geometry_json);
                                if(pts) mapDiv._leaflet_map.fitBounds(pts);
+                           } catch(e){}
+                        }
+                    }, 200);
+
+                    // Resize Conn Map (New)
+                    setTimeout(() => {
+                        const mapDiv2 = document.getElementById('detail-conn-map');
+                        if (mapDiv2 && mapDiv2._leaflet_map) {
+                           mapDiv2._leaflet_map.invalidateSize();
+                           // Re-fit lines
+                           try {
+                                const d = state.currentDetail;
+                                if(d.origin_lat && d.origin_lng) {
+                                    const bounds = L.latLngBounds([[d.lat, d.lng], [d.origin_lat, d.origin_lng]]);
+                                    mapDiv2._leaflet_map.fitBounds(bounds, {padding:[50,50]});
+                                }
                            } catch(e){}
                         }
                     }, 200);
@@ -1058,16 +1073,24 @@
                                 ${videos || '<div class="text-sm text-gray-400 italic">No videos linked.</div>'}
                             </div>
 
-                            <!-- MINI MAP -->
+                            <!-- MINI MAP (PETA PERSEBARAN) -->
                             <div class="mb-8">
-                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center"><i class="fas fa-map mr-2 text-blue-600"></i> Geographic Context</h3>
+                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center"><i class="fas fa-map mr-2 text-blue-600"></i> Peta Persebaran</h3>
                                 ${d.geometry_json ? `<div id="detail-geo-map" class="h-64 w-full bg-gray-200 rounded-xl border border-gray-300 shadow-inner"></div>` : '<div class="h-32 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300">No geographic polygon data.</div>'}
+                            </div>
+
+                            <!-- CONNECTED MAP (PETA TERHUBUNG) - NEW -->
+                            <div class="mb-8">
+                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center"><i class="fas fa-route mr-2 text-orange-600"></i> Peta Hubungan Sejarah</h3>
+                                ${d.origin_lat && d.origin_lng ? 
+                                `<div id="detail-conn-map" class="h-64 w-full bg-gray-200 rounded-xl border border-gray-300 shadow-inner"></div>` 
+                                : '<div class="h-32 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300">Data asal usul tidak lengkap (Origin Lat/Lng Missing).</div>'}
                             </div>
 
                             <!-- LINKS -->
                             ${d.research_links ? `
                             <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                                <h3 class="text-xs font-bold text-blue-800 uppercase mb-3 flex items-center"><i class="fas fa-graduation-cap mr-2"></i> Academic Sources</h3>
+                                <h3 class="text-xs font-bold text-blue-800 uppercase mb-3 flex items-center"><i class="fas fa-graduation-cap mr-2"></i> Academic Sources (Riset)</h3>
                                 <div class="flex flex-col gap-2 text-sm text-blue-700">
                                     ${d.research_links.split(',').map(l => `<a href="${l.trim()}" target="_blank" class="hover:underline flex items-center gap-2"><i class="fas fa-external-link-alt text-xs opacity-50"></i> ${l.trim()}</a>`).join('')}
                                 </div>
@@ -1077,21 +1100,8 @@
                     </div>
                 `;
 
-                // Init Map if needed (Lazy init when tab is clicked, but pre-load DOM)
-                if(d.geometry_json) {
-                    setTimeout(() => {
-                        const gMap = L.map('detail-geo-map', {zoomControl:false}).setView([d.lat, d.lng], 6);
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(gMap);
-                        // Store map instance for resizing later
-                        document.getElementById('detail-geo-map')._leaflet_map = gMap;
-                        
-                        try { 
-                            const pts = JSON.parse(d.geometry_json); 
-                            L.polygon(pts, {color:'#ff1b2d', fillOpacity:0.2}).addTo(gMap); 
-                            gMap.fitBounds(pts); 
-                        } catch(e){}
-                    }, 500);
-                }
+                // Init Maps if needed (Lazy init when tab is clicked, but pre-load DOM)
+                // We define the map init logic inside switchModalTab to handle visibility issues
             }
         };
 
@@ -1214,6 +1224,13 @@
                     connection_type: document.getElementById('inp-conn-type').value
                 };
                 
+                // --- SAFETY LOCK: INSERT ORIGINAL DATA FOR VERIFICATION ON UPDATE ---
+                if (state.editId && state.currentDetail) {
+                    data.original_lat = state.currentDetail.lat;
+                    data.original_lng = state.currentDetail.lng;
+                    data.original_name = state.currentDetail.food_name;
+                }
+
                 ui.toggleLoader(true); // SHOW LOADER
                 
                 const action = state.editId ? 'update' : 'insert';
@@ -1254,13 +1271,18 @@
                 
                 ui.toggleLoader(true); // SHOW LOADER
                 
-                // --- UPDATE: Kirim DATA NAMA untuk Trace Logika di Server ---
-                const dataPayload = JSON.stringify({ food_name: state.currentDetail.food_name });
+                // --- SAFETY UPDATE: Send Original Lat/Lng/Name to Server for Strict Verification ---
+                // Server should delete WHERE id=id AND lat=lat AND lng=lng
+                const dataPayload = JSON.stringify({ 
+                    food_name: state.currentDetail.food_name,
+                    lat: state.currentDetail.lat,
+                    lng: state.currentDetail.lng
+                });
 
                 const form = new URLSearchParams(); 
                 form.append('action', 'delete'); 
                 form.append('id', state.editId);
-                form.append('data', dataPayload); // Kirim Nama agar server bisa trace by name
+                form.append('data', dataPayload); 
 
                 fetch(GAS_URL, { method: 'POST', body: form }).then(r => r.json()).then(d => {
                     if (d.status === 'success') {
