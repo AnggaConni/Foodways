@@ -1245,12 +1245,15 @@
             saveData: () => {
                 const data = {
                     id: state.editId || '', food_name: document.getElementById('inp-name').value, country: document.getElementById('inp-country').value,
-                    lat: parseFloat(document.getElementById('inp-lat').value), lng: parseFloat(document.getElementById('inp-lng').value),
+                    // --- PATCH: Robust parsing for comma-separated floats (e.g. Indonesian locale) ---
+                    lat: parseFloat(document.getElementById('inp-lat').value.replace(',', '.')), 
+                    lng: parseFloat(document.getElementById('inp-lng').value.replace(',', '.')),
                     description: document.getElementById('inp-desc').value, geometry_json: document.getElementById('inp-geometry').value,
                     unesco_status: document.getElementById('inp-unesco').value, research_links: document.getElementById('inp-research').value,
                     image_url: document.getElementById('inp-image').value, youtube_url: document.getElementById('inp-youtube').value,
                     origin_food_name: document.getElementById('inp-origin-name').value, origin_country: document.getElementById('inp-origin-country').value,
-                    origin_lat: document.getElementById('inp-origin-lat').value, origin_lng: document.getElementById('inp-origin-lng').value,
+                    origin_lat: parseFloat(document.getElementById('inp-origin-lat').value.replace(',', '.') || 0), 
+                    origin_lng: parseFloat(document.getElementById('inp-origin-lng').value.replace(',', '.') || 0),
                     connection_type: document.getElementById('inp-conn-type').value
                 };
                 
