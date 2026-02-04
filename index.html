@@ -672,33 +672,63 @@
 
                 // If map tab, resize leaflet
                 if(tabName === 'multimedia') {
-                     // Resize Geo Map
-                     setTimeout(() => {
-                        const mapDiv = document.getElementById('detail-geo-map');
-                        if (mapDiv && mapDiv._leaflet_map) {
-                           mapDiv._leaflet_map.invalidateSize();
-                           try {
-                               const pts = JSON.parse(state.currentDetail.geometry_json);
-                               if(pts) mapDiv._leaflet_map.fitBounds(pts);
-                           } catch(e){}
-                        }
-                    }, 200);
+                    const d = state.currentDetail;
+                    if(!d) return;
 
-                    // Resize Conn Map (New)
+                    // 1. GEO MAP (Polygon)
+                    setTimeout(() => {
+                        const mapDiv = document.getElementById('detail-geo-map');
+                        if (mapDiv) {
+                            if (!mapDiv._leaflet_map) {
+                                // Init
+                                const map = L.map('detail-geo-map', { zoomControl: false, attributionControl: false }).setView([d.lat, d.lng], 6);
+                                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+                                if(d.geometry_json) {
+                                    try {
+                                        const pts = JSON.parse(d.geometry_json);
+                                        L.polygon(pts, {color:'#ff1b2d', fillOpacity:0.2}).addTo(map);
+                                        map.fitBounds(pts);
+                                    } catch(e) { console.error("Geo JSON error", e); }
+                                }
+                                mapDiv._leaflet_map = map;
+                            } else {
+                                mapDiv._leaflet_map.invalidateSize();
+                            }
+                        }
+                    }, 100);
+
+                    // 2. CONNECTED MAP (Line)
                     setTimeout(() => {
                         const mapDiv2 = document.getElementById('detail-conn-map');
-                        if (mapDiv2 && mapDiv2._leaflet_map) {
-                           mapDiv2._leaflet_map.invalidateSize();
-                           // Re-fit lines
-                           try {
-                                const d = state.currentDetail;
+                        if (mapDiv2) {
+                            if (!mapDiv2._leaflet_map) {
+                                // Init
+                                const map2 = L.map('detail-conn-map', { zoomControl: false, attributionControl: false });
+                                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map2);
+                                
                                 if(d.origin_lat && d.origin_lng) {
-                                    const bounds = L.latLngBounds([[d.lat, d.lng], [d.origin_lat, d.origin_lng]]);
-                                    mapDiv2._leaflet_map.fitBounds(bounds, {padding:[50,50]});
+                                    const bounds = L.latLngBounds([[d.origin_lat, d.origin_lng], [d.lat, d.lng]]);
+                                    
+                                    L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], {
+                                        color: '#ea580c', // Orange-600
+                                        weight: 3,
+                                        opacity: 0.8,
+                                        dashArray: '10, 10'
+                                    }).addTo(map2);
+
+                                    L.circleMarker([d.origin_lat, d.origin_lng], { color: '#ea580c', fillColor:'white', fillOpacity:1, radius: 5 }).addTo(map2).bindTooltip("Origin: " + d.origin_country, {permanent:true, direction:'bottom'});
+                                    L.circleMarker([d.lat, d.lng], { color: '#dc2626', fillColor:'#dc2626', fillOpacity:1, radius: 5 }).addTo(map2).bindTooltip("Current", {permanent:true, direction:'top'});
+                                    
+                                    map2.fitBounds(bounds, {padding: [50, 50]});
+                                } else {
+                                     map2.setView([d.lat, d.lng], 5);
                                 }
-                           } catch(e){}
+                                mapDiv2._leaflet_map = map2;
+                            } else {
+                                mapDiv2._leaflet_map.invalidateSize();
+                            }
                         }
-                    }, 200);
+                    }, 100);
                 }
             }
         };
