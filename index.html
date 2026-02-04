@@ -495,7 +495,7 @@
 
     <script>
         // Updated URL
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyYogzaqbKHEWAFR0f0PMg2FZpfuGqHGLPcBOixMNdPp-acQr7d3DSPEnWlS0trn9LA/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbw5XZBvqGjPbjB_nE2ZeJ27Ppib9-9DjSKDeVzNF-HDQU0pes9rzVn6jI9uYYjfTac/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
         const state = { 
             data: [], 
@@ -1254,13 +1254,6 @@
                     connection_type: document.getElementById('inp-conn-type').value
                 };
                 
-                // --- SAFETY LOCK: INSERT ORIGINAL DATA FOR VERIFICATION ON UPDATE ---
-                if (state.editId && state.currentDetail) {
-                    data.original_lat = state.currentDetail.lat;
-                    data.original_lng = state.currentDetail.lng;
-                    data.original_name = state.currentDetail.food_name;
-                }
-
                 ui.toggleLoader(true); // SHOW LOADER
                 
                 const action = state.editId ? 'update' : 'insert';
@@ -1269,7 +1262,20 @@
                 else { data.id = 'TEMP'; state.data.push(data); }
                 mapLogic.render(); dashboard.render();
 
-                const form = new URLSearchParams(); form.append('action', action); form.append('data', JSON.stringify(data));
+                const form = new URLSearchParams(); 
+                form.append('action', action); 
+                form.append('data', JSON.stringify(data));
+
+                // --- SAFETY LOCK: SEND SEPARATE ORIGINAL DATA FOR VERIFICATION ---
+                if (action === 'update' && state.currentDetail) {
+                    const originalData = {
+                        food_name: state.currentDetail.food_name,
+                        lat: state.currentDetail.lat,
+                        lng: state.currentDetail.lng
+                    };
+                    form.append('original_data', JSON.stringify(originalData));
+                }
+
                 fetch(GAS_URL, { method: 'POST', body: form }).then(r=>r.json()).then(d => { 
                     if(d.status==='success') { 
                         alert('Saved to Cloud!'); 
