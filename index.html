@@ -177,7 +177,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-6 pt-4 border-t border-gray-700 w-full text-center text-gray-400 text-xs">
-                <div>v51.0 (Realtime Edit) • <span id="record-count" class="text-white font-bold">0</span> Records</div>
+                <div>v52.0 (Smart Sync) • <span id="record-count" class="text-white font-bold">0</span> Records</div>
                 <div class="mt-1 font-bold">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -494,7 +494,8 @@
     </div>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz9C3b7Y967gih1r1D59DJ5pEdYlp6xcK_gw8KHhRFtuEo3LK9YEOtYeKB7NhuyGfW9/exec';
+        // Updated URL
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyYogzaqbKHEWAFR0f0PMg2FZpfuGqHGLPcBOixMNdPp-acQr7d3DSPEnWlS0trn9LA/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
         const state = { 
             data: [], 
@@ -1014,7 +1015,7 @@
                                 <div>
                                     ${d.origin_food_name ? `
                                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                                        <h3 class="text-xs font-bold text-orange-600 uppercase mb-6 tracking-wider flex items-center justify-center md:justify-start">
+                                        <h3 class="text-xs font-bold text-orange-600 uppercase mb-6 tracking-wider flex items-center justify-center">
                                             <span class="bg-orange-100 p-1.5 rounded mr-2"><i class="fas fa-history"></i></span> Cultural Roots
                                         </h3>
                                         <div class="flex items-center gap-4 relative justify-center">
@@ -1247,7 +1248,14 @@
                 
                 ui.toggleLoader(true); // SHOW LOADER
                 
-                const form = new URLSearchParams(); form.append('action', 'delete'); form.append('id', state.editId);
+                // --- UPDATE: Kirim DATA NAMA untuk Trace Logika di Server ---
+                const dataPayload = JSON.stringify({ food_name: state.currentDetail.food_name });
+
+                const form = new URLSearchParams(); 
+                form.append('action', 'delete'); 
+                form.append('id', state.editId);
+                form.append('data', dataPayload); // Kirim Nama agar server bisa trace by name
+
                 fetch(GAS_URL, { method: 'POST', body: form }).then(r => r.json()).then(d => {
                     if (d.status === 'success') {
                         state.data = state.data.filter(item => item.id !== state.editId);
