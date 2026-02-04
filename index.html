@@ -177,7 +177,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-6 pt-4 border-t border-gray-700 w-full text-center text-gray-400 text-xs">
-                <div>v50.0 (Stable Scroll) • <span id="record-count" class="text-white font-bold">0</span> Records</div>
+                <div>v51.0 (Realtime Edit) • <span id="record-count" class="text-white font-bold">0</span> Records</div>
                 <div class="mt-1 font-bold">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -970,20 +970,30 @@
                 const container = document.getElementById('detail-container');
                 container.innerHTML = `
                     <!-- HEADER -->
-                    <div class="px-8 pt-8 pb-4 bg-white z-10 shrink-0">
-                        <h2 class="text-5xl font-black text-gray-900 mb-3 tracking-tight">${d.food_name}</h2>
-                        <div class="flex flex-wrap gap-2 mb-6">
-                            <span class="text-red-600 bg-red-50 px-4 py-1.5 rounded-full font-bold text-sm border border-red-100 shadow-sm flex items-center">
-                                <i class="fas fa-map-marker-alt mr-2"></i> ${d.country}
-                            </span>
-                            ${d.unesco_status ? `
-                            <span class="text-green-700 bg-green-50 px-4 py-1.5 rounded-full font-bold text-sm border border-green-100 shadow-sm flex items-center">
-                                <i class="fas fa-award mr-2"></i> ${d.unesco_status}
-                            </span>` : ''}
+                    <div class="px-8 pt-8 pb-4 bg-white z-10 shrink-0 relative group-header">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h2 class="text-5xl font-black text-gray-900 mb-2 tracking-tight">${d.food_name}</h2>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="text-red-600 bg-red-50 px-4 py-1.5 rounded-full font-bold text-sm border border-red-100 shadow-sm flex items-center">
+                                        <i class="fas fa-map-marker-alt mr-2"></i> ${d.country}
+                                    </span>
+                                    ${d.unesco_status ? `
+                                    <span class="text-green-700 bg-green-50 px-4 py-1.5 rounded-full font-bold text-sm border border-green-100 shadow-sm flex items-center">
+                                        <i class="fas fa-award mr-2"></i> ${d.unesco_status}
+                                    </span>` : ''}
+                                </div>
+                            </div>
+                            
+                            <!-- EDIT BUTTON (HEADER LOCATION) -->
+                            ${state.role === 'admin' ? `
+                            <button onclick="app.openInputModal('edit')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-bold text-xs transition flex items-center gap-2 border border-gray-200 shadow-sm mt-2">
+                                <i class="fas fa-edit text-[var(--opera-red)]"></i> Edit Entry
+                            </button>` : ''}
                         </div>
                         
                         <!-- TABS -->
-                        <div class="flex gap-6 border-b border-gray-200">
+                        <div class="flex gap-6 border-b border-gray-200 mt-4">
                             <button onclick="ui.switchModalTab('overview')" id="tab-btn-overview" class="tab-btn active">Ringkasan / Overview</button>
                             <button onclick="ui.switchModalTab('multimedia')" id="tab-btn-multimedia" class="tab-btn">Multimedia & Data</button>
                         </div>
@@ -994,24 +1004,26 @@
                         
                         <!-- TAB 1: OVERVIEW -->
                         <div id="tab-content-overview" class="tab-content active p-8">
+                            
+                            <!-- 1. IMAGE CAROUSEL -->
                             ${images}
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="flex flex-col gap-8">
                                 
-                                <!-- LEFT: ORIGIN CARD -->
+                                <!-- 2. CULTURAL ROOTS (Stacked Below Image) -->
                                 <div>
                                     ${d.origin_food_name ? `
-                                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 h-full">
-                                        <h3 class="text-xs font-bold text-orange-600 uppercase mb-6 tracking-wider flex items-center">
+                                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                                        <h3 class="text-xs font-bold text-orange-600 uppercase mb-6 tracking-wider flex items-center justify-center md:justify-start">
                                             <span class="bg-orange-100 p-1.5 rounded mr-2"><i class="fas fa-history"></i></span> Cultural Roots
                                         </h3>
-                                        <div class="flex items-center gap-4 relative">
+                                        <div class="flex items-center gap-4 relative justify-center">
                                             <div class="text-center min-w-[100px]">
                                                 <div class="text-lg font-bold text-gray-800">${d.origin_food_name}</div>
                                                 <div class="text-xs text-gray-500">from ${d.origin_country}</div>
                                             </div>
                                             
-                                            <div class="flex-1 border-t-2 border-dashed border-orange-300 relative mx-4">
+                                            <div class="w-32 border-t-2 border-dashed border-orange-300 relative mx-4">
                                                 <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-2 text-[10px] font-bold text-orange-500 uppercase border border-orange-200 rounded-full">
                                                     ${d.connection_type}
                                                 </span>
@@ -1024,10 +1036,10 @@
                                             </div>
                                         </div>
                                     </div>` 
-                                    : `<div class="bg-gray-100 p-6 rounded-2xl border border-dashed border-gray-300 flex items-center justify-center text-gray-400 h-full text-sm font-bold">Origin data not available</div>`}
+                                    : `<div class="bg-gray-100 p-6 rounded-2xl border border-dashed border-gray-300 flex items-center justify-center text-gray-400 h-24 text-sm font-bold">Origin data not available</div>`}
                                 </div>
 
-                                <!-- RIGHT: NARRATIVE -->
+                                <!-- 3. HISTORICAL NARRATIVE (Stacked Below Roots) -->
                                 <div class="prose prose-sm max-w-none text-gray-700 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                                     <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide border-b pb-2 mb-4">Historical Narrative</h3>
                                     <p class="leading-relaxed whitespace-pre-line">${d.description || 'No historical data available for this entry.'}</p>
@@ -1058,13 +1070,6 @@
                                 <div class="flex flex-col gap-2 text-sm text-blue-700">
                                     ${d.research_links.split(',').map(l => `<a href="${l.trim()}" target="_blank" class="hover:underline flex items-center gap-2"><i class="fas fa-external-link-alt text-xs opacity-50"></i> ${l.trim()}</a>`).join('')}
                                 </div>
-                            </div>` : ''}
-
-                            ${state.role==='admin' ? `
-                            <div class="mt-8 pt-6 border-t border-gray-200 text-right">
-                                <button onclick="app.openInputModal('edit')" class="btn-opera px-6 py-3 rounded-xl font-bold shadow-lg inline-flex items-center gap-2">
-                                    <i class="fas fa-edit"></i> Edit This Entry
-                                </button>
                             </div>` : ''}
                         </div>
 
@@ -1212,7 +1217,25 @@
 
                 const form = new URLSearchParams(); form.append('action', action); form.append('data', JSON.stringify(data));
                 fetch(GAS_URL, { method: 'POST', body: form }).then(r=>r.json()).then(d => { 
-                    if(d.status==='success') { alert('Saved to Cloud!'); if(!state.editId && d.id) { state.data[state.data.length-1].id = d.id; } ui.closeModal('input-modal'); } 
+                    if(d.status==='success') { 
+                        alert('Saved to Cloud!'); 
+                        
+                        // UPDATE ID IF NEW RECORD
+                        const finalId = (!state.editId && d.id) ? d.id : (state.editId || data.id);
+                        if(!state.editId && d.id) { state.data[state.data.length-1].id = d.id; }
+                        
+                        // --- FIX: REALTIME UPDATE (UPDATE CACHE & RE-RENDER) ---
+                        const newData = { ...data, id: finalId };
+                        state.detailCache[finalId] = newData; // FORCE UPDATE CACHE
+                        
+                        // IF MODAL OPEN, RE-RENDER
+                        if(state.currentDetail && state.currentDetail.id === finalId) {
+                            state.currentDetail = newData;
+                            dashboard.renderDetailContent(newData);
+                        }
+
+                        ui.closeModal('input-modal'); 
+                    } 
                     else alert('Error: '+d.message); 
                 }).catch(e => alert('Offline Mode: Saved locally.')).finally(()=> {
                     ui.toggleLoader(false); // HIDE LOADER
@@ -1228,6 +1251,10 @@
                 fetch(GAS_URL, { method: 'POST', body: form }).then(r => r.json()).then(d => {
                     if (d.status === 'success') {
                         state.data = state.data.filter(item => item.id !== state.editId);
+                        
+                        // REMOVE FROM CACHE
+                        delete state.detailCache[state.editId];
+                        
                         mapLogic.render(); dashboard.render(); ui.closeModal('input-modal'); alert("Data successfully deleted.");
                     } else { alert("Delete Failed: " + d.message); }
                 }).catch(e => alert("Network Error: Could not delete.")).finally(() => {
