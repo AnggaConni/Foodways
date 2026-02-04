@@ -116,6 +116,34 @@
         .carousel-btn:hover { background: var(--opera-red); color: white; }
         .carousel-btn.prev { left: 10px; }
         .carousel-btn.next { right: 10px; }
+
+        /* NEW TABS STYLING */
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: var(--opera-text); }
+        .tab-btn.active {
+            color: var(--opera-red);
+            border-bottom-color: var(--opera-red);
+        }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col bg-gray-50">
@@ -149,7 +177,7 @@
             </div>
             
             <div id="dataset-info" class="hidden mt-6 pt-4 border-t border-gray-700 w-full text-center text-gray-400 text-xs">
-                <div>v48.0 (Final Light) • <span id="record-count" class="text-white font-bold">0</span> Records</div>
+                <div>v50.0 (Stable Scroll) • <span id="record-count" class="text-white font-bold">0</span> Records</div>
                 <div class="mt-1 font-bold">Angga Conni Saputra 2026</div>
             </div>
         </div>
@@ -322,6 +350,15 @@
 
     <!-- MODALS -->
 
+    <!-- CRUD LOADER -->
+    <div id="crud-loader" class="fixed inset-0 z-[5000] hidden flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center transform scale-100 transition-transform">
+             <i class="fas fa-circle-notch fa-spin text-4xl text-[var(--opera-red)] mb-4"></i>
+             <div class="text-gray-800 font-bold text-lg tracking-tight">Processing Data...</div>
+             <div class="text-gray-500 text-sm mt-1">Synchronizing with Cloud Database</div>
+        </div>
+    </div>
+
     <!-- HELP MODAL -->
     <div id="help-modal" class="fixed inset-0 z-[2500] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
@@ -434,11 +471,13 @@
         </div>
     </div>
 
-    <!-- DETAIL -->
+    <!-- NEW DETAIL MODAL -->
     <div id="detail-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl flex flex-col relative overflow-hidden text-gray-800">
+        <div class="bg-white w-full max-w-5xl h-[90vh] rounded-3xl shadow-2xl flex flex-col relative overflow-hidden text-gray-800">
             <button onclick="ui.closeModal('detail-modal')" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/10 hover:bg-red-500 hover:text-white text-black rounded-full transition flex items-center justify-center"><i class="fas fa-times"></i></button>
-            <div id="detail-content" class="overflow-y-auto h-full p-8 custom-scrollbar"></div>
+            
+            <!-- Dynamic Content Container -->
+            <div id="detail-container" class="h-full flex flex-col"></div>
         </div>
     </div>
 
@@ -457,7 +496,17 @@
     <script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbz9C3b7Y967gih1r1D59DJ5pEdYlp6xcK_gw8KHhRFtuEo3LK9YEOtYeKB7NhuyGfW9/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
-        const state = { data: [], role: 'guest', editId: null, pickerTarget: null, currentDetail: null, filter: { search: '' }, pagination: { page: 1, limit: 10 } };
+        const state = { 
+            data: [], 
+            role: 'guest', 
+            editId: null, 
+            pickerTarget: null, 
+            currentDetail: null, 
+            filter: { search: '' }, 
+            pagination: { page: 1, limit: 10 },
+            detailCache: {}, // New Cache Object
+            loadingId: null
+        };
 
         // --- ROBUST PARSER ---
         function robustParse(val) {
@@ -487,33 +536,33 @@
             const urls = urlStr.split(',').map(u => u.trim()).filter(u => u);
             if(urls.length === 0) return '';
             const cid = "vid-car-" + Math.floor(Math.random() * 10000);
-            
+
             return `
-                <div class="relative group">
+               <div class="relative group w-full mb-6">
                     <div onclick="scrollCarousel('${cid}', -1)" class="carousel-btn prev hover:scale-110"><i class="fas fa-chevron-left"></i></div>
                     <div id="${cid}" class="flex overflow-x-auto gap-4 pb-4 snap-x no-scrollbar scroll-smooth">
                         ${urls.map(url => {
-                             let id = null;
-                             let embedSrc = '';
-                             if (url.includes('iframe')) { 
+                            let id = null;
+                            let embedSrc = '';
+                            if (url.includes('iframe')) { 
                                 const cleanUrl = url.match(/src="([^"]+)"/);
                                 if(cleanUrl && cleanUrl[1]) embedSrc = cleanUrl[1];
-                             } else if(url.includes('v=')) {
+                            } else if(url.includes('v=')) {
                                 id = url.split('v=')[1].split('&')[0];
                                 embedSrc = `https://www.youtube.com/embed/${id}?origin=${window.location.origin}`;
-                             } else if(url.includes('youtu.be/')) {
+                            } else if(url.includes('youtu.be/')) {
                                 id = url.split('youtu.be/')[1];
                                 embedSrc = `https://www.youtube.com/embed/${id}?origin=${window.location.origin}`;
-                             }
-                             return embedSrc ? `
-                                <div class="snap-center shrink-0 w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-black relative">
-                                     <iframe width="100%" height="100%" src="${embedSrc}" frameborder="0" allowfullscreen></iframe>
+                            }
+                            return embedSrc ? `
+                                <div class="snap-center shrink-0 w-full md:w-[600px] aspect-video rounded-xl overflow-hidden shadow-lg bg-black relative">
+                                    <iframe width="100%" height="100%" src="${embedSrc}" frameborder="0" allowfullscreen></iframe>
                                 </div>` : '';
                         }).join('')}
                     </div>
                     <div onclick="scrollCarousel('${cid}', 1)" class="carousel-btn next hover:scale-110"><i class="fas fa-chevron-right"></i></div>
                 </div>
-             `;
+            `;
         }
 
         function extractImages(urlStr) {
@@ -523,11 +572,11 @@
              const cid = "img-car-" + Math.floor(Math.random() * 10000);
              
              return `
-                <div class="relative group">
+                <div class="relative group w-full mb-6">
                     <div onclick="scrollCarousel('${cid}', -1)" class="carousel-btn prev hover:scale-110"><i class="fas fa-chevron-left"></i></div>
                     <div id="${cid}" class="flex overflow-x-auto gap-4 pb-4 snap-x no-scrollbar scroll-smooth">
                         ${urls.map(u => `
-                            <div class="snap-center shrink-0 w-full sm:w-96 h-64 rounded-xl overflow-hidden shadow-md border border-gray-200 relative bg-gray-100">
+                            <div class="snap-center shrink-0 w-full md:w-[600px] h-80 rounded-2xl overflow-hidden shadow-md border border-gray-200 relative bg-gray-100">
                                 <img src="${u}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=No+Image'">
                             </div>
                         `).join('')}
@@ -541,7 +590,6 @@
         function scrollCarousel(id, direction) {
             const container = document.getElementById(id);
             if(container) {
-                // Determine scroll amount based on first child width or default
                 const item = container.firstElementChild;
                 const scrollAmount = item ? item.offsetWidth + 16 : 300; 
                 container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
@@ -609,13 +657,39 @@
             showError: (msg) => {
                 document.getElementById('loading-container').classList.add('hidden');
                 document.getElementById('error-container').classList.remove('hidden');
+            },
+            toggleLoader: (show) => {
+                const l = document.getElementById('crud-loader');
+                if(show) l.classList.remove('hidden'); else l.classList.add('hidden');
+            },
+            switchModalTab: (tabName) => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(`tab-btn-${tabName}`).classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(`tab-content-${tabName}`).classList.add('active');
+
+                // If map tab, resize leaflet
+                if(tabName === 'multimedia' && state.currentDetail?.geometry_json) {
+                    setTimeout(() => {
+                        // Re-trigger map resize if needed
+                        const mapDiv = document.getElementById('detail-geo-map');
+                        if (mapDiv && mapDiv._leaflet_map) {
+                           mapDiv._leaflet_map.invalidateSize();
+                           // Re-fit bounds
+                           try {
+                               const pts = JSON.parse(state.currentDetail.geometry_json);
+                               if(pts) mapDiv._leaflet_map.fitBounds(pts);
+                           } catch(e){}
+                        }
+                    }, 200);
+                }
             }
         };
 
         const mapLogic = {
             map: null, layers: [], lines: [], markers: [],
             init: () => {
-                // FIXED: Light Mode Tiles
                 mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false, maxBounds: [[-90, -180], [90, 180]], maxBoundsViscosity: 1.0, minZoom: 2 }).setView([20, 0], 2);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, noWrap: true, bounds: [[-90, -180], [90, 180]] }).addTo(mapLogic.map);
                 L.control.zoom({ position: 'topright' }).addTo(mapLogic.map);
@@ -829,85 +903,187 @@
                     });
                 }
             },
-            updateSearch: (val) => {
-                 state.filter.search = val;
-                 dashboard.renderTable();
+            
+            // --- NEW: LAZY LOAD SIMULATION LOGIC ---
+            fetchNodeDetail: async (id) => {
+                // 1. Check Cache
+                if (state.detailCache[id]) return state.detailCache[id];
+                
+                // 2. Simulate Network Fetch (Promise)
+                // In a real app, this would be `await fetch('/api/food/'+id)`
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        const item = state.data.find(x => x.id === id);
+                        if (item) {
+                            state.detailCache[id] = item; // Save to Cache
+                            resolve(item);
+                        } else resolve(null);
+                    }, 800); // 800ms artificial delay to show off the loader
+                });
             },
-            showDetail: (d) => {
-                state.currentDetail = d;
-                let images = extractImages(d.image_url);
-                let videos = extractYoutubeEmbeds(d.youtube_url);
-                let geoMapHtml = d.geometry_json ? `<div id="detail-geo-map" class="h-48 w-full bg-gray-100 rounded-xl border border-gray-200 mt-4"></div>` : '';
 
-                const html = `
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-                        <div class="overflow-y-auto pr-2 flex flex-col gap-6">
-                             <div>
-                                <h2 class="text-4xl font-black text-gray-900 mb-2 leading-tight">${d.food_name}</h2>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="text-[var(--opera-red)] text-sm font-bold bg-red-50 px-3 py-1 rounded-full border border-red-100"><i class="fas fa-map-marker-alt mr-2"></i> ${d.country}</span>
-                                    ${d.unesco_status ? `<span class="text-green-700 text-sm font-bold bg-green-50 px-3 py-1 rounded-full border border-green-100"><i class="fas fa-award mr-2"></i> ${d.unesco_status}</span>` : ''}
-                                </div>
-                             </div>
-                             
-                             ${images}
+            showDetail: async (partialData) => {
+                const id = partialData.id;
+                ui.openModal('detail-modal');
+                state.loadingId = id; // Track current view
 
-                             ${d.origin_food_name ? `
-                             <div class="glass-panel p-6 rounded-2xl border-l-4 border-orange-400 bg-orange-50/50">
-                                <h3 class="text-xs font-bold text-orange-600 uppercase mb-3 tracking-wider flex items-center"><i class="fas fa-history mr-2"></i> Cultural Roots</h3>
-                                <div class="flex items-center gap-4">
-                                    <div>
-                                        <div class="text-lg font-bold text-gray-800">${d.origin_food_name}</div>
-                                        <div class="text-xs text-gray-500">from ${d.origin_country}</div>
-                                    </div>
-                                    <div class="flex-1 border-t-2 border-dashed border-orange-300 relative text-center">
-                                        <span class="absolute -top-3 bg-white px-2 text-[10px] font-bold text-orange-400 uppercase">${d.connection_type}</span>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-lg font-bold text-[var(--opera-red)]">${d.food_name}</div>
-                                        <div class="text-xs text-gray-500">in ${d.country}</div>
-                                    </div>
-                                </div>
-                             </div>` : ''}
+                // Render Skeleton First
+                dashboard.renderDetailSkeleton(partialData);
 
-                             <div class="prose prose-sm max-w-none text-gray-600">
-                                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide border-b pb-2 mb-3">Historical Narrative</h3>
-                                <div class="max-h-40 overflow-y-auto custom-scrollbar pr-2">
-                                    <p class="leading-relaxed">${d.description || 'No historical data available.'}</p>
-                                </div>
-                             </div>
-                             
-                             ${d.research_links ? `
-                             <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                <h3 class="text-xs font-bold text-gray-500 uppercase mb-2">Sources</h3>
-                                <div class="flex flex-col gap-1 text-xs text-blue-600 truncate">
-                                    ${d.research_links.split(',').map(l => `<a href="${l.trim()}" target="_blank" class="hover:underline"><i class="fas fa-external-link-alt mr-1"></i> ${l.trim()}</a>`).join('')}
-                                </div>
-                             </div>` : ''}
-                        </div>
-                        
-                        <div class="flex flex-col gap-6 overflow-y-auto pr-2">
-                             <div class="space-y-4">
-                                ${videos}
-                             </div>
-                             ${geoMapHtml}
-                             
-                             ${state.role==='admin' ? `
-                             <div class="mt-auto pt-6 border-t border-gray-200 text-right">
-                                <button onclick="app.openInputModal('edit')" class="btn-opera px-6 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 ml-auto">
-                                    <i class="fas fa-edit"></i> Edit / Update Data
-                                </button>
-                             </div>` : ''}
+                // Fetch (Lazy Load)
+                const fullData = await dashboard.fetchNodeDetail(id);
+
+                // If user is still looking at this modal (didn't switch fast), render content
+                if (state.loadingId === id && fullData) {
+                    state.currentDetail = fullData;
+                    dashboard.renderDetailContent(fullData);
+                } else if (!fullData) {
+                    document.getElementById('detail-container').innerHTML = '<div class="p-8 text-center text-red-500">Failed to load data.</div>';
+                }
+            },
+
+            renderDetailSkeleton: (d) => {
+                const container = document.getElementById('detail-container');
+                container.innerHTML = `
+                    <div class="p-8 border-b border-gray-100 flex justify-between items-start bg-white">
+                        <div>
+                            <h2 class="text-4xl font-black text-gray-900 mb-2 leading-tight">${d.food_name}</h2>
+                             <div class="flex gap-2">
+                                <div class="h-6 w-24 skeleton"></div>
+                                <div class="h-6 w-32 skeleton"></div>
+                            </div>
                         </div>
                     </div>
+                    <div class="p-8 flex-1 flex flex-col items-center justify-center space-y-4">
+                        <div class="h-64 w-full skeleton rounded-2xl"></div>
+                        <div class="h-4 w-3/4 skeleton"></div>
+                        <div class="h-4 w-1/2 skeleton"></div>
+                        <div class="text-gray-400 text-sm animate-pulse mt-4"><i class="fas fa-sync fa-spin mr-2"></i> Fetching details...</div>
+                    </div>
                 `;
-                document.getElementById('detail-content').innerHTML = html;
-                ui.openModal('detail-modal');
+            },
+
+            renderDetailContent: (d) => {
+                let images = extractImages(d.image_url);
+                let videos = extractYoutubeEmbeds(d.youtube_url);
+                
+                const container = document.getElementById('detail-container');
+                container.innerHTML = `
+                    <!-- HEADER -->
+                    <div class="px-8 pt-8 pb-4 bg-white z-10 shrink-0">
+                        <h2 class="text-5xl font-black text-gray-900 mb-3 tracking-tight">${d.food_name}</h2>
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <span class="text-red-600 bg-red-50 px-4 py-1.5 rounded-full font-bold text-sm border border-red-100 shadow-sm flex items-center">
+                                <i class="fas fa-map-marker-alt mr-2"></i> ${d.country}
+                            </span>
+                            ${d.unesco_status ? `
+                            <span class="text-green-700 bg-green-50 px-4 py-1.5 rounded-full font-bold text-sm border border-green-100 shadow-sm flex items-center">
+                                <i class="fas fa-award mr-2"></i> ${d.unesco_status}
+                            </span>` : ''}
+                        </div>
+                        
+                        <!-- TABS -->
+                        <div class="flex gap-6 border-b border-gray-200">
+                            <button onclick="ui.switchModalTab('overview')" id="tab-btn-overview" class="tab-btn active">Ringkasan / Overview</button>
+                            <button onclick="ui.switchModalTab('multimedia')" id="tab-btn-multimedia" class="tab-btn">Multimedia & Data</button>
+                        </div>
+                    </div>
+
+                    <!-- CONTENT SCROLL AREA (Fixed Scroll) -->
+                    <div class="flex-1 overflow-y-auto custom-scrollbar bg-gray-50 min-h-0">
+                        
+                        <!-- TAB 1: OVERVIEW -->
+                        <div id="tab-content-overview" class="tab-content active p-8">
+                            ${images}
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                
+                                <!-- LEFT: ORIGIN CARD -->
+                                <div>
+                                    ${d.origin_food_name ? `
+                                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 h-full">
+                                        <h3 class="text-xs font-bold text-orange-600 uppercase mb-6 tracking-wider flex items-center">
+                                            <span class="bg-orange-100 p-1.5 rounded mr-2"><i class="fas fa-history"></i></span> Cultural Roots
+                                        </h3>
+                                        <div class="flex items-center gap-4 relative">
+                                            <div class="text-center min-w-[100px]">
+                                                <div class="text-lg font-bold text-gray-800">${d.origin_food_name}</div>
+                                                <div class="text-xs text-gray-500">from ${d.origin_country}</div>
+                                            </div>
+                                            
+                                            <div class="flex-1 border-t-2 border-dashed border-orange-300 relative mx-4">
+                                                <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-2 text-[10px] font-bold text-orange-500 uppercase border border-orange-200 rounded-full">
+                                                    ${d.connection_type}
+                                                </span>
+                                                <i class="fas fa-chevron-right absolute -right-1.5 -top-2 text-orange-300"></i>
+                                            </div>
+                                            
+                                            <div class="text-center min-w-[100px]">
+                                                <div class="text-lg font-bold text-[var(--opera-red)]">${d.food_name}</div>
+                                                <div class="text-xs text-gray-500">in ${d.country}</div>
+                                            </div>
+                                        </div>
+                                    </div>` 
+                                    : `<div class="bg-gray-100 p-6 rounded-2xl border border-dashed border-gray-300 flex items-center justify-center text-gray-400 h-full text-sm font-bold">Origin data not available</div>`}
+                                </div>
+
+                                <!-- RIGHT: NARRATIVE -->
+                                <div class="prose prose-sm max-w-none text-gray-700 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide border-b pb-2 mb-4">Historical Narrative</h3>
+                                    <p class="leading-relaxed whitespace-pre-line">${d.description || 'No historical data available for this entry.'}</p>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: MULTIMEDIA -->
+                        <div id="tab-content-multimedia" class="tab-content p-8">
+                            
+                            <!-- VIDEOS (Restored Carousel) -->
+                            <div class="mb-8">
+                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center"><i class="fab fa-youtube text-red-600 mr-2 text-xl"></i> Related Videos</h3>
+                                ${videos || '<div class="text-sm text-gray-400 italic">No videos linked.</div>'}
+                            </div>
+
+                            <!-- MINI MAP -->
+                            <div class="mb-8">
+                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center"><i class="fas fa-map mr-2 text-blue-600"></i> Geographic Context</h3>
+                                ${d.geometry_json ? `<div id="detail-geo-map" class="h-64 w-full bg-gray-200 rounded-xl border border-gray-300 shadow-inner"></div>` : '<div class="h-32 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300">No geographic polygon data.</div>'}
+                            </div>
+
+                            <!-- LINKS -->
+                            ${d.research_links ? `
+                            <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                                <h3 class="text-xs font-bold text-blue-800 uppercase mb-3 flex items-center"><i class="fas fa-graduation-cap mr-2"></i> Academic Sources</h3>
+                                <div class="flex flex-col gap-2 text-sm text-blue-700">
+                                    ${d.research_links.split(',').map(l => `<a href="${l.trim()}" target="_blank" class="hover:underline flex items-center gap-2"><i class="fas fa-external-link-alt text-xs opacity-50"></i> ${l.trim()}</a>`).join('')}
+                                </div>
+                            </div>` : ''}
+
+                            ${state.role==='admin' ? `
+                            <div class="mt-8 pt-6 border-t border-gray-200 text-right">
+                                <button onclick="app.openInputModal('edit')" class="btn-opera px-6 py-3 rounded-xl font-bold shadow-lg inline-flex items-center gap-2">
+                                    <i class="fas fa-edit"></i> Edit This Entry
+                                </button>
+                            </div>` : ''}
+                        </div>
+
+                    </div>
+                `;
+
+                // Init Map if needed (Lazy init when tab is clicked, but pre-load DOM)
                 if(d.geometry_json) {
                     setTimeout(() => {
                         const gMap = L.map('detail-geo-map', {zoomControl:false}).setView([d.lat, d.lng], 6);
                         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(gMap);
-                        try { const pts = JSON.parse(d.geometry_json); L.polygon(pts, {color:'#ff1b2d', fillOpacity:0.2}).addTo(gMap); gMap.fitBounds(pts); } catch(e){}
+                        // Store map instance for resizing later
+                        document.getElementById('detail-geo-map')._leaflet_map = gMap;
+                        
+                        try { 
+                            const pts = JSON.parse(d.geometry_json); 
+                            L.polygon(pts, {color:'#ff1b2d', fillOpacity:0.2}).addTo(gMap); 
+                            gMap.fitBounds(pts); 
+                        } catch(e){}
                     }, 500);
                 }
             }
@@ -957,7 +1133,7 @@
                 app.switchTab('map'); app.pickLocation('main');
             },
             
-            // --- NEW: Autocomplete Logic ---
+            // --- Autocomplete Logic ---
             handleOriginSearch: (val) => {
                 const list = document.getElementById('origin-suggestions');
                 if(val.length < 2) { list.classList.add('hidden'); return; }
@@ -1025,7 +1201,9 @@
                     origin_lat: document.getElementById('inp-origin-lat').value, origin_lng: document.getElementById('inp-origin-lng').value,
                     connection_type: document.getElementById('inp-conn-type').value
                 };
-                const btn = document.getElementById('btn-save'); btn.innerText='Saving...';
+                
+                ui.toggleLoader(true); // SHOW LOADER
+                
                 const action = state.editId ? 'update' : 'insert';
                 
                 if(state.editId) { const idx = state.data.findIndex(x=>x.id===state.editId); if(idx!==-1) state.data[idx] = {...state.data[idx], ...data}; } 
@@ -1036,25 +1214,30 @@
                 fetch(GAS_URL, { method: 'POST', body: form }).then(r=>r.json()).then(d => { 
                     if(d.status==='success') { alert('Saved to Cloud!'); if(!state.editId && d.id) { state.data[state.data.length-1].id = d.id; } ui.closeModal('input-modal'); } 
                     else alert('Error: '+d.message); 
-                }).catch(e => alert('Offline Mode: Saved locally.')).finally(()=> btn.innerText='Save Changes');
+                }).catch(e => alert('Offline Mode: Saved locally.')).finally(()=> {
+                    ui.toggleLoader(false); // HIDE LOADER
+                });
             },
             deleteData: () => {
                 if (!state.editId) return;
                 if (!confirm("Are you sure you want to DELETE this entry? This cannot be undone.")) return;
-                const btn = document.getElementById('btn-delete'); btn.innerText = 'Deleting...'; btn.disabled = true;
+                
+                ui.toggleLoader(true); // SHOW LOADER
+                
                 const form = new URLSearchParams(); form.append('action', 'delete'); form.append('id', state.editId);
                 fetch(GAS_URL, { method: 'POST', body: form }).then(r => r.json()).then(d => {
                     if (d.status === 'success') {
                         state.data = state.data.filter(item => item.id !== state.editId);
                         mapLogic.render(); dashboard.render(); ui.closeModal('input-modal'); alert("Data successfully deleted.");
                     } else { alert("Delete Failed: " + d.message); }
-                }).catch(e => alert("Network Error: Could not delete.")).finally(() => { btn.innerText = 'Delete'; btn.disabled = false; });
+                }).catch(e => alert("Network Error: Could not delete.")).finally(() => {
+                    ui.toggleLoader(false); // HIDE LOADER
+                });
             },
             switchTab: (t) => {
                 document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-map').classList.add('hidden');
                 document.getElementById('view-'+t).classList.remove('hidden');
                 if(t==='map') mapLogic.resize();
-                // Lazy render for charts to ensure canvas is visible
                 if(t==='dashboard') setTimeout(() => dashboard.render(), 100);
             },
             exportData: () => { const csv = Papa.unparse(state.data); const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURI(csv); a.download='foodways.csv'; a.click(); }
