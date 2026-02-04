@@ -75,6 +75,7 @@
             border-radius: 4px !important;
             font-weight: bold !important;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+            white-space: nowrap;
         }
         .leaflet-tooltip-top:before { display: none; }
         
@@ -697,38 +698,132 @@
                         }
                     }, 100);
 
-                    // 2. CONNECTED MAP (Line)
+                    // 2. CONNECTED MAP (Line) - UPDATED LOGIC FOR SERIAL + PARALLEL FOODWAYS
                     setTimeout(() => {
                         const mapDiv2 = document.getElementById('detail-conn-map');
                         if (mapDiv2) {
                             if (!mapDiv2._leaflet_map) {
-                                // Init
                                 const map2 = L.map('detail-conn-map', { zoomControl: false, attributionControl: false });
                                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map2);
                                 
-                                if(d.origin_lat && d.origin_lng) {
-                                    const bounds = L.latLngBounds([[d.origin_lat, d.origin_lng], [d.lat, d.lng]]);
+                                const bounds = L.latLngBounds();
+                                
+                                // --- ALGORITHM: FIND ULTIMATE ROOT & FULL FAMILY TREE ---
+
+                                // 1. Build a map of children for traversal: ParentName -> [ChildNodes]
+                                const childrenMap = {};
+                                state.data.forEach(item => {
+                                    if(item.origin_food_name) {
+                                        const pName = item.origin_food_name.toLowerCase().trim();
+                                        if(!childrenMap[pName]) childrenMap[pName] = [];
+                                        childrenMap[pName].push(item);
+                                    }
+                                });
+
+                                // 2. Find the "Ultimate Root" of the current node (Traverse Up)
+                                let rootName = d.food_name;
+                                let curr = d;
+                                const pathUp = new Set([d.id]); // Detect cycles
+
+                                while(curr && curr.origin_food_name) {
+                                    const parentName = curr.origin_food_name;
+                                    // Find parent record in DB
+                                    const parentNode = state.data.find(n => n.food_name.toLowerCase().trim() === parentName.toLowerCase().trim());
                                     
-                                    L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], {
-                                        color: '#ea580c', // Orange-600
-                                        weight: 3,
-                                        opacity: 0.8,
-                                        dashArray: '10, 10'
+                                    rootName = parentName; // Assume parent is root
+                                    if(parentNode) {
+                                        if(pathUp.has(parentNode.id)) break; 
+                                        pathUp.add(parentNode.id);
+                                        curr = parentNode;
+                                    } else {
+                                        // Parent exists as text (e.g. "China") but no record. Stop here.
+                                        break;
+                                    }
+                                }
+
+                                // 3. Collect all nodes starting from Ultimate Root (BFS Down)
+                                const familyNodes = [];
+                                const queue = [rootName];
+                                const visitedNames = new Set();
+
+                                while(queue.length > 0) {
+                                    const pName = queue.shift();
+                                    const lowerP = pName.toLowerCase().trim();
+                                    if(visitedNames.has(lowerP)) continue;
+                                    visitedNames.add(lowerP);
+
+                                    // If this name exists as a real node, add to list
+                                    const realNode = state.data.find(n => n.food_name.toLowerCase().trim() === lowerP);
+                                    if(realNode) familyNodes.push(realNode);
+
+                                    // Find children
+                                    if(childrenMap[lowerP]) {
+                                        childrenMap[lowerP].forEach(child => {
+                                            familyNodes.push(child); 
+                                            queue.push(child.food_name);
+                                        });
+                                    }
+                                }
+
+                                // 4. Render Unique Nodes
+                                const uniqueNodes = Array.from(new Map(familyNodes.map(item => [item.id, item])).values());
+                                if(!uniqueNodes.find(n => n.id === d.id)) uniqueNodes.push(d); // Ensure current is present
+
+                                // FIX: Sort to ensure current node is drawn last (on top) to avoid using bringToFront() which causes errors
+                                uniqueNodes.sort((a, b) => (a.id === d.id) ? 1 : (b.id === d.id) ? -1 : 0);
+
+                                uniqueNodes.forEach(node => {
+                                    // Draw Line (from Origin to Node)
+                                    if(node.origin_lat && node.origin_lng && node.lat && node.lng) {
+                                         L.polyline([[node.origin_lat, node.origin_lng], [node.lat, node.lng]], {
+                                            color: '#fca5a5', 
+                                            weight: 1,
+                                            opacity: 0.6,
+                                            dashArray: '5, 5'
+                                        }).addTo(map2);
+                                        
+                                        // Draw small dot at origin point (Hub)
+                                        L.circleMarker([node.origin_lat, node.origin_lng], { 
+                                            color: '#fb923c', fillColor: '#fff', fillOpacity: 1, radius: 3, weight: 1
+                                        }).addTo(map2);
+                                        
+                                        bounds.extend([node.origin_lat, node.origin_lng]);
+                                    }
+
+                                    // Draw Node Marker
+                                    const isCurrent = node.id === d.id;
+                                    const m = L.circleMarker([node.lat, node.lng], { 
+                                        color: isCurrent ? '#ff1b2d' : '#ef4444', 
+                                        fillColor: isCurrent ? '#ff1b2d' : '#fee2e2', 
+                                        fillOpacity: 1, 
+                                        radius: isCurrent ? 6 : 4,
+                                        weight: isCurrent ? 0 : 1
                                     }).addTo(map2);
 
-                                    L.circleMarker([d.origin_lat, d.origin_lng], { color: '#ea580c', fillColor:'white', fillOpacity:1, radius: 5 }).addTo(map2).bindTooltip("Origin: " + d.origin_country, {permanent:true, direction:'bottom'});
-                                    L.circleMarker([d.lat, d.lng], { color: '#dc2626', fillColor:'#dc2626', fillOpacity:1, radius: 5 }).addTo(map2).bindTooltip("Current", {permanent:true, direction:'top'});
+                                    // Tooltip Logic: Only Current is Permanent (Fix overlapping)
+                                    const tooltipContent = `<div class="text-center"><div class="font-bold">${node.food_name}</div><div class="text-[9px] uppercase">${node.country}</div></div>`;
                                     
-                                    map2.fitBounds(bounds, {padding: [50, 50]});
-                                } else {
-                                     map2.setView([d.lat, d.lng], 5);
-                                }
+                                    m.bindTooltip(tooltipContent, {
+                                        permanent: isCurrent, // TRUE if current, FALSE otherwise
+                                        direction: 'top',
+                                        className: isCurrent ? 'z-50 custom-tooltip' : 'text-xs bg-white text-gray-500 border border-gray-200 p-1 shadow-sm'
+                                    });
+                                    
+                                    // Removed explicit bringToFront() call to prevent race condition error
+                                    // Sorting ensures 'current' marker is added last (on top)
+                                    
+                                    bounds.extend([node.lat, node.lng]);
+                                });
+
+                                if(bounds.isValid()) map2.fitBounds(bounds, {padding: [50, 50]});
+                                else map2.setView([20, 0], 2);
+
                                 mapDiv2._leaflet_map = map2;
                             } else {
                                 mapDiv2._leaflet_map.invalidateSize();
                             }
                         }
-                    }, 100);
+                    }, 200);
                 }
             }
         };
@@ -1111,7 +1206,7 @@
 
                             <!-- CONNECTED MAP (PETA TERHUBUNG) - NEW -->
                             <div class="mb-8">
-                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center"><i class="fas fa-route mr-2 text-orange-600"></i> Culinary Influence Map</h3>
+                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center"><i class="fas fa-route mr-2 text-orange-600"></i> Culinary Influence Map (Foodways)</h3>
                                 ${d.origin_lat && d.origin_lng ? 
                                 `<div id="detail-conn-map" class="h-64 w-full bg-gray-200 rounded-xl border border-gray-300 shadow-inner"></div>` 
                                 : '<div class="h-32 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300">Origin data is incomplete (missing latitude/longitude).</div>'}
@@ -1129,9 +1224,6 @@
 
                     </div>
                 `;
-
-                // Init Maps if needed (Lazy init when tab is clicked, but pre-load DOM)
-                // We define the map init logic inside switchModalTab to handle visibility issues
             }
         };
 
@@ -1343,26 +1435,17 @@
                 if(t==='dashboard') setTimeout(() => dashboard.render(), 100);
             },
             exportData: () => {
-    // 1. Generate CSV string dari state.data
-    const csv = Papa.unparse(state.data);
-    
-    // 2. Buat Blob object. 
-    // "\uFEFF" ditambahkan agar Excel bisa membaca format UTF-8 (supaya karakter aneh gak muncul)
-    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-    
-    // 3. Buat URL sementara dari Blob tersebut
-    const url = URL.createObjectURL(blob);
-    
-    // 4. Trigger download
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `foodways_data_${new Date().toISOString().slice(0,10)}.csv`; // Tambah tanggal biar rapi
-    document.body.appendChild(a); // Perlu di-append untuk support Firefox
-    a.click();
-    
-    // 5. Bersihkan
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 100); }
+                const csv = Papa.unparse(state.data);
+                const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `foodways_data_${new Date().toISOString().slice(0,10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 100); 
+            }
         };
 
         window.addEventListener('DOMContentLoaded', app.init);
