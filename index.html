@@ -9,9 +9,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- HTML2PDF & HTML2CANVAS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Explicit html2canvas for map snapshots -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- Custom Styles -->
     <style>
@@ -1126,11 +1132,18 @@
                                 </div>
                             </div>
                             
-                            <!-- EDIT BUTTON (HEADER LOCATION) -->
-                            ${state.role === 'admin' ? `
-                            <button onclick="app.openInputModal('edit')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-bold text-xs transition flex items-center gap-2 border border-gray-200 shadow-sm mt-2">
-                                <i class="fas fa-edit text-[var(--opera-red)]"></i> Edit Entry
-                            </button>` : ''}
+                            <div class="flex gap-2 items-start mt-2">
+                                <!-- PDF EXPORT BUTTON -->
+                                <button onclick="app.exportToPDF()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-bold text-xs transition flex items-center gap-2 shadow-sm">
+                                    <i class="fas fa-file-pdf"></i> Export to PDF
+                                </button>
+
+                                <!-- EDIT BUTTON -->
+                                ${state.role === 'admin' ? `
+                                <button onclick="app.openInputModal('edit')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-bold text-xs transition flex items-center gap-2 border border-gray-200 shadow-sm">
+                                    <i class="fas fa-edit text-[var(--opera-red)]"></i> Edit Entry
+                                </button>` : ''}
+                            </div>
                         </div>
                         
                         <!-- TABS -->
@@ -1445,6 +1458,244 @@
                 a.click();
                 document.body.removeChild(a);
                 setTimeout(() => URL.revokeObjectURL(url), 100); 
+            },
+            
+            // --- UPDATED: EXPORT TO PDF FUNCTION ---
+            exportToPDF: async () => {
+                if(!state.currentDetail) return;
+                const d = state.currentDetail;
+                const btn = event.target;
+                
+                // Set loading state for button
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Generating PDF...';
+                btn.disabled = true;
+
+                try {
+                    // 1. Prepare CLEAN GeoJSON Feature (No Description)
+                    const geoFeature = {
+                        "type": "Feature",
+                        "properties": {
+                            "name": d.food_name,
+                            "country": d.country,
+                            "origin": d.origin_food_name || null,
+                            "type": d.connection_type || null
+                        },
+                        "geometry": {
+                            "type": "GeometryCollection",
+                            "geometries": [
+                                { "type": "Point", "coordinates": [d.lng, d.lat] }
+                            ]
+                        }
+                    };
+                    
+                    // Add LineString if origin exists
+                    if(d.origin_lat && d.origin_lng) {
+                        geoFeature.geometry.geometries.push({
+                            "type": "LineString",
+                            "coordinates": [[d.origin_lng, d.origin_lat], [d.lng, d.lat]]
+                        });
+                        geoFeature.geometry.geometries.push({
+                            "type": "Point",
+                            "coordinates": [d.origin_lng, d.origin_lat]
+                        });
+                    }
+                    
+                    // Add Polygon if exists
+                    if(d.geometry_json) {
+                        try {
+                            const polyCoords = JSON.parse(d.geometry_json);
+                            // Leaflet uses [Lat, Lng], GeoJSON uses [Lng, Lat]. Need to swap.
+                            const geoJsonCoords = polyCoords.map(pt => [pt[1], pt[0]]);
+                            // Close polygon if needed
+                            if(geoJsonCoords.length > 0 && (geoJsonCoords[0][0] !== geoJsonCoords[geoJsonCoords.length-1][0])) {
+                                geoJsonCoords.push(geoJsonCoords[0]);
+                            }
+                            geoFeature.geometry.geometries.push({
+                                "type": "Polygon",
+                                "coordinates": [geoJsonCoords]
+                            });
+                        } catch(e) {}
+                    }
+
+                    const geoJsonString = JSON.stringify(geoFeature, null, 2);
+
+                    // 2. Prepare HTML Structure for PDF (Layout Logic)
+                    let mainImage = 'https://placehold.co/600x400?text=No+Image';
+                    if(d.image_url) {
+                        const urls = d.image_url.split(',');
+                        if(urls.length > 0 && urls[0].trim()) mainImage = urls[0].trim();
+                    }
+
+                    // 3. CAPTURE MAP SNAPSHOTS (Both Maps)
+                    // We look for the active map in the modal.
+                    ui.switchModalTab('multimedia'); // Force switch to multimedia to ensure map is rendered
+                    
+                    // Allow time for tiles to load/render
+                    await new Promise(r => setTimeout(r, 1500));
+                    
+                    const map1El = document.getElementById('detail-geo-map');
+                    const map2El = document.getElementById('detail-conn-map');
+                    
+                    let map1Img = '', map2Img = '';
+                    
+                    // Use html2canvas specifically for maps to avoid CORS/black issues if possible
+                    if(map1El) {
+                        try {
+                            const c1 = await html2canvas(map1El, { useCORS: true, scale: 2 });
+                            map1Img = c1.toDataURL('image/jpeg', 0.9);
+                        } catch(e) { console.warn("Map 1 snap failed", e); }
+                    }
+                    if(map2El) {
+                        try {
+                            const c2 = await html2canvas(map2El, { useCORS: true, scale: 2 });
+                            map2Img = c2.toDataURL('image/jpeg', 0.9);
+                        } catch(e) { console.warn("Map 2 snap failed", e); }
+                    }
+
+                    // 4. Construct PDF HTML Template (2 Pages)
+                    const content = `
+                        <div style="font-family: 'Helvetica', sans-serif; color: #333; width: 750px; margin: 0 auto;">
+                            
+                            <!-- PAGE 1 START -->
+                            <div style="padding: 40px; min-height: 1050px; position: relative;">
+                                <!-- HEADER -->
+                                <div style="border-bottom: 3px solid #ff1b2d; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+                                    <div>
+                                        <h1 style="font-size: 36px; font-weight: 900; margin: 0; color: #000; line-height: 1;">${d.food_name}</h1>
+                                        <div style="margin-top: 10px; font-size: 14px; color: #666;">
+                                            <span style="background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 4px; font-weight: bold; margin-right: 10px;">${d.country}</span>
+                                            ${d.connection_type ? `<span style="background: #fff7ed; color: #c2410c; padding: 4px 8px; border-radius: 4px; font-weight: bold;">${d.connection_type}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 2px; font-weight: bold;">FOODWAYS DATABASE</div>
+                                        <div style="font-size: 14px; font-weight: bold; color: #333;">ID: ${d.id}</div>
+                                    </div>
+                                </div>
+
+                                <!-- TWO COLUMN CONTENT -->
+                                <div style="display: flex; gap: 40px;">
+                                    
+                                    <!-- LEFT COLUMN (60%) -->
+                                    <div style="flex: 1.5;">
+                                        <!-- Main Image -->
+                                        <img src="${mainImage}" style="width: 100%; height: 250px; object-fit: cover; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" crossorigin="anonymous">
+                                        
+                                        <!-- Cultural Roots Diagram -->
+                                        <div style="margin-bottom: 30px; border: 1px dashed #e5e7eb; border-radius: 12px; padding: 20px; text-align: center;">
+                                            <h4 style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #f97316; margin: 0 0 15px 0;">Cultural Roots</h4>
+                                            <div style="display: flex; justify-content: center; align-items: center; gap: 20px; font-size: 12px;">
+                                                <div>
+                                                    <div style="font-weight: bold;">${d.origin_food_name || 'Indigenous'}</div>
+                                                    <div style="color: #666; font-size: 10px;">${d.origin_country || 'Local Origin'}</div>
+                                                </div>
+                                                <div style="color: #f97316;">&rarr; ${d.connection_type || 'Origin'} &rarr;</div>
+                                                <div>
+                                                    <div style="font-weight: bold; color: #ff1b2d;">${d.food_name}</div>
+                                                    <div style="color: #666; font-size: 10px;">${d.country}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Narrative -->
+                                        <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; color: #333; border-bottom: 2px solid #f3f4f6; padding-bottom: 8px; margin-bottom: 15px;">Historical Narrative</h3>
+                                        <p style="font-size: 11px; line-height: 1.8; text-align: justify; color: #4b5563;">
+                                            ${d.description || 'No description available.'}
+                                        </p>
+                                    </div>
+
+                                    <!-- RIGHT COLUMN (40%) -->
+                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+                                        <!-- Map 1 -->
+                                        <div>
+                                            <h4 style="font-size: 12px; font-weight: bold; color: #2563eb; margin: 0 0 8px 0;">Distribution Map</h4>
+                                            ${map1Img ? `<img src="${map1Img}" style="width: 100%; border-radius: 8px; border: 1px solid #e5e7eb;">` : '<div style="background:#f3f4f6; height:150px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999;">Map Unavailable</div>'}
+                                        </div>
+
+                                        <!-- Map 2 -->
+                                        <div>
+                                            <h4 style="font-size: 12px; font-weight: bold; color: #ea580c; margin: 0 0 8px 0;">Influence Map</h4>
+                                            ${map2Img ? `<img src="${map2Img}" style="width: 100%; border-radius: 8px; border: 1px solid #e5e7eb;">` : '<div style="background:#f3f4f6; height:150px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999;">Map Unavailable</div>'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- PAGE 1 END -->
+
+                            <div style="page-break-before: always;"></div>
+
+                            <!-- PAGE 2 START -->
+                            <div style="padding: 40px; min-height: 1050px; position: relative;">
+                                
+                                <!-- Metadata Section -->
+                                <div style="margin-bottom: 40px;">
+                                    <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; color: #333; margin-bottom: 15px;">Data & Sources</h3>
+                                    
+                                    <!-- Sources -->
+                                    ${d.research_links ? `
+                                    <div style="margin-bottom: 20px; background: #eff6ff; padding: 15px; border-radius: 8px; border-left: 4px solid #2563eb;">
+                                        <h4 style="font-size: 11px; font-weight: bold; color: #1e40af; margin: 0 0 8px 0;">Academic Sources</h4>
+                                        <ul style="font-size: 9px; margin: 0; padding-left: 15px; color: #1e3a8a; overflow-wrap: break-word;">
+                                            ${d.research_links.split(',').map(l => `<li style="margin-bottom: 4px;">${l.trim()}</li>`).join('')}
+                                        </ul>
+                                    </div>` : ''}
+
+                                    <!-- Coordinates -->
+                                    <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                        <h4 style="font-size: 11px; font-weight: bold; color: #ef4444; margin: 0 0 10px 0;">Main Location Coordinates</h4>
+                                        <div style="display: flex; gap: 20px;">
+                                            <div style="flex: 1; background: white; border: 1px solid #d1d5db; padding: 8px; border-radius: 4px; font-size: 10px;">
+                                                <span style="color: #999; font-size: 8px; display: block;">LATITUDE</span>
+                                                ${d.lat}
+                                            </div>
+                                            <div style="flex: 1; background: white; border: 1px solid #d1d5db; padding: 8px; border-radius: 4px; font-size: 10px;">
+                                                <span style="color: #999; font-size: 8px; display: block;">LONGITUDE</span>
+                                                ${d.lng}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- GeoJSON Block -->
+                                <div>
+                                    <h3 style="font-size: 14px; font-weight: bold; color: #059669; margin-bottom: 10px;">ArcGIS GeoJSON (Spatial Only)</h3>
+                                    <div style="background: #1e293b; color: #a5f3fc; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 9px; white-space: pre-wrap; overflow-wrap: break-word; border: 1px solid #334155;">${geoJsonString}</div>
+                                </div>
+
+                                <!-- FOOTER -->
+                                <div style="position: absolute; bottom: 40px; left: 40px; right: 40px; border-top: 1px solid #e5e7eb; padding-top: 15px; font-size: 9px; text-align: center; color: #9ca3af;">
+                                    Generated by Foodways Shared Heritage Project • ${new Date().toLocaleDateString()} • Page 2/2
+                                </div>
+                            </div>
+                            <!-- PAGE 2 END -->
+
+                        </div>
+                    `;
+
+                    // 5. Render PDF
+                    const opt = {
+                        margin:       0,
+                        filename:     `${d.food_name.replace(/\s+/g, '_')}_Profile.pdf`,
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, useCORS: true, letterRendering: true }, 
+                        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                    };
+
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = content;
+                    document.body.appendChild(tempDiv);
+                    
+                    await html2pdf().set(opt).from(tempDiv).save();
+                    
+                    document.body.removeChild(tempDiv); // Cleanup
+
+                } catch(e) {
+                    console.error(e);
+                    alert("PDF Generation Failed. Ensure images allow CORS or try again.");
+                } finally {
+                    btn.innerHTML = '<i class="fas fa-file-pdf"></i> Export to PDF';
+                    btn.disabled = false;
+                }
             }
         };
 
