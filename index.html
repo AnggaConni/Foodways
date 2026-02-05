@@ -16,7 +16,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <!-- HTML2PDF & HTML2CANVAS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Explicit html2canvas for map snapshots -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- Custom Styles -->
@@ -87,11 +86,23 @@
         
         /* Animations */
         @keyframes breath {
-            0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255, 27, 45, 0.3)); }
-            50% { transform: scale(1.1); filter: drop-shadow(0 0 10px rgba(255, 27, 45, 0.8)); }
-            100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255, 27, 45, 0.3)); }
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
         }
         .logo-breath { animation: breath 3s infinite ease-in-out; }
+        
+        /* NEW: Glowing Animation (No Jumping) - Only changes opacity/stroke */
+        @keyframes glow {
+            0% { stroke-opacity: 0.6; fill-opacity: 0.8; }
+            50% { stroke-opacity: 1; fill-opacity: 1; }
+            100% { stroke-opacity: 0.6; fill-opacity: 0.8; }
+        }
+        
+        /* Applied only to Main Map nodes, NOT export maps */
+        .node-pulse {
+            animation: glow 2s infinite ease-in-out;
+        }
 
         .btn-opera {
             background-color: var(--opera-red); color: white; transition: all 0.3s;
@@ -138,9 +149,16 @@
             color: var(--opera-red);
             border-bottom-color: var(--opera-red);
         }
-        .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
+        /* FIX: REMOVED TRANSLATEY TO PREVENT PDF JUMPING */
+        .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Utility to kill animations during export */
+        body.exporting * {
+            transition: none !important;
+            animation: none !important;
+        }
 
         /* Skeleton Loading */
         .skeleton {
@@ -356,6 +374,29 @@
     </div>
 
     <!-- MODALS -->
+    
+    <!-- NEW: PDF PROGRESS MODAL (OVERLAY) -->
+    <div id="pdf-progress-modal" class="fixed inset-0 z-[6000] hidden flex items-center justify-center bg-black/90 backdrop-blur-md transition-opacity duration-300">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm w-full text-center border-t-4 border-[var(--opera-red)]">
+             <div class="relative w-16 h-16 mb-6">
+                 <!-- Outer Ring -->
+                 <div class="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+                 <!-- Spinning Ring -->
+                 <div class="absolute inset-0 border-4 border-[var(--opera-red)] rounded-full border-t-transparent animate-spin"></div>
+                 <!-- Icon in center -->
+                 <div class="absolute inset-0 flex items-center justify-center text-[var(--opera-red)]">
+                     <i class="fas fa-file-pdf text-xl"></i>
+                 </div>
+             </div>
+             <h3 class="text-xl font-black text-gray-800 mb-2">Exporting PDF</h3>
+             <p id="pdf-progress-text" class="text-sm text-gray-500 font-mono mb-4">Initializing...</p>
+             
+             <!-- Progress Bar -->
+             <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                 <div id="pdf-progress-bar" class="bg-[var(--opera-red)] h-full w-0 transition-all duration-300 ease-out"></div>
+             </div>
+        </div>
+    </div>
 
     <!-- CRUD LOADER -->
     <div id="crud-loader" class="fixed inset-0 z-[5000] hidden flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300">
@@ -444,13 +485,13 @@
                 <div><label class="text-xs text-gray-500 font-bold block mb-1">Description</label><textarea id="inp-desc" rows="3" class="input-light w-full rounded-lg p-3"></textarea></div>
 
                 <div class="grid grid-cols-2 gap-6">
-                     <div><label class="text-xs text-gray-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="input-light w-full rounded-lg p-3"></div>
-                     <div><label class="text-xs text-gray-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="input-light w-full rounded-lg p-3"></div>
+                      <div><label class="text-xs text-gray-500 font-bold block mb-1">UNESCO Status</label><input type="text" id="inp-unesco" class="input-light w-full rounded-lg p-3"></div>
+                      <div><label class="text-xs text-gray-500 font-bold block mb-1">Research Links</label><input type="text" id="inp-research" class="input-light w-full rounded-lg p-3"></div>
                 </div>
                 
                 <div class="grid grid-cols-1 gap-4">
-                     <div><label class="text-xs text-gray-500 font-bold block mb-1">Image URLs (Comma separated)</label><input type="text" id="inp-image" class="input-light w-full rounded-lg p-3" placeholder="https://img1.jpg, https://img2.jpg"></div>
-                     <div><label class="text-xs text-gray-500 font-bold block mb-1">YouTube URLs (Comma separated)</label><input type="text" id="inp-youtube" class="input-light w-full rounded-lg p-3" placeholder="https://youtube.com/v1, https://youtube.com/v2"></div>
+                      <div><label class="text-xs text-gray-500 font-bold block mb-1">Image URLs (Comma separated)</label><input type="text" id="inp-image" class="input-light w-full rounded-lg p-3" placeholder="https://img1.jpg, https://img2.jpg"></div>
+                      <div><label class="text-xs text-gray-500 font-bold block mb-1">YouTube URLs (Comma separated)</label><input type="text" id="inp-youtube" class="input-light w-full rounded-lg p-3" placeholder="https://youtube.com/v1, https://youtube.com/v2"></div>
                 </div>
                 
                 <div class="bg-gray-100 p-6 rounded-xl border border-gray-200">
@@ -504,7 +545,7 @@
         // Updated URL
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbw5XZBvqGjPbjB_nE2ZeJ27Ppib9-9DjSKDeVzNF-HDQU0pes9rzVn6jI9uYYjfTac/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
-        const state = { 
+        var state = { 
             data: [], 
             role: 'guest', 
             editId: null, 
@@ -514,6 +555,36 @@
             pagination: { page: 1, limit: 10 },
             detailCache: {}, // New Cache Object
             loadingId: null
+        };
+
+        // --- HELPER FOR PDF GENERATION (Avoid CORS Issues) ---
+        const getBase64FromUrl = async (url) => {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Network response was not ok');
+                const blob = await res.blob();
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+            } catch (error) {
+                console.warn("CORS/Network error for image:", url, error);
+                return null; // Return null so we can show a placeholder instead of crashing
+            }
+        };
+
+        const captureElement = async (elementId) => {
+            const el = document.getElementById(elementId);
+            if (!el) return null;
+            // Use standard canvas capture
+            try {
+                const canvas = await html2canvas(el, { useCORS: true, allowTaint: true, logging: false });
+                return canvas.toDataURL('image/png');
+            } catch (e) {
+                console.warn("Map capture failed:", e);
+                return null;
+            }
         };
 
         // --- ROBUST PARSER ---
@@ -626,7 +697,7 @@
             };
         }
 
-        const ui = {
+        var ui = {
             renderAuth: () => {
                 const sGuest = document.getElementById('status-guest');
                 const sAdmin = document.getElementById('status-admin');
@@ -687,15 +758,26 @@
                         const mapDiv = document.getElementById('detail-geo-map');
                         if (mapDiv) {
                             if (!mapDiv._leaflet_map) {
-                                // Init
-                                const map = L.map('detail-geo-map', { zoomControl: false, attributionControl: false }).setView([d.lat, d.lng], 6);
+                                // Init - Disable Animation & Inertia STRICTLY for screenshot accuracy
+                                const map = L.map('detail-geo-map', { 
+                                    zoomControl: false, 
+                                    attributionControl: false,
+                                    zoomAnimation: false, 
+                                    fadeAnimation: false, 
+                                    markerZoomAnimation: false,
+                                    inertia: false, // Prevent kinetic scrolling
+                                    zoomSnap: 0, // Disable snapping to integers for perfect fits
+                                }).setView([d.lat, d.lng], 6);
                                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
                                 if(d.geometry_json) {
                                     try {
                                         const pts = JSON.parse(d.geometry_json);
                                         L.polygon(pts, {color:'#ff1b2d', fillOpacity:0.2}).addTo(map);
-                                        map.fitBounds(pts);
+                                        // Animate: false ensures INSTANT snap for accurate screenshot
+                                        map.fitBounds(pts, { animate: false, duration: 0 });
                                     } catch(e) { console.error("Geo JSON error", e); }
+                                } else {
+                                    map.setView([d.lat, d.lng], 6, { animate: false });
                                 }
                                 mapDiv._leaflet_map = map;
                             } else {
@@ -709,7 +791,16 @@
                         const mapDiv2 = document.getElementById('detail-conn-map');
                         if (mapDiv2) {
                             if (!mapDiv2._leaflet_map) {
-                                const map2 = L.map('detail-conn-map', { zoomControl: false, attributionControl: false });
+                                // Disable Animation here too
+                                const map2 = L.map('detail-conn-map', { 
+                                    zoomControl: false, 
+                                    attributionControl: false,
+                                    zoomAnimation: false,
+                                    fadeAnimation: false,
+                                    markerZoomAnimation: false,
+                                    inertia: false,
+                                    zoomSnap: 0
+                                });
                                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map2);
                                 
                                 const bounds = L.latLngBounds();
@@ -781,11 +872,12 @@
                                 uniqueNodes.forEach(node => {
                                     // Draw Line (from Origin to Node)
                                     if(node.origin_lat && node.origin_lng && node.lat && node.lng) {
+                                         // SOLID STATIC LINE (User request: No shifting animation)
                                          L.polyline([[node.origin_lat, node.origin_lng], [node.lat, node.lng]], {
                                             color: '#fca5a5', 
-                                            weight: 1,
+                                            weight: 2,
                                             opacity: 0.6,
-                                            dashArray: '5, 5'
+                                            dashArray: '5, 5' // Dashed but no CSS animation
                                         }).addTo(map2);
                                         
                                         // Draw small dot at origin point (Hub)
@@ -804,6 +896,7 @@
                                         fillOpacity: 1, 
                                         radius: isCurrent ? 6 : 4,
                                         weight: isCurrent ? 0 : 1
+                                        // NO ANIMATION CLASS HERE
                                     }).addTo(map2);
 
                                     // Tooltip Logic: Only Current is Permanent (Fix overlapping)
@@ -815,14 +908,12 @@
                                         className: isCurrent ? 'z-50 custom-tooltip' : 'text-xs bg-white text-gray-500 border border-gray-200 p-1 shadow-sm'
                                     });
                                     
-                                    // Removed explicit bringToFront() call to prevent race condition error
-                                    // Sorting ensures 'current' marker is added last (on top)
-                                    
                                     bounds.extend([node.lat, node.lng]);
                                 });
 
-                                if(bounds.isValid()) map2.fitBounds(bounds, {padding: [50, 50]});
-                                else map2.setView([20, 0], 2);
+                                // Animate: false ensures INSTANT snap for accurate screenshot
+                                if(bounds.isValid()) map2.fitBounds(bounds, {padding: [50, 50], animate: false, duration: 0});
+                                else map2.setView([20, 0], 2, { animate: false, duration: 0 });
 
                                 mapDiv2._leaflet_map = map2;
                             } else {
@@ -834,7 +925,7 @@
             }
         };
 
-        const mapLogic = {
+        var mapLogic = {
             map: null, layers: [], lines: [], markers: [],
             init: () => {
                 mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false, maxBounds: [[-90, -180], [90, 180]], maxBoundsViscosity: 1.0, minZoom: 2 }).setView([20, 0], 2);
@@ -878,10 +969,17 @@
                             weight: 1.5, opacity: 0.4, dashArray: '4, 8', className: 'leaflet-interactive' 
                         }).addTo(mapLogic.map);
                         
-                         line.on('mouseover', function() {
+                        // Bind Tooltip ONCE (Fixed Bug: Sticky Tooltips on Hover)
+                        line.bindTooltip(`${d.origin_food_name} ➔ ${d.food_name}`, { 
+                            sticky: true, // Follow mouse
+                            direction: 'top',
+                            className: 'bg-white text-gray-800 text-[10px] font-bold px-2 py-1 rounded border border-gray-300 shadow-lg'
+                        });
+
+                        line.on('mouseover', function() {
                             this.setStyle({ color: '#d40012', weight: 4, opacity: 1, dashArray: null });
                             this.bringToFront();
-                            this.bindTooltip(`${d.origin_food_name} ➔ ${d.food_name}`, { sticky: true }).openTooltip();
+                            this.openTooltip();
                         });
                         line.on('mouseout', function() {
                             this.setStyle({ color: '#ff1b2d', weight: 1.5, opacity: 0.4, dashArray: '4, 8' });
@@ -898,7 +996,10 @@
                             mapLogic.markers.push(origin); mapLogic.layers.push(origin);
                         }
                     }
-                    const m = L.circleMarker([d.lat, d.lng], { color: '#ff1b2d', fillColor: '#ff1b2d', fillOpacity: 0.8, radius: 6 }).addTo(mapLogic.map);
+                    const m = L.circleMarker([d.lat, d.lng], { 
+                        color: '#ff1b2d', fillColor: '#ff1b2d', fillOpacity: 0.8, radius: 6,
+                        className: 'node-pulse' // KEEP ANIMATION FOR MAIN MAP ONLY
+                    }).addTo(mapLogic.map);
                     m.on('click', () => dashboard.showDetail(d));
                     m.bindTooltip(d.food_name, { direction: 'top', className: 'custom-tooltip' });
                     mapLogic.layers.push(m);
@@ -922,7 +1023,7 @@
             }
         };
 
-        const geoEditor = {
+        var geoEditor = {
             map: null, layer: null, points: [], markers: [],
             start: () => {
                 ui.closeModal('input-modal');
@@ -960,7 +1061,7 @@
             }
         };
 
-        const dashboard = {
+        var dashboard = {
             chartCountry: null, chartType: null, chartUnesco: null,
             init: () => { dashboard.render(); dashboard.listeners(); }, 
             render: () => {
@@ -1134,7 +1235,7 @@
                             
                             <div class="flex gap-2 items-start mt-2">
                                 <!-- PDF EXPORT BUTTON -->
-                                <button onclick="app.exportToPDF()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-bold text-xs transition flex items-center gap-2 shadow-sm">
+                                <button onclick="app.exportToPDF(this)" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-bold text-xs transition flex items-center gap-2 shadow-sm">
                                     <i class="fas fa-file-pdf"></i> Export to PDF
                                 </button>
 
@@ -1240,7 +1341,7 @@
             }
         };
 
-        const app = {
+        var app = {
             init: () => {
                 ui.renderAuth();
                 window.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const landing = document.getElementById('landing-page'); if (landing && landing.style.display !== 'none' && !document.getElementById('loading-container').classList.contains('hidden') === false) { app.enterAsGuest(); } } });
@@ -1460,219 +1561,265 @@
                 setTimeout(() => URL.revokeObjectURL(url), 100); 
             },
             
-            // --- UPDATED: EXPORT TO PDF FUNCTION ---
-            exportToPDF: async () => {
+            // --- UPDATED: EXPORT TO PDF FUNCTION WITH LOADING OVERLAY ---
+            updatePdfProgress: (percent, text) => {
+                const bar = document.getElementById('pdf-progress-bar');
+                const txt = document.getElementById('pdf-progress-text');
+                if(bar) bar.style.width = `${percent}%`;
+                if(txt) txt.innerText = text;
+                // Force UI Repaint
+                return new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50))); 
+            },
+
+            exportToPDF: async (btnElement) => {
                 if(!state.currentDetail) return;
                 const d = state.currentDetail;
-                const btn = event.target;
+                const btn = btnElement || event.target;
                 
-                // Set loading state for button
-                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Generating PDF...';
+                // Show Overlay Modal immediately
+                ui.openModal('pdf-progress-modal');
+                document.body.classList.add('exporting');
                 btn.disabled = true;
 
                 try {
-                    // 1. Prepare CLEAN GeoJSON Feature (No Description)
+                    await app.updatePdfProgress(5, "Initializing Renderer...");
+
+                    // --- GHOST MAP SETUP ---
+                    const ghostId = 'ghost-map-container';
+                    let ghost = document.getElementById(ghostId);
+                    if (!ghost) {
+                        ghost = document.createElement('div');
+                        ghost.id = ghostId;
+                        // Position off-screen but keep in DOM flow to ensure rendering
+                        ghost.style.position = 'fixed';
+                        ghost.style.left = '-9999px'; 
+                        ghost.style.top = '0';
+                        ghost.style.width = '800px'; 
+                        ghost.style.height = '400px';
+                        ghost.style.zIndex = '-9999';
+                        document.body.appendChild(ghost);
+                    }
+
+                    // --- GENERATE SNAPSHOT HELPER ---
+                    const generateMapSnapshot = async (type) => {
+                        // Reset Container
+                        if (ghost._leaflet_id) { ghost._leaflet_id = null; }
+                        ghost.innerHTML = ''; 
+
+                        const map = L.map(ghostId, {
+                            zoomControl: false, attributionControl: false,
+                            fadeAnimation: false, zoomAnimation: false, preferCanvas: true
+                        });
+                        
+                        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+                        const bounds = L.latLngBounds();
+                        let hasLayer = false;
+
+                        if (type === 'geo') {
+                            // Distribution Map Logic
+                            if (d.geometry_json) {
+                                try {
+                                    const pts = JSON.parse(d.geometry_json);
+                                    L.polygon(pts, {color:'#ff1b2d', fillOpacity:0.2}).addTo(map);
+                                    bounds.extend(pts);
+                                    hasLayer = true;
+                                } catch(e){}
+                            } else {
+                                L.circleMarker([d.lat, d.lng], {color:'#ff1b2d'}).addTo(map);
+                                bounds.extend([d.lat, d.lng]);
+                                hasLayer = true;
+                            }
+                        } else {
+                            // Influence Map Logic
+                            // Use main map logic to draw lines
+                            let rootName = d.food_name;
+                            let curr = d;
+                            const pathUp = new Set([d.id]);
+
+                            // Find Root
+                            while(curr && curr.origin_food_name) {
+                                const parentName = curr.origin_food_name;
+                                const parentNode = state.data.find(n => n.food_name.toLowerCase().trim() === parentName.toLowerCase().trim());
+                                rootName = parentName;
+                                if(parentNode) {
+                                    if(pathUp.has(parentNode.id)) break; 
+                                    pathUp.add(parentNode.id);
+                                    curr = parentNode;
+                                } else break;
+                            }
+
+                            // Collect Family
+                            const familyNodes = [];
+                            const queue = [rootName];
+                            const visitedNames = new Set();
+                            const childrenMap = {};
+                            state.data.forEach(item => {
+                                if(item.origin_food_name) {
+                                    const pName = item.origin_food_name.toLowerCase().trim();
+                                    if(!childrenMap[pName]) childrenMap[pName] = [];
+                                    childrenMap[pName].push(item);
+                                }
+                            });
+
+                            while(queue.length > 0) {
+                                const pName = queue.shift();
+                                const lowerP = pName.toLowerCase().trim();
+                                if(visitedNames.has(lowerP)) continue;
+                                visitedNames.add(lowerP);
+                                const realNode = state.data.find(n => n.food_name.toLowerCase().trim() === lowerP);
+                                if(realNode) familyNodes.push(realNode);
+                                if(childrenMap[lowerP]) {
+                                    childrenMap[lowerP].forEach(child => {
+                                        familyNodes.push(child); queue.push(child.food_name);
+                                    });
+                                }
+                            }
+
+                            const uniqueNodes = Array.from(new Map(familyNodes.map(item => [item.id, item])).values());
+                            if(!uniqueNodes.find(n => n.id === d.id)) uniqueNodes.push(d); 
+                            uniqueNodes.sort((a, b) => (a.id === d.id) ? 1 : (b.id === d.id) ? -1 : 0);
+
+                            uniqueNodes.forEach(node => {
+                                if(node.origin_lat && node.origin_lng && node.lat && node.lng) {
+                                     L.polyline([[node.origin_lat, node.origin_lng], [node.lat, node.lng]], {
+                                        color: '#fca5a5', weight: 2, opacity: 0.6, dashArray: '5, 5'
+                                    }).addTo(map);
+                                    L.circleMarker([node.origin_lat, node.origin_lng], { 
+                                        color: '#fb923c', fillColor: '#fff', fillOpacity: 1, radius: 3, weight: 1
+                                    }).addTo(map);
+                                    bounds.extend([node.origin_lat, node.origin_lng]);
+                                    hasLayer = true;
+                                }
+                                const isCurrent = node.id === d.id;
+                                const m = L.circleMarker([node.lat, node.lng], { 
+                                    color: isCurrent ? '#ff1b2d' : '#ef4444', 
+                                    fillColor: isCurrent ? '#ff1b2d' : '#fee2e2', 
+                                    fillOpacity: 1, radius: isCurrent ? 6 : 4, weight: isCurrent ? 0 : 1
+                                }).addTo(map);
+                                if (isCurrent) {
+                                     m.bindTooltip(node.food_name, { permanent: true, direction: 'top', className: 'z-50 custom-tooltip' });
+                                }
+                                bounds.extend([node.lat, node.lng]);
+                                hasLayer = true;
+                            });
+                        }
+
+                        // --- CRITICAL FIX FOR ZOOM ---
+                        if (hasLayer && bounds.isValid()) {
+                            map.fitBounds(bounds, { 
+                                animate: false, 
+                                padding: [50, 50], 
+                                maxZoom: 4 // FORCE WIDER VIEW
+                            });
+                        } else {
+                            map.setView([20, 0], 2, { animate: false });
+                        }
+
+                        await new Promise(r => setTimeout(r, 800)); // Wait for tile load
+
+                        const canvas = await html2canvas(ghost, { useCORS: true, allowTaint: true, logging: false, scale: 2 });
+                        map.remove();
+                        return canvas.toDataURL('image/png');
+                    };
+
+                    // Generate Maps off-screen with Progress Updates
+                    await app.updatePdfProgress(20, "Generating Distribution Map (1/2)...");
+                    const map1Img = await generateMapSnapshot('geo');
+                    
+                    await app.updatePdfProgress(40, "Generating Influence Map (2/2)...");
+                    const map2Img = await generateMapSnapshot('conn');
+
+                    // 5. Prepare CLEAN GeoJSON Feature
                     const geoFeature = {
                         "type": "Feature",
                         "properties": {
-                            "name": d.food_name,
-                            "country": d.country,
-                            "origin": d.origin_food_name || null,
-                            "type": d.connection_type || null
+                            "name": d.food_name, "country": d.country,
+                            "origin": d.origin_food_name || null, "type": d.connection_type || null
                         },
                         "geometry": {
                             "type": "GeometryCollection",
-                            "geometries": [
-                                { "type": "Point", "coordinates": [d.lng, d.lat] }
-                            ]
+                            "geometries": [ { "type": "Point", "coordinates": [d.lng, d.lat] } ]
                         }
                     };
-                    
-                    // Add LineString if origin exists
                     if(d.origin_lat && d.origin_lng) {
-                        geoFeature.geometry.geometries.push({
-                            "type": "LineString",
-                            "coordinates": [[d.origin_lng, d.origin_lat], [d.lng, d.lat]]
-                        });
-                        geoFeature.geometry.geometries.push({
-                            "type": "Point",
-                            "coordinates": [d.origin_lng, d.origin_lat]
-                        });
+                        geoFeature.geometry.geometries.push({ "type": "LineString", "coordinates": [[d.origin_lng, d.origin_lat], [d.lng, d.lat]] });
                     }
-                    
-                    // Add Polygon if exists
                     if(d.geometry_json) {
                         try {
                             const polyCoords = JSON.parse(d.geometry_json);
-                            // Leaflet uses [Lat, Lng], GeoJSON uses [Lng, Lat]. Need to swap.
                             const geoJsonCoords = polyCoords.map(pt => [pt[1], pt[0]]);
-                            // Close polygon if needed
-                            if(geoJsonCoords.length > 0 && (geoJsonCoords[0][0] !== geoJsonCoords[geoJsonCoords.length-1][0])) {
-                                geoJsonCoords.push(geoJsonCoords[0]);
-                            }
-                            geoFeature.geometry.geometries.push({
-                                "type": "Polygon",
-                                "coordinates": [geoJsonCoords]
-                            });
+                            if(geoJsonCoords.length > 0 && (geoJsonCoords[0][0] !== geoJsonCoords[geoJsonCoords.length-1][0])) geoJsonCoords.push(geoJsonCoords[0]);
+                            geoFeature.geometry.geometries.push({ "type": "Polygon", "coordinates": [geoJsonCoords] });
                         } catch(e) {}
                     }
-
                     const geoJsonString = JSON.stringify(geoFeature, null, 2);
 
-                    // 2. Prepare HTML Structure for PDF (Layout Logic)
-                    let mainImage = 'https://placehold.co/600x400?text=No+Image';
+                    // Image Loading
+                    await app.updatePdfProgress(60, "Processing High-Res Images...");
+                    let processedImages = [];
                     if(d.image_url) {
-                        const urls = d.image_url.split(',');
-                        if(urls.length > 0 && urls[0].trim()) mainImage = urls[0].trim();
+                        const rawUrls = d.image_url.split(',').filter(u => u.trim());
+                        for (let url of rawUrls.slice(0, 4)) {
+                            const base64 = await getBase64FromUrl(url.trim());
+                            if (base64) processedImages.push(base64);
+                        }
                     }
+                    let imagesHtml = processedImages.length > 0 ? 
+                        `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                            ${processedImages.map(imgData => `<img src="${imgData}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;">`).join('')}
+                        </div>` : 
+                        `<div style="background:#f9fafb; color:#999; padding:20px; text-align:center; border:1px dashed #ccc; border-radius:6px; margin-bottom:20px; font-size:10px;">No Images Available</div>`;
 
-                    // 3. CAPTURE MAP SNAPSHOTS (Both Maps)
-                    // We look for the active map in the modal.
-                    ui.switchModalTab('multimedia'); // Force switch to multimedia to ensure map is rendered
-                    
-                    // Allow time for tiles to load/render
-                    await new Promise(r => setTimeout(r, 1500));
-                    
-                    const map1El = document.getElementById('detail-geo-map');
-                    const map2El = document.getElementById('detail-conn-map');
-                    
-                    let map1Img = '', map2Img = '';
-                    
-                    // Use html2canvas specifically for maps to avoid CORS/black issues if possible
-                    if(map1El) {
-                        try {
-                            const c1 = await html2canvas(map1El, { useCORS: true, scale: 2 });
-                            map1Img = c1.toDataURL('image/jpeg', 0.9);
-                        } catch(e) { console.warn("Map 1 snap failed", e); }
-                    }
-                    if(map2El) {
-                        try {
-                            const c2 = await html2canvas(map2El, { useCORS: true, scale: 2 });
-                            map2Img = c2.toDataURL('image/jpeg', 0.9);
-                        } catch(e) { console.warn("Map 2 snap failed", e); }
-                    }
+                    await app.updatePdfProgress(80, "Compiling Document Layout...");
 
-                    // 4. Construct PDF HTML Template (2 Pages)
+                    // HTML Template
                     const content = `
-                        <div style="font-family: 'Helvetica', sans-serif; color: #333; width: 750px; margin: 0 auto;">
-                            
-                            <!-- PAGE 1 START -->
-                            <div style="padding: 40px; min-height: 1050px; position: relative;">
-                                <!-- HEADER -->
-                                <div style="border-bottom: 3px solid #ff1b2d; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
-                                    <div>
-                                        <h1 style="font-size: 36px; font-weight: 900; margin: 0; color: #000; line-height: 1;">${d.food_name}</h1>
-                                        <div style="margin-top: 10px; font-size: 14px; color: #666;">
-                                            <span style="background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 4px; font-weight: bold; margin-right: 10px;">${d.country}</span>
-                                            ${d.connection_type ? `<span style="background: #fff7ed; color: #c2410c; padding: 4px 8px; border-radius: 4px; font-weight: bold;">${d.connection_type}</span>` : ''}
-                                        </div>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 2px; font-weight: bold;">FOODWAYS DATABASE</div>
-                                        <div style="font-size: 14px; font-weight: bold; color: #333;">ID: ${d.id}</div>
-                                    </div>
-                                </div>
-
-                                <!-- TWO COLUMN CONTENT -->
-                                <div style="display: flex; gap: 40px;">
-                                    
-                                    <!-- LEFT COLUMN (60%) -->
-                                    <div style="flex: 1.5;">
-                                        <!-- Main Image -->
-                                        <img src="${mainImage}" style="width: 100%; height: 250px; object-fit: cover; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" crossorigin="anonymous">
-                                        
-                                        <!-- Cultural Roots Diagram -->
-                                        <div style="margin-bottom: 30px; border: 1px dashed #e5e7eb; border-radius: 12px; padding: 20px; text-align: center;">
-                                            <h4 style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #f97316; margin: 0 0 15px 0;">Cultural Roots</h4>
-                                            <div style="display: flex; justify-content: center; align-items: center; gap: 20px; font-size: 12px;">
-                                                <div>
-                                                    <div style="font-weight: bold;">${d.origin_food_name || 'Indigenous'}</div>
-                                                    <div style="color: #666; font-size: 10px;">${d.origin_country || 'Local Origin'}</div>
-                                                </div>
-                                                <div style="color: #f97316;">&rarr; ${d.connection_type || 'Origin'} &rarr;</div>
-                                                <div>
-                                                    <div style="font-weight: bold; color: #ff1b2d;">${d.food_name}</div>
-                                                    <div style="color: #666; font-size: 10px;">${d.country}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Narrative -->
-                                        <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; color: #333; border-bottom: 2px solid #f3f4f6; padding-bottom: 8px; margin-bottom: 15px;">Historical Narrative</h3>
-                                        <p style="font-size: 11px; line-height: 1.8; text-align: justify; color: #4b5563;">
-                                            ${d.description || 'No description available.'}
-                                        </p>
-                                    </div>
-
-                                    <!-- RIGHT COLUMN (40%) -->
-                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
-                                        <!-- Map 1 -->
-                                        <div>
-                                            <h4 style="font-size: 12px; font-weight: bold; color: #2563eb; margin: 0 0 8px 0;">Distribution Map</h4>
-                                            ${map1Img ? `<img src="${map1Img}" style="width: 100%; border-radius: 8px; border: 1px solid #e5e7eb;">` : '<div style="background:#f3f4f6; height:150px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999;">Map Unavailable</div>'}
-                                        </div>
-
-                                        <!-- Map 2 -->
-                                        <div>
-                                            <h4 style="font-size: 12px; font-weight: bold; color: #ea580c; margin: 0 0 8px 0;">Influence Map</h4>
-                                            ${map2Img ? `<img src="${map2Img}" style="width: 100%; border-radius: 8px; border: 1px solid #e5e7eb;">` : '<div style="background:#f3f4f6; height:150px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999;">Map Unavailable</div>'}
-                                        </div>
-                                    </div>
+                        <div style="font-family: 'Helvetica', sans-serif; color: #333; width: 750px; margin: 0 auto; padding: 40px; position: relative;">
+                            <div style="text-align: center; border-bottom: 4px solid #ff1b2d; padding-bottom: 20px; margin-bottom: 30px;">
+                                <h1 style="font-size: 36px; font-weight: 900; margin: 0; text-transform: uppercase; line-height: 1.1; color: #000;">${d.food_name}</h1>
+                                <div style="margin-top: 8px; font-size: 14px; font-weight: bold; color: #555;">
+                                    📍 ${d.country} ${d.unesco_status ? `<span style="margin: 0 10px; color: #ccc;">|</span> 🏆 <span style="color: #d97706;">${d.unesco_status}</span>` : ''}
                                 </div>
                             </div>
-                            <!-- PAGE 1 END -->
-
-                            <div style="page-break-before: always;"></div>
-
-                            <!-- PAGE 2 START -->
-                            <div style="padding: 40px; min-height: 1050px; position: relative;">
-                                
-                                <!-- Metadata Section -->
-                                <div style="margin-bottom: 40px;">
-                                    <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; color: #333; margin-bottom: 15px;">Data & Sources</h3>
-                                    
-                                    <!-- Sources -->
-                                    ${d.research_links ? `
-                                    <div style="margin-bottom: 20px; background: #eff6ff; padding: 15px; border-radius: 8px; border-left: 4px solid #2563eb;">
-                                        <h4 style="font-size: 11px; font-weight: bold; color: #1e40af; margin: 0 0 8px 0;">Academic Sources</h4>
-                                        <ul style="font-size: 9px; margin: 0; padding-left: 15px; color: #1e3a8a; overflow-wrap: break-word;">
-                                            ${d.research_links.split(',').map(l => `<li style="margin-bottom: 4px;">${l.trim()}</li>`).join('')}
-                                        </ul>
-                                    </div>` : ''}
-
-                                    <!-- Coordinates -->
-                                    <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
-                                        <h4 style="font-size: 11px; font-weight: bold; color: #ef4444; margin: 0 0 10px 0;">Main Location Coordinates</h4>
-                                        <div style="display: flex; gap: 20px;">
-                                            <div style="flex: 1; background: white; border: 1px solid #d1d5db; padding: 8px; border-radius: 4px; font-size: 10px;">
-                                                <span style="color: #999; font-size: 8px; display: block;">LATITUDE</span>
-                                                ${d.lat}
-                                            </div>
-                                            <div style="flex: 1; background: white; border: 1px solid #d1d5db; padding: 8px; border-radius: 4px; font-size: 10px;">
-                                                <span style="color: #999; font-size: 8px; display: block;">LONGITUDE</span>
-                                                ${d.lng}
-                                            </div>
-                                        </div>
-                                    </div>
+                            <h3 style="border-left: 4px solid #ff1b2d; padding-left: 10px; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Visual Archive</h3>
+                            ${imagesHtml}
+                            ${d.origin_food_name ? `
+                            <div style="background: #fff7ed; border: 1px dashed #f97316; border-radius: 8px; padding: 15px; margin-bottom: 25px; text-align: center;">
+                                <div style="font-size: 9px; font-weight: bold; color: #c2410c; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Evolution Path (${d.connection_type || 'Unknown'})</div>
+                                <div style="font-size: 14px; display: flex; justify-content: center; align-items: center; gap: 15px;">
+                                    <div><span style="font-weight: bold;">${d.origin_food_name}</span> <span style="font-size: 10px; color: #666;">(${d.origin_country})</span></div>
+                                    <div style="color: #f97316; font-size: 18px;">➔</div>
+                                    <div><span style="font-weight: bold;">${d.food_name}</span> <span style="font-size: 10px; color: #666;">(${d.country})</span></div>
                                 </div>
-
-                                <!-- GeoJSON Block -->
+                            </div>` : ''}
+                            <h3 style="border-left: 4px solid #ff1b2d; padding-left: 10px; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Historical Narrative</h3>
+                            <div style="font-size: 11px; line-height: 1.6; text-align: justify; margin-bottom: 30px; white-space: pre-line; color: #444;">${d.description || 'No detailed history available.'}</div>
+                            <h3 style="border-left: 4px solid #ff1b2d; padding-left: 10px; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Geographic Mapping</h3>
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-size: 9px; font-weight: bold; color: #2563eb; margin-bottom: 4px;">FIG 1. DISTRIBUTION MAP</div>
+                                <img src="${map1Img}" style="width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 30px;">
+                                <div style="font-size: 9px; font-weight: bold; color: #ea580c; margin-bottom: 4px;">FIG 2. INFLUENCE PATH</div>
+                                <img src="${map2Img}" style="width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;">
+                            </div>
+                            <div style="border-top: 4px double #ddd; padding-top: 20px; margin-top: 40px;">
+                                <div style="margin-bottom: 15px;">
+                                    <h4 style="font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; color: #000;">Research Sources</h4>
+                                    <div style="font-size: 8px; color: #0056b3; overflow-wrap: break-word;">${d.research_links ? d.research_links.split(',').map(l => `<div>• ${l.trim()}</div>`).join('') : 'No sources listed.'}</div>
+                                </div>
                                 <div>
-                                    <h3 style="font-size: 14px; font-weight: bold; color: #059669; margin-bottom: 10px;">ArcGIS GeoJSON (Spatial Only)</h3>
-                                    <div style="background: #1e293b; color: #a5f3fc; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 9px; white-space: pre-wrap; overflow-wrap: break-word; border: 1px solid #334155;">${geoJsonString}</div>
+                                    <h4 style="font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; color: #000;">GeoJSON Data (Spatial)</h4>
+                                    <div style="background: #f1f5f9; padding: 10px; font-family: 'Courier New', monospace; font-size: 7px; color: #475569; border: 1px solid #e2e8f0; border-radius: 4px; white-space: pre-wrap; overflow-wrap: break-word;">${geoJsonString}</div>
                                 </div>
-
-                                <!-- FOOTER -->
-                                <div style="position: absolute; bottom: 40px; left: 40px; right: 40px; border-top: 1px solid #e5e7eb; padding-top: 15px; font-size: 9px; text-align: center; color: #9ca3af;">
-                                    Generated by Foodways Shared Heritage Project • ${new Date().toLocaleDateString()} • Page 2/2
-                                </div>
+                                <div style="text-align: center; margin-top: 20px; font-size: 8px; color: #999;">Foodways Shared Heritage Project • Generated on ${new Date().toLocaleDateString()}</div>
                             </div>
-                            <!-- PAGE 2 END -->
-
                         </div>
                     `;
 
-                    // 5. Render PDF
+                    await app.updatePdfProgress(95, "Finalizing PDF File...");
+
                     const opt = {
                         margin:       0,
                         filename:     `${d.food_name.replace(/\s+/g, '_')}_Profile.pdf`,
@@ -1684,17 +1831,16 @@
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = content;
                     document.body.appendChild(tempDiv);
-                    
                     await html2pdf().set(opt).from(tempDiv).save();
-                    
-                    document.body.removeChild(tempDiv); // Cleanup
+                    document.body.removeChild(tempDiv);
 
                 } catch(e) {
                     console.error(e);
-                    alert("PDF Generation Failed. Ensure images allow CORS or try again.");
+                    alert("PDF Generation Failed: " + e.message);
                 } finally {
-                    btn.innerHTML = '<i class="fas fa-file-pdf"></i> Export to PDF';
                     btn.disabled = false;
+                    document.body.classList.remove('exporting');
+                    ui.closeModal('pdf-progress-modal');
                 }
             }
         };
