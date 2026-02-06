@@ -697,6 +697,50 @@
             };
         }
 
+        // --- NEW: ArcGIS Ready Footer Generator Function ---
+        // Fungsi ini menerima data mentah dari Kolom 11/K
+        function generateArcGISReadyFooter(rawData) {
+            if(!rawData) return "No Data";
+            
+            try {
+                // 1. Cek jika data masih berupa string, parse dulu jadi Array
+                // Contoh input: "[[5.77,94.77], [5.16,97.71], ...]"
+                let coords = (typeof rawData === 'string') ? JSON.parse(rawData) : rawData;
+
+                // 2. LOGIKA KRUSIAL: Swap Coordinate (Balik Posisi)
+                // Data input adalah [Lat, Lng], harus dibalik jadi [Lng, Lat] untuk ArcGIS
+                const fixedCoords = coords.map(point => {
+                    return [point[1], point[0]]; 
+                });
+
+                // 3. Bungkus jadi GeoJSON FeatureCollection (ArcGIS Ready)
+                const geoJSON = {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "properties": {
+                                "info": "Generated from Foodways PDF Export",
+                                "timestamp": new Date().toISOString()
+                            },
+                            "geometry": {
+                                // Asumsi data ini membentuk Area (Polygon)
+                                // Jika data tidak tertutup, ganti jadi "LineString" dan hapus kurung siku terluar di coordinates
+                                "type": "Polygon", 
+                                "coordinates": [fixedCoords] 
+                            }
+                        }
+                    ]
+                };
+
+                // 4. Return sebagai Text String untuk dicetak di PDF
+                return JSON.stringify(geoJSON, null, 2);
+            } catch(e) {
+                console.error("GeoJSON Footer Error:", e);
+                return "Error parsing GeoJSON Data";
+            }
+        }
+
         var ui = {
             renderAuth: () => {
                 const sGuest = document.getElementById('status-guest');
@@ -1247,10 +1291,17 @@
                             </div>
                         </div>
                         
-                        <!-- TABS -->
-                        <div class="flex gap-6 border-b border-gray-200 mt-4">
-                            <button onclick="ui.switchModalTab('overview')" id="tab-btn-overview" class="tab-btn active">Overview</button>
-                            <button onclick="ui.switchModalTab('multimedia')" id="tab-btn-multimedia" class="tab-btn">Multimedia & Data</button>
+                        <!-- TABS & GEOJSON BUTTON (Option Red) -->
+                        <div class="flex justify-between items-end border-b border-gray-200 mt-4">
+                            <div class="flex gap-6">
+                                <button onclick="ui.switchModalTab('overview')" id="tab-btn-overview" class="tab-btn active">Overview</button>
+                                <button onclick="ui.switchModalTab('multimedia')" id="tab-btn-multimedia" class="tab-btn">Multimedia & Data</button>
+                            </div>
+                            
+                            <!-- GEOJSON EXPORT BUTTON -->
+                            <button onclick="app.exportGeoJSON()" class="mb-2 bg-black hover:bg-gray-800 text-white px-3 py-1.5 rounded text-[10px] font-bold transition shadow-lg flex items-center gap-2" title="Download for ArcGIS/QGIS">
+                                <i class="fas fa-globe-americas"></i> Download GeoJSON
+                            </button>
                         </div>
                     </div>
 
@@ -1561,6 +1612,45 @@
                 setTimeout(() => URL.revokeObjectURL(url), 100); 
             },
             
+            // --- NEW: EXPORT SINGLE GEOJSON (ARCGIS READY) ---
+            exportGeoJSON: () => {
+                if (!state.currentDetail) return;
+                const d = state.currentDetail;
+                
+                // Gunakan logika yang sama dengan footer PDF (ArcGIS Compatible)
+                let content = "";
+                
+                if (d.geometry_json) {
+                    content = generateArcGISReadyFooter(d.geometry_json);
+                } else {
+                    // Fallback jika tidak ada poligon, buat Point Feature sederhana
+                    const simpleFeature = {
+                        "type": "FeatureCollection",
+                        "features": [{
+                            "type": "Feature",
+                            "properties": { 
+                                "name": d.food_name, 
+                                "info": "Point Data Only (No Polygon Available)",
+                                "timestamp": new Date().toISOString()
+                            },
+                            "geometry": { "type": "Point", "coordinates": [d.lng, d.lat] }
+                        }]
+                    };
+                    content = JSON.stringify(simpleFeature, null, 2);
+                }
+
+                // Create Blob & Download
+                const blob = new Blob([content], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${d.food_name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_arcgis.json`; 
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            },
+
             // --- UPDATED: EXPORT TO PDF FUNCTION WITH LOADING OVERLAY ---
             updatePdfProgress: (percent, text) => {
                 const bar = document.getElementById('pdf-progress-bar');
@@ -1730,30 +1820,21 @@
                     await app.updatePdfProgress(40, "Generating Influence Map (2/2)...");
                     const map2Img = await generateMapSnapshot('conn');
 
-                    // 5. Prepare CLEAN GeoJSON Feature
-                    const geoFeature = {
-                        "type": "Feature",
-                        "properties": {
-                            "name": d.food_name, "country": d.country,
-                            "origin": d.origin_food_name || null, "type": d.connection_type || null
-                        },
-                        "geometry": {
-                            "type": "GeometryCollection",
-                            "geometries": [ { "type": "Point", "coordinates": [d.lng, d.lat] } ]
-                        }
-                    };
-                    if(d.origin_lat && d.origin_lng) {
-                        geoFeature.geometry.geometries.push({ "type": "LineString", "coordinates": [[d.origin_lng, d.origin_lat], [d.lng, d.lat]] });
+                    // 5. Prepare CLEAN GeoJSON Feature (REPLACED AS PER REQUEST)
+                    let geoJsonString = "No Spatial Data Available";
+
+                    if (d.geometry_json) {
+                        // Logic from User: generate ArcGIS ready Footer
+                        geoJsonString = generateArcGISReadyFooter(d.geometry_json);
+                    } else {
+                        // Fallback logic in case polygon is missing, but keep footer format valid
+                         const simpleFeature = {
+                            "type": "Feature",
+                            "geometry": { "type": "Point", "coordinates": [d.lng, d.lat] },
+                            "properties": { "name": d.food_name }
+                        };
+                        geoJsonString = JSON.stringify(simpleFeature, null, 2);
                     }
-                    if(d.geometry_json) {
-                        try {
-                            const polyCoords = JSON.parse(d.geometry_json);
-                            const geoJsonCoords = polyCoords.map(pt => [pt[1], pt[0]]);
-                            if(geoJsonCoords.length > 0 && (geoJsonCoords[0][0] !== geoJsonCoords[geoJsonCoords.length-1][0])) geoJsonCoords.push(geoJsonCoords[0]);
-                            geoFeature.geometry.geometries.push({ "type": "Polygon", "coordinates": [geoJsonCoords] });
-                        } catch(e) {}
-                    }
-                    const geoJsonString = JSON.stringify(geoFeature, null, 2);
 
                     // Image Loading
                     await app.updatePdfProgress(60, "Processing High-Res Images...");
@@ -1810,7 +1891,7 @@
                                     <div style="font-size: 8px; color: #0056b3; overflow-wrap: break-word;">${d.research_links ? d.research_links.split(',').map(l => `<div>• ${l.trim()}</div>`).join('') : 'No sources listed.'}</div>
                                 </div>
                                 <div>
-                                    <h4 style="font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; color: #000;">GeoJSON Data (Spatial)</h4>
+                                    <h4 style="font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; color: #000;">GeoJSON Data (ArcGIS Compatible)</h4>
                                     <div style="background: #f1f5f9; padding: 10px; font-family: 'Courier New', monospace; font-size: 7px; color: #475569; border: 1px solid #e2e8f0; border-radius: 4px; white-space: pre-wrap; overflow-wrap: break-word;">${geoJsonString}</div>
                                 </div>
                                 <div style="text-align: center; margin-top: 20px; font-size: 8px; color: #999;">Foodways Shared Heritage Project • Generated on ${new Date().toLocaleDateString()}</div>
