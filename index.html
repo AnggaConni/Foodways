@@ -258,6 +258,8 @@
                     <button id="btn-sidebar-logout" onclick="app.logout()" class="hidden w-full py-2 text-gray-500 hover:text-white text-xs transition">Sign Out</button>
                 </div>
                 <button onclick="app.exportData()" class="w-full mt-2 py-2 text-gray-500 hover:text-white text-[10px] font-bold border border-gray-800 rounded hover:bg-gray-800 transition">Download .CSV</button>
+                <!-- NEW DCMI BUTTON -->
+                <button onclick="app.exportMetadata()" class="w-full mt-2 py-2 text-gray-500 hover:text-[var(--opera-red)] text-[10px] font-bold border border-gray-800 rounded hover:bg-gray-800 transition" title="Export for Digital Libraries (JSON)">Download Metadata (DCMI)</button>
             </div>
         </aside>
 
@@ -608,6 +610,30 @@
             if(t.includes('colonialism')) return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase badge-colonialism">COLONIALISM</span>';
             return `<span class="px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-bold border border-gray-300">${type}</span>`;
         };
+        
+        // --- NEW: DUBLIN CORE CONVERTER ---
+        function convertToDublinCore(item) {
+             return {
+                "dc:title": item.food_name,
+                "dc:creator": "Community Contributor",
+                "dc:subject": ["Culinary Heritage", "Intangible Cultural Heritage", item.connection_type],
+                "dc:description": item.description,
+                "dc:publisher": "Foodways: Community-Based Inventory Tool",
+                "dc:date": new Date().toISOString().split('T')[0],
+                "dc:type": "Dataset",
+                "dc:format": "application/json",
+                "dc:identifier": item.id,
+                "dc:source": item.research_links ? item.research_links.split(',') : [],
+                "dc:language": "id",
+                "dcterms:isPartOf": item.origin_food_name || null,
+                "dc:coverage": {
+                    "placeName": item.country,
+                    "spatial": item.geometry_json ? JSON.parse(item.geometry_json) : { type: "Point", coordinates: [item.lng, item.lat] }
+                },
+                "dc:rights": "Creative Commons Attribution-NonCommercial (CC BY-NC)",
+                "meta:app_version": "Foodways v1.0 (Mobile Ready)"
+            };
+        }
 
         // Updated Video Carousel with Navigation
         function extractYoutubeEmbeds(urlStr) {
@@ -1649,6 +1675,23 @@
                 a.click();
                 document.body.removeChild(a);
                 setTimeout(() => URL.revokeObjectURL(url), 100);
+            },
+            
+            // --- NEW: EXPORT METADATA (DCMI) ---
+            exportMetadata: () => {
+                 // Konversi semua data yang ada di state.data ke format Dublin Core
+                 const dcData = state.data.map(convertToDublinCore);
+                 
+                 // Bungkus dalam array JSON yang rapi
+                 const blob = new Blob([JSON.stringify(dcData, null, 2)], { type: 'application/json' });
+                 const url = URL.createObjectURL(blob);
+                 const a = document.createElement('a');
+                 a.href = url;
+                 a.download = `foodways_metadata_dcmi_${new Date().toISOString().slice(0,10)}.json`;
+                 document.body.appendChild(a);
+                 a.click();
+                 document.body.removeChild(a);
+                 setTimeout(() => URL.revokeObjectURL(url), 100); 
             },
 
             // --- UPDATED: EXPORT TO PDF FUNCTION WITH LOADING OVERLAY ---
