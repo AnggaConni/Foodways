@@ -55,4 +55,4 @@ For bug reports, feature requests, or commercial licensing inquiries:
 
 **Angga Conni Saputra**
 *Governance Reform & Digital System Consultant*
-[Link LinkedIn Anda]
+(https://www.linkedin.com/in/anggaconni/)
