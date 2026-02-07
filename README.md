@@ -1,4 +1,4 @@
-# [Nama Project/Aplikasi]
+# FOODWAYS - Shared Heritage by Taste
 
 > **Open Source Tools for Community & Governance Reform**
 > *Built by Angga Conni Saputra*
