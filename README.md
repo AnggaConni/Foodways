@@ -77,7 +77,7 @@ Database: Google Sheets
 
 💡 Technical Philosophy: The "Anomaly"
 
-This project is often described by experts (and heritage organizations) as a technical "anomaly." Here is why this unorthodox architecture was chosen:
+Here is why this unorthodox architecture was chosen:
 
 1. The "One-File Monolith"
 
@@ -107,7 +107,7 @@ The Paradox: The "engine" is a simple HTML file, but it outputs DCMI (Dublin Cor
 
 5. Digital Sustainability
 
-UNESCO projects often suffer from "Digital Rot"—sophisticated projects die after a few years when funding for servers or programmers runs out.
+Database projects often suffer from "Digital Rot"—sophisticated projects die after a few years when funding for servers or programmers runs out.
 
 The Benefit: This application is "immortal." As long as GitHub and Google Sheets exist, this application will run for $0 forever. It requires zero server maintenance, making it highly attractive for sustainable heritage initiatives.
 
