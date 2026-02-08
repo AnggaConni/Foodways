@@ -116,13 +116,25 @@ const CSV_URL = 'YOUR_GOOGLE_SHEET_CSV_URL';
 📸 Screenshots
 
 Landing Page
-XX
+<p align="center">
+  <img src="assets/lp.png" width="700">
+</p>
+
 Dashboard
-XX
+<p align="center">
+  <img src="assets/db.png" width="700">
+</p>
+
 Data Detail
-XX
+<p align="center">
+  <img src="assets/detail.png" width="700">
+</p>
+
 Interactive Map
-XX
+<p align="center">
+  <img src="assets/map.png" width="700">
+</p>
+
 
 
 🤝 Contribution
