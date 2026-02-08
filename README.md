@@ -153,24 +153,23 @@ const GAS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL';
 const CSV_URL = 'YOUR_GOOGLE_SHEET_CSV_URL';
 
 
-📸 Screenshots
-
-Landing Page
+<h2 align="center">📸 Screenshots</h2>
+<p align="center">Landing Page</p>
 <p align="center">
   <img src="assets/lp.png" width="700">
 </p>
 
-Dashboard
+<p align="center">Dashboard</p>
 <p align="center">
   <img src="assets/db.png" width="700">
 </p>
 
-Data Detail
+<p align="center">Data Detail</p>
 <p align="center">
   <img src="assets/detail.png" width="700">
 </p>
 
-Interactive Map
+<p align="center">Interactive Map</p>
 <p align="center">
   <img src="assets/map.png" width="700">
 </p>
