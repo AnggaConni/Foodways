@@ -73,6 +73,46 @@ Backend: Google Apps Script (GAS)
 
 Database: Google Sheets
 
+====
+
+💡 Technical Philosophy: The "Anomaly"
+
+This project is often described by experts (and heritage organizations) as a technical "anomaly." Here is why this unorthodox architecture was chosen:
+
+1. The "One-File Monolith"
+
+In a modern web development world where apps are split into hundreds of files (React components, Node.js backends, etc.), this application places all logic (HTML, CSS, JS, Map Logic, PDF Engine) into a single index.html file.
+
+The Benefit: Extreme portability. The app can run offline (partially), be shared via email, requires no complex build steps (npm/webpack), and is server-agnostic. It is a "Guerrilla App": small, agile, and effective.
+
+2. The "Democratized" Database
+
+Cultural Heritage projects often rely on expensive, complex databases like PostgreSQL/PostGIS or Arches. This app forces Google Sheets to behave like a sophisticated relational database.
+
+The Benefit: It lowers the barrier to entry for non-technical contributors. The script performs client-side CSV parsing (PapaParse) and handles complex parent-child relational logic (for food history) entirely in the browser memory. It is a "low-tech" solution for a "high-tech" problem.
+
+3. "Ghost Mapping" PDF Engine
+
+Standard PDF exports with maps usually require dedicated print servers. This app uses a "Ghost Mapping" technique.
+
+The Technique: The app creates a hidden HTML container (ghost-map-container), re-renders the specific map views off-screen, takes a high-resolution snapshot using html2canvas, and embeds it into the PDF generation pipeline.
+
+The Benefit: High-fidelity reporting with zero server costs.
+
+4. High Standards on a Simple Stack
+
+While the technology stack is simple, the output adheres to strict academic standards.
+
+The Paradox: The "engine" is a simple HTML file, but it outputs DCMI (Dublin Core) metadata for digital libraries and GeoJSON for professional GIS software (ArcGIS/QGIS). It bridges the gap between hobbyist tools and professional requirements.
+
+5. Digital Sustainability
+
+UNESCO projects often suffer from "Digital Rot"—sophisticated projects die after a few years when funding for servers or programmers runs out.
+
+The Benefit: This application is "immortal." As long as GitHub and Google Sheets exist, this application will run for $0 forever. It requires zero server maintenance, making it highly attractive for sustainable heritage initiatives.
+
+====
+
 📂 Project Structure
 
 Since this is a single-file application, all logic resides within index.html. However, the code is logically divided into:
