@@ -92,14 +92,12 @@
         }
         .logo-breath { animation: breath 3s infinite ease-in-out; }
         
-        /* NEW: Glowing Animation (No Jumping) - Only changes opacity/stroke */
         @keyframes glow {
             0% { stroke-opacity: 0.6; fill-opacity: 0.8; }
             50% { stroke-opacity: 1; fill-opacity: 1; }
             100% { stroke-opacity: 0.6; fill-opacity: 0.8; }
         }
         
-        /* Applied only to Main Map nodes, NOT export maps */
         .node-pulse {
             animation: glow 2s infinite ease-in-out;
         }
@@ -149,7 +147,6 @@
             color: var(--opera-red);
             border-bottom-color: var(--opera-red);
         }
-        /* FIX: REMOVED TRANSLATEY TO PREVENT PDF JUMPING */
         .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -189,6 +186,13 @@
         .editor-btn:hover {
             background-color: #e5e7eb;
             color: var(--opera-text);
+        }
+        
+        /* Guide Sidebar Active State */
+        .guide-item.active {
+            background-color: #fee2e2;
+            color: var(--opera-red);
+            border-right: 3px solid var(--opera-red);
         }
 
     </style>
@@ -399,23 +403,18 @@
 
     <!-- MODALS -->
     
-    <!-- NEW: PDF PROGRESS MODAL (OVERLAY) -->
+    <!-- PDF PROGRESS MODAL -->
     <div id="pdf-progress-modal" class="fixed inset-0 z-[6000] hidden flex items-center justify-center bg-black/90 backdrop-blur-md transition-opacity duration-300">
         <div class="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm w-full text-center border-t-4 border-[var(--opera-red)]">
              <div class="relative w-16 h-16 mb-6">
-                 <!-- Outer Ring -->
                  <div class="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-                 <!-- Spinning Ring -->
                  <div class="absolute inset-0 border-4 border-[var(--opera-red)] rounded-full border-t-transparent animate-spin"></div>
-                 <!-- Icon in center -->
                  <div class="absolute inset-0 flex items-center justify-center text-[var(--opera-red)]">
                      <i class="fas fa-file-pdf text-xl"></i>
                  </div>
              </div>
              <h3 class="text-xl font-black text-gray-800 mb-2">Exporting PDF</h3>
              <p id="pdf-progress-text" class="text-sm text-gray-500 font-mono mb-4">Initializing...</p>
-             
-             <!-- Progress Bar -->
              <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
                  <div id="pdf-progress-bar" class="bg-[var(--opera-red)] h-full w-0 transition-all duration-300 ease-out"></div>
              </div>
@@ -431,34 +430,31 @@
         </div>
     </div>
 
-    <!-- HELP MODAL -->
+    <!-- UPDATED: DYNAMIC HELP MODAL (CAROUSEL / MASTER-DETAIL STYLE) -->
     <div id="help-modal" class="fixed inset-0 z-[2500] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+        <div class="bg-white w-full max-w-6xl h-[80vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-lg text-gray-800"><i class="fas fa-book-reader mr-2 text-[var(--opera-red)]"></i> User Guide</h3>
-                <button onclick="window.ui.closeModal('help-modal')" class="text-gray-400 hover:text-black"><i class="fas fa-times"></i></button>
+                <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-book-open text-[var(--opera-red)]"></i> 
+                    Platform Guidance
+                </h3>
+                <button onclick="window.ui.closeModal('help-modal')" class="text-gray-400 hover:text-black transition transform hover:rotate-90">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
-            <div class="p-6 overflow-y-auto">
-                <div class="grid grid-cols-2 gap-8">
-                    <div>
-                        <h4 class="font-bold text-[var(--opera-red)] mb-2 border-b pb-1">🇮🇩 Indonesian</h4>
-                        <ul class="text-sm space-y-2 text-gray-600 list-disc ml-4">
-                            <li><strong>Dashboard:</strong> Statistik penyebaran makanan.</li>
-                            <li><strong>Peta Global:</strong> Geser peta. Garis = jalur sejarah.</li>
-                            <li><strong>Cari:</strong> Gunakan kotak pencarian di peta/tabel.</li>
-                            <li><strong>Detail:</strong> Klik titik peta untuk lihat foto/sejarah.</li>
-                            <li><strong>Admin:</strong> Login untuk edit data.</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-blue-600 mb-2 border-b pb-1">🇺🇸 English (US)</h4>
-                        <ul class="text-sm space-y-2 text-gray-600 list-disc ml-4">
-                            <li><strong>Dashboard:</strong> Global food stats.</li>
-                            <li><strong>Global Map:</strong> Lines show history path.</li>
-                            <li><strong>Search:</strong> Filter items instantly.</li>
-                            <li><strong>Details:</strong> Click dots for info.</li>
-                            <li><strong>Admin:</strong> Login to manage data.</li>
-                        </ul>
+            
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Sidebar (List of Titles) -->
+                <div class="w-1/3 bg-gray-50 border-r border-gray-200 overflow-y-auto" id="help-sidebar">
+                    <!-- Dynamic List Items will go here -->
+                    <div class="p-4 text-center text-gray-400 italic text-sm"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading Guides...</div>
+                </div>
+                
+                <!-- Main Content (Description) -->
+                <div class="w-2/3 bg-white overflow-y-auto p-8" id="help-content">
+                    <div class="h-full flex flex-col items-center justify-center text-gray-300">
+                        <i class="fas fa-mouse-pointer text-4xl mb-4"></i>
+                        <p>Select a topic from the left to view details.</p>
                     </div>
                 </div>
             </div>
@@ -506,7 +502,7 @@
                     <textarea id="inp-geometry" rows="2" class="input-light w-full rounded-lg p-3 text-xs font-mono text-gray-400" placeholder="Geometry JSON (Auto-filled)" readonly></textarea>
                 </div>
 
-                <!-- UPDATE: Mini Word-Like Editor -->
+                <!-- Update: Mini Word-Like Editor -->
                 <div>
                     <label class="text-xs text-gray-500 font-bold block mb-1">Description (Rich Editor)</label>
                     <div class="border border-gray-300 rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-[var(--opera-red)] focus-within:border-[var(--opera-red)] bg-white">
@@ -585,23 +581,24 @@
     </div>
 
     <script>
-        // Updated URL
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbw5XZBvqGjPbjB_nE2ZeJ27Ppib9-9DjSKDeVzNF-HDQU0pes9rzVn6jI9uYYjfTac/exec';
+        // Updated URL for the latest deployment
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzu2WYcJRyqESeiRbc3eEM3BjAYMaeRr-EZK15V3iUJAee_LX3HIHABMohx1EXELGzh/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuPArVU91axob82CTzIgfmODCpa43OrFNIymoOVfV6UwtzUH7Yzb-yzorb3yBooJikXvsKSv10z3fV/pub?output=csv';
+        
         window.state = { 
             data: [], 
+            guides: [], // New Guide Data Store
             role: 'guest', 
             editId: null, 
             pickerTarget: null, 
             currentDetail: null, 
             filter: { search: '' }, 
             pagination: { page: 1, limit: 10 },
-            detailCache: {}, // New Cache Object
+            detailCache: {},
             loadingId: null
         };
 
         // --- GLOBAL SANITIZER (Prevent XSS) ---
-        // Escape special HTML characters to prevent script injection
         window.escapeHtml = (text) => {
             if (!text) return '';
             return String(text)
@@ -612,44 +609,26 @@
                 .replace(/'/g, "&#039;");
         };
 
-        // --- SAFE MARKDOWN PARSER (Plain-Text Structured Authoring) ---
-        // This function ensures the description text is safe (no XSS) and formatted nicely
+        // --- SAFE MARKDOWN PARSER ---
         function parseSafeMarkdown(text) {
             if (!text) return '';
-
-            // 1. Sanitize HTML (prevent XSS) - ESCAPE ALL HTML TAGS FIRST
             let safe = window.escapeHtml(text);
-
-            // 2. Simple Formatting Rules
-            // Headers (e.g. # Title)
             safe = safe.replace(/^# (.*$)/gim, '<h3 class="font-bold text-lg mt-4 mb-2 text-gray-900 border-b border-gray-100 pb-1">$1</h3>');
-            
-            // Bold (**text**)
             safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            
-            // Italic (*text*)
             safe = safe.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            
-            // Links ([text](url)) - STRICT: ONLY ALLOW HTTP/HTTPS
             safe = safe.replace(/\[(.*?)\]\((.*?)\)/g, (match, label, url) => {
                 if (url.match(/^https?:\/\//i)) {
                     return `<a href="${url}" target="_blank" class="text-blue-600 hover:underline">$1</a>`;
                 }
-                return `${label} (${url})`; // Fallback for unsafe links (javascript:)
+                return `${label} (${url})`;
             });
-            
-            // Lists (- item) - Replace line starting with "- " to a bullet item
             safe = safe.replace(/^\s*-\s+(.*$)/gim, '<div class="flex items-start ml-2 mb-1"><span class="mr-2 text-gray-400">•</span><span>$1</span></div>');
-            
-            // Paragraphs/Newlines
             safe = safe.replace(/\n\n/g, '</p><p class="mb-4">');
             safe = safe.replace(/\n/g, '<br>');
-
-            // Wrap in a div container with specific markdown styling class
             return `<div class="markdown-body text-gray-700 leading-relaxed">${safe}</div>`;
         }
 
-        // --- HELPER FOR PDF GENERATION (Avoid CORS Issues) ---
+        // --- HELPER FOR PDF GENERATION ---
         const getBase64FromUrl = async (url) => {
             try {
                 const res = await fetch(url);
@@ -662,14 +641,13 @@
                 });
             } catch (error) {
                 console.warn("CORS/Network error for image:", url, error);
-                return null; // Return null so we can show a placeholder instead of crashing
+                return null;
             }
         };
 
         const captureElement = async (elementId) => {
             const el = document.getElementById(elementId);
             if (!el) return null;
-            // Use standard canvas capture
             try {
                 const canvas = await html2canvas(el, { useCORS: true, allowTaint: true, logging: false });
                 return canvas.toDataURL('image/png');
@@ -725,7 +703,6 @@
             };
         }
 
-        // Updated Video Carousel with Navigation
         function extractYoutubeEmbeds(urlStr) {
             if (!urlStr) return '';
             const urls = urlStr.split(',').map(u => u.trim()).filter(u => u);
@@ -814,22 +791,15 @@
         }
 
         // --- NEW: ArcGIS Ready Footer Generator Function ---
-        // Fungsi ini menerima data mentah dari Kolom 11/K
         function generateArcGISReadyFooter(rawData) {
             if(!rawData) return "No Data";
             
             try {
-                // 1. Cek jika data masih berupa string, parse dulu jadi Array
-                // Contoh input: "[[5.77,94.77], [5.16,97.71], ...]"
                 let coords = (typeof rawData === 'string') ? JSON.parse(rawData) : rawData;
-
-                // 2. LOGIKA KRUSIAL: Swap Coordinate (Balik Posisi)
-                // Data input adalah [Lat, Lng], harus dibalik jadi [Lng, Lat] untuk ArcGIS
                 const fixedCoords = coords.map(point => {
                     return [point[1], point[0]]; 
                 });
 
-                // 3. Bungkus jadi GeoJSON FeatureCollection (ArcGIS Ready)
                 const geoJSON = {
                     "type": "FeatureCollection",
                     "features": [
@@ -840,16 +810,12 @@
                                 "timestamp": new Date().toISOString()
                             },
                             "geometry": {
-                                // Asumsi data ini membentuk Area (Polygon)
-                                // Jika data tidak tertutup, ganti jadi "LineString" dan hapus kurung siku terluar di coordinates
                                 "type": "Polygon", 
                                 "coordinates": [fixedCoords] 
                             }
                         }
                     ]
                 };
-
-                // 4. Return sebagai Text String untuk dicetak di PDF
                 return JSON.stringify(geoJSON, null, 2);
             } catch(e) {
                 console.error("GeoJSON Footer Error:", e);
@@ -879,6 +845,56 @@
                 const el = document.getElementById('help-modal');
                 el.classList.toggle('hidden');
             },
+            
+            // --- UPDATED: RENDER HELP CONTENT (MASTER-DETAIL) ---
+            renderHelp: () => {
+                const sidebar = document.getElementById('help-sidebar');
+                
+                // If no guides, show message
+                if(!state.guides || state.guides.length === 0) {
+                     sidebar.innerHTML = `<div class="p-6 text-center text-gray-500 text-sm">No guide data available.<br><span class="text-xs">Sheet 'Guide' is empty.</span></div>`;
+                     return;
+                }
+
+                // Render Sidebar Items
+                let html = '';
+                state.guides.forEach((g, index) => {
+                    html += `
+                        <div class="guide-item p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition flex items-center justify-between group ${index===0 ? 'active' : ''}" 
+                             onclick="window.ui.showHelpDetail(${index}, this)">
+                             <div class="font-bold text-gray-700 group-hover:text-black text-sm">${window.escapeHtml(g.title)}</div>
+                             <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                        </div>
+                    `;
+                });
+                sidebar.innerHTML = html;
+                
+                // Show first item by default
+                if(state.guides.length > 0) {
+                    window.ui.showHelpDetail(0);
+                }
+            },
+            
+            showHelpDetail: (index, element) => {
+                const contentDiv = document.getElementById('help-content');
+                const guide = state.guides[index];
+                
+                if (element) {
+                    // Update active state in sidebar
+                    document.querySelectorAll('.guide-item').forEach(el => el.classList.remove('active'));
+                    element.classList.add('active');
+                }
+
+                if (guide) {
+                    contentDiv.innerHTML = `
+                        <h2 class="text-3xl font-black text-gray-800 mb-6 border-b pb-4">${window.escapeHtml(guide.title)}</h2>
+                        <div class="prose max-w-none text-gray-600">
+                             ${parseSafeMarkdown(guide.desc)}
+                        </div>
+                    `;
+                }
+            },
+            
             loaded: () => {
                 document.getElementById('loading-container').classList.add('hidden');
                 document.getElementById('entry-buttons').classList.remove('hidden');
@@ -886,16 +902,11 @@
                 document.getElementById('dataset-info').classList.remove('hidden');
                 document.getElementById('record-count').innerText = state.data.length;
             },
-            updateServerStatus: (s, m) => {
-                const el = document.getElementById('admin-server-status'), dot = document.getElementById('server-dot'), txt = document.getElementById('server-text');
-                if (s) { dot.className="w-2 h-2 rounded-full bg-emerald-500"; txt.className="text-xs text-emerald-600 font-bold"; txt.textContent = m; }
-                else { dot.className="w-2 h-2 rounded-full bg-red-500"; txt.className="text-xs text-red-500 font-bold"; txt.textContent = m; }
-            },
             openModal: (id) => document.getElementById(id).classList.remove('hidden'),
             closeModal: (id) => document.getElementById(id).classList.add('hidden'),
             showError: (msg) => {
                 document.getElementById('loading-container').classList.add('hidden');
-                document.getElementById('error-container').classList.remove('hidden');
+                alert(msg);
             },
             toggleLoader: (show) => {
                 const l = document.getElementById('crud-loader');
@@ -926,7 +937,7 @@
                                     fadeAnimation: false, 
                                     markerZoomAnimation: false,
                                     inertia: false, // Prevent kinetic scrolling
-                                    zoomSnap: 0, // Disable snapping to integers for perfect fits
+                                    zoomSnap: 0 // Disable snapping to integers for perfect fits
                                 }).setView([d.lat, d.lng], 6);
                                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
                                 if(d.geometry_json) {
@@ -946,29 +957,40 @@
                         }
                     }, 100);
 
-                    // 2. CONNECTED MAP (Line) - UPDATED LOGIC FOR SERIAL + PARALLEL FOODWAYS
+                    // 2. CONNECTED MAP (FULL FAMILY TREE TRAVERSAL)
                     setTimeout(() => {
                         const mapDiv2 = document.getElementById('detail-conn-map');
                         if (mapDiv2) {
                             if (!mapDiv2._leaflet_map) {
-                                // Disable Animation here too
-                                const map2 = L.map('detail-conn-map', { 
-                                    zoomControl: false, 
-                                    attributionControl: false,
-                                    zoomAnimation: false, 
-                                    fadeAnimation: false, 
-                                    markerZoomAnimation: false,
-                                    inertia: false,
-                                    zoomSnap: 0
-                                });
+                                const map2 = L.map('detail-conn-map', { zoomControl: false, attributionControl: false }).setView([20,0], 2);
                                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map2);
                                 
                                 const bounds = L.latLngBounds();
-                                
-                                // --- ALGORITHM: FIND ULTIMATE ROOT & FULL FAMILY TREE ---
 
-                                // 1. Build a map of children for traversal: ParentName -> [ChildNodes]
+                                // --- ALGORITHM: FIND ULTIMATE ROOT & FULL FAMILY TREE ---
+                                // 1. Traverse UP to find Ultimate Root
+                                let rootName = d.food_name;
+                                let curr = d;
+                                const pathUp = new Set([d.id]);
+
+                                while(curr && curr.origin_food_name) {
+                                    const parentName = curr.origin_food_name;
+                                    const parentNode = state.data.find(n => n.food_name.toLowerCase().trim() === parentName.toLowerCase().trim());
+                                    rootName = parentName;
+                                    if(parentNode) {
+                                        if(pathUp.has(parentNode.id)) break;
+                                        pathUp.add(parentNode.id);
+                                        curr = parentNode;
+                                    } else break;
+                                }
+
+                                // 2. Traverse DOWN (BFS) to find ALL siblings & descendants
+                                const familyNodes = [];
+                                const queue = [rootName];
+                                const visitedNames = new Set();
                                 const childrenMap = {};
+
+                                // Pre-build children map
                                 state.data.forEach(item => {
                                     if(item.origin_food_name) {
                                         const pName = item.origin_food_name.toLowerCase().trim();
@@ -977,75 +999,46 @@
                                     }
                                 });
 
-                                // 2. Find the "Ultimate Root" of the current node (Traverse Up)
-                                let rootName = d.food_name;
-                                let curr = d;
-                                const pathUp = new Set([d.id]); // Detect cycles
-
-                                while(curr && curr.origin_food_name) {
-                                    const parentName = curr.origin_food_name;
-                                    // Find parent record in DB
-                                    const parentNode = state.data.find(n => n.food_name.toLowerCase().trim() === parentName.toLowerCase().trim());
-                                    
-                                    rootName = parentName; // Assume parent is root
-                                    if(parentNode) {
-                                        if(pathUp.has(parentNode.id)) break; 
-                                        pathUp.add(parentNode.id);
-                                        curr = parentNode;
-                                    } else {
-                                        // Parent exists as text (e.g. "China") but no record. Stop here.
-                                        break;
-                                    }
-                                }
-
-                                // 3. Collect all nodes starting from Ultimate Root (BFS Down)
-                                const familyNodes = [];
-                                const queue = [rootName];
-                                const visitedNames = new Set();
-
                                 while(queue.length > 0) {
                                     const pName = queue.shift();
                                     const lowerP = pName.toLowerCase().trim();
                                     if(visitedNames.has(lowerP)) continue;
                                     visitedNames.add(lowerP);
 
-                                    // If this name exists as a real node, add to list
+                                    // Add Node
                                     const realNode = state.data.find(n => n.food_name.toLowerCase().trim() === lowerP);
                                     if(realNode) familyNodes.push(realNode);
 
-                                    // Find children
+                                    // Enqueue Children
                                     if(childrenMap[lowerP]) {
                                         childrenMap[lowerP].forEach(child => {
-                                            familyNodes.push(child); 
+                                            familyNodes.push(child);
                                             queue.push(child.food_name);
                                         });
                                     }
                                 }
 
-                                // 4. Render Unique Nodes
+                                // 3. Ensure Current Node is displayed
                                 const uniqueNodes = Array.from(new Map(familyNodes.map(item => [item.id, item])).values());
-                                if(!uniqueNodes.find(n => n.id === d.id)) uniqueNodes.push(d); // Ensure current is present
-
-                                // FIX: Sort to ensure current node is drawn last (on top) to avoid using bringToFront() which causes errors
+                                if(!uniqueNodes.find(n => n.id === d.id)) uniqueNodes.push(d);
+                                
+                                // Sort so current node is drawn last (on top)
                                 uniqueNodes.sort((a, b) => (a.id === d.id) ? 1 : (b.id === d.id) ? -1 : 0);
 
+                                // 4. Draw Everything
                                 uniqueNodes.forEach(node => {
-                                    // Draw Line (from Origin to Node)
+                                    // Draw Line
                                     if(node.origin_lat && node.origin_lng && node.lat && node.lng) {
-                                         // SOLID STATIC LINE (User request: No shifting animation)
-                                         L.polyline([[node.origin_lat, node.origin_lng], [node.lat, node.lng]], {
-                                            color: '#fca5a5', 
-                                            weight: 2,
-                                            opacity: 0.6,
-                                            dashArray: '5, 5' // Dashed but no CSS animation
-                                        }).addTo(map2);
-                                        
-                                        // Draw small dot at origin point (Hub)
-                                        L.circleMarker([node.origin_lat, node.origin_lng], { 
-                                            color: '#fb923c', fillColor: '#fff', fillOpacity: 1, radius: 3, weight: 1
-                                        }).addTo(map2);
-                                        
-                                        bounds.extend([node.origin_lat, node.origin_lng]);
+                                         L.polyline([[node.origin_lat, node.origin_lng], [node.lat, node.lng]], { 
+                                             color: '#ff1b2d', weight: 1.5, opacity: 0.5, dashArray: '5,5' 
+                                         }).addTo(map2);
+                                         
+                                         // Origin Dot
+                                         L.circleMarker([node.origin_lat, node.origin_lng], { 
+                                             color: '#fb923c', fillColor: '#fff', fillOpacity: 1, radius: 3, weight: 1 
+                                         }).addTo(map2);
+                                         
+                                         bounds.extend([node.origin_lat, node.origin_lng]);
                                     }
 
                                     // Draw Node Marker
@@ -1053,27 +1046,22 @@
                                     const m = L.circleMarker([node.lat, node.lng], { 
                                         color: isCurrent ? '#ff1b2d' : '#ef4444', 
                                         fillColor: isCurrent ? '#ff1b2d' : '#fee2e2', 
-                                        fillOpacity: 1, 
-                                        radius: isCurrent ? 6 : 4,
-                                        weight: isCurrent ? 0 : 1
-                                        // NO ANIMATION CLASS HERE
+                                        fillOpacity: 1, radius: isCurrent ? 6 : 4, weight: isCurrent ? 0 : 1 
                                     }).addTo(map2);
 
-                                    // Tooltip Logic: Only Current is Permanent (Fix overlapping)
-                                    const tooltipContent = `<div class="text-center"><div class="font-bold">${window.escapeHtml(node.food_name)}</div><div class="text-[9px] uppercase">${window.escapeHtml(node.country)}</div></div>`;
-                                    
-                                    m.bindTooltip(tooltipContent, {
-                                        permanent: isCurrent, // TRUE if current, FALSE otherwise
-                                        direction: 'top',
-                                        className: isCurrent ? 'z-50 custom-tooltip' : 'text-xs bg-white text-gray-500 border border-gray-200 p-1 shadow-sm'
-                                    });
-                                    
+                                    if(isCurrent) {
+                                        m.bindTooltip(window.escapeHtml(node.food_name), { permanent: true, direction: 'top', className: 'z-50 custom-tooltip' });
+                                    }
+
                                     bounds.extend([node.lat, node.lng]);
                                 });
 
-                                // Animate: false ensures INSTANT snap for accurate screenshot
-                                if(bounds.isValid()) map2.fitBounds(bounds, {padding: [50, 50], animate: false, duration: 0});
-                                else map2.setView([20, 0], 2, { animate: false, duration: 0 });
+                                // Fit Bounds
+                                if(bounds.isValid()) {
+                                    map2.fitBounds(bounds, { padding: [50,50], maxZoom: 4 });
+                                } else {
+                                    map2.setView([20,0], 2);
+                                }
 
                                 mapDiv2._leaflet_map = map2;
                             } else {
@@ -1084,7 +1072,6 @@
                 }
             },
             
-            // --- NEW: Helper for Mini-Word Editor ---
             insertFormat: (prefix, suffix) => {
                 const el = document.getElementById('inp-desc');
                 if(!el) return;
@@ -1097,13 +1084,9 @@
                 const selected = text.substring(start, end);
                 const after = text.substring(end);
                 
-                // Insert formatting
                 el.value = before + prefix + selected + suffix + after;
-                
-                // Move cursor to after prefix or wrap selection
                 el.selectionStart = start + prefix.length;
                 el.selectionEnd = end + prefix.length;
-                
                 el.focus();
             }
         };
@@ -1135,10 +1118,10 @@
 
                 const visibleIds = new Set(filteredData.map(d => d.id));
                 filteredData.forEach(d => {
-                   if (d.origin_food_name) {
-                       const originNode = state.data.find(n => n.food_name === d.origin_food_name);
-                       if (originNode) visibleIds.add(originNode.id);
-                   }
+                    if (d.origin_food_name) {
+                        const originNode = state.data.find(n => n.food_name === d.origin_food_name);
+                        if (originNode) visibleIds.add(originNode.id);
+                    }
                 });
 
                 const dataToRender = state.data.filter(d => visibleIds.has(d.id));
@@ -1152,22 +1135,13 @@
                             weight: 1.5, opacity: 0.4, dashArray: '4, 8', className: 'leaflet-interactive' 
                         }).addTo(window.mapLogic.map);
                         
-                        // Bind Tooltip ONCE (Fixed Bug: Sticky Tooltips on Hover)
                         line.bindTooltip(`${window.escapeHtml(d.origin_food_name)} ➔ ${window.escapeHtml(d.food_name)}`, { 
-                            sticky: true, // Follow mouse
-                            direction: 'top',
+                            sticky: true, direction: 'top',
                             className: 'bg-white text-gray-800 text-[10px] font-bold px-2 py-1 rounded border border-gray-300 shadow-lg'
                         });
 
-                        line.on('mouseover', function() {
-                            this.setStyle({ color: '#d40012', weight: 4, opacity: 1, dashArray: null });
-                            this.bringToFront();
-                            this.openTooltip();
-                        });
-                        line.on('mouseout', function() {
-                            this.setStyle({ color: '#ff1b2d', weight: 1.5, opacity: 0.4, dashArray: '4, 8' });
-                            this.closeTooltip();
-                        });
+                        line.on('mouseover', function() { this.setStyle({ color: '#d40012', weight: 4, opacity: 1, dashArray: null }); this.bringToFront(); this.openTooltip(); });
+                        line.on('mouseout', function() { this.setStyle({ color: '#ff1b2d', weight: 1.5, opacity: 0.4, dashArray: '4, 8' }); this.closeTooltip(); });
 
                         window.mapLogic.lines.push(line);
                         window.mapLogic.layers.push(line);
@@ -1181,7 +1155,7 @@
                     }
                     const m = L.circleMarker([d.lat, d.lng], { 
                         color: '#ff1b2d', fillColor: '#ff1b2d', fillOpacity: 0.8, radius: 6,
-                        className: 'node-pulse' // KEEP ANIMATION FOR MAIN MAP ONLY
+                        className: 'node-pulse'
                     }).addTo(window.mapLogic.map);
                     m.on('click', () => window.dashboard.showDetail(d));
                     m.bindTooltip(window.escapeHtml(d.food_name), { direction: 'top', className: 'custom-tooltip' });
@@ -1269,8 +1243,8 @@
                 const t = {}; state.data.forEach(d => { if(d.connection_type) t[d.connection_type]=(t[d.connection_type]||0)+1; });
                 const u = { 'UNESCO': 0, 'National': 0, 'Icon': 0, 'Other': 0 };
                 state.data.forEach(d => {
-                   const s = d.unesco_status ? d.unesco_status.toLowerCase() : '';
-                   if(s.includes('unesco')) u['UNESCO']++; else if(s.includes('national')) u['National']++; else if(s.includes('cultural')) u['Icon']++; else u['Other']++;
+                    const s = d.unesco_status ? d.unesco_status.toLowerCase() : '';
+                    if(s.includes('unesco')) u['UNESCO']++; else if(s.includes('national')) u['National']++; else if(s.includes('cultural')) u['Icon']++; else u['Other']++;
                 });
 
                 if(window.dashboard.chartCountry) window.dashboard.chartCountry.destroy();
@@ -1337,11 +1311,7 @@
             
             // --- NEW: LAZY LOAD SIMULATION LOGIC ---
             fetchNodeDetail: async (id) => {
-                // 1. Check Cache
                 if (state.detailCache[id]) return state.detailCache[id];
-                
-                // 2. Simulate Network Fetch (Promise)
-                // In a real app, this would be `await fetch('/api/food/'+id)`
                 return new Promise((resolve) => {
                     setTimeout(() => {
                         const item = state.data.find(x => x.id === id);
@@ -1349,7 +1319,7 @@
                             state.detailCache[id] = item; // Save to Cache
                             resolve(item);
                         } else resolve(null);
-                    }, 800); // 800ms artificial delay to show off the loader
+                    }, 800); 
                 });
             },
 
@@ -1536,18 +1506,40 @@
             init: () => {
                 window.ui.renderAuth();
                 window.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const landing = document.getElementById('landing-page'); if (landing && landing.style.display !== 'none' && !document.getElementById('loading-container').classList.contains('hidden') === false) { window.app.enterAsGuest(); } } });
+                
+                // --- FETCH MAIN DATA (CSV) ---
                 Papa.parse(CSV_URL, {
                     download: true, header: true, skipEmptyLines: true,
                     complete: (res) => {
                         if(res.data.length) {
                             state.data = res.data.map(transformData).filter(x => x.lat && x.lng);
                             window.mapLogic.init(); window.dashboard.init(); window.ui.loaded();
-                            window.mapLogic.render(); // Force Initial Map Render
+                            window.mapLogic.render(); 
                         } else alert('Data Empty');
                     },
                     error: (err) => window.ui.showError("Failed to Download Data")
                 });
+                
+                // --- FETCH GUIDES (NEW) ---
+                window.app.fetchGuides();
             },
+            
+            // --- NEW: FETCH GUIDES FROM SHEET ---
+            fetchGuides: () => {
+                fetch(GAS_URL + '?action=get_guides')
+                .then(r => r.json())
+                .then(d => {
+                    if(d.status === 'success') {
+                        state.guides = d.data;
+                        // Pre-render the guide UI so it's ready when clicked
+                        window.ui.renderHelp();
+                    } else {
+                        console.warn("Failed to load guides:", d.message);
+                    }
+                })
+                .catch(e => console.error("Guide Fetch Error:", e));
+            },
+
             enterAsContributor: () => { if(state.role==='admin') return; window.ui.openModal('login-modal'); },
             enterAsGuest: () => { 
                 document.getElementById('landing-page').style.display='none'; 
@@ -1566,10 +1558,6 @@
                 }).catch(e => { btn.innerText='Login'; alert('Server Error.'); });
             },
             logout: () => { state.role='guest'; window.ui.renderAuth(); alert('Logged Out'); },
-            testConnection: () => {
-                 const formData = new URLSearchParams(); formData.append('action', 'ping');
-                 fetch(GAS_URL, { method: 'POST', redirect: "follow", body: formData }).then(r => r.json()).then(data => alert("Server Reachable! Status: " + data.status)).catch(e => alert("Server Unreachable."));
-            },
             initiateAddEntry: () => {
                 state.editId = null;
                 document.querySelectorAll('#input-modal input, #input-modal textarea').forEach(el => el.value = '');
@@ -1624,9 +1612,7 @@
                 window.ui.openModal('input-modal');
             },
             pickLocation: (target) => {
-                // --- FIX: Switch ke Tab Map otomatis saat Pick Point diklik ---
                 window.app.switchTab('map'); 
-                
                 state.pickerTarget = target; 
                 window.ui.closeModal('input-modal'); 
                 document.getElementById('picker-notification').classList.remove('hidden');
@@ -1642,7 +1628,6 @@
             saveData: () => {
                 const data = {
                     id: state.editId || '', food_name: document.getElementById('inp-name').value, country: document.getElementById('inp-country').value,
-                    // --- PATCH: Robust parsing for comma-separated floats (e.g. Indonesian locale) ---
                     lat: parseFloat(document.getElementById('inp-lat').value.replace(',', '.')), 
                     lng: parseFloat(document.getElementById('inp-lng').value.replace(',', '.')),
                     description: document.getElementById('inp-desc').value, geometry_json: document.getElementById('inp-geometry').value,
@@ -1654,7 +1639,7 @@
                     connection_type: document.getElementById('inp-conn-type').value
                 };
                 
-                window.ui.toggleLoader(true); // SHOW LOADER
+                window.ui.toggleLoader(true); 
                 
                 const action = state.editId ? 'update' : 'insert';
                 
@@ -1666,7 +1651,6 @@
                 form.append('action', action); 
                 form.append('data', JSON.stringify(data));
 
-                // --- SAFETY LOCK: SEND SEPARATE ORIGINAL DATA FOR VERIFICATION ---
                 if (action === 'update' && state.currentDetail) {
                     const originalData = {
                         food_name: state.currentDetail.food_name,
@@ -1679,16 +1663,12 @@
                 fetch(GAS_URL, { method: 'POST', body: form }).then(r=>r.json()).then(d => { 
                     if(d.status==='success') { 
                         alert('Saved to Cloud!'); 
-                        
-                        // UPDATE ID IF NEW RECORD
                         const finalId = (!state.editId && d.id) ? d.id : (state.editId || data.id);
                         if(!state.editId && d.id) { state.data[state.data.length-1].id = d.id; }
                         
-                        // --- FIX: REALTIME UPDATE (UPDATE CACHE & RE-RENDER) ---
                         const newData = { ...data, id: finalId };
-                        state.detailCache[finalId] = newData; // FORCE UPDATE CACHE
+                        state.detailCache[finalId] = newData; 
                         
-                        // IF MODAL OPEN, RE-RENDER
                         if(state.currentDetail && state.currentDetail.id === finalId) {
                             state.currentDetail = newData;
                             window.dashboard.renderDetailContent(newData);
@@ -1698,17 +1678,15 @@
                     } 
                     else alert('Error: '+d.message); 
                 }).catch(e => alert('Offline Mode: Saved locally.')).finally(()=> {
-                    window.ui.toggleLoader(false); // HIDE LOADER
+                    window.ui.toggleLoader(false); 
                 });
             },
             deleteData: () => {
                 if (!state.editId) return;
                 if (!confirm("Are you sure you want to DELETE this entry? This cannot be undone.")) return;
                 
-                window.ui.toggleLoader(true); // SHOW LOADER
+                window.ui.toggleLoader(true); 
                 
-                // --- SAFETY UPDATE: Send Original Lat/Lng/Name to Server for Strict Verification ---
-                // Server should delete WHERE id=id AND lat=lat AND lng=lng
                 const dataPayload = JSON.stringify({ 
                     food_name: state.currentDetail.food_name,
                     lat: state.currentDetail.lat,
@@ -1723,14 +1701,11 @@
                 fetch(GAS_URL, { method: 'POST', body: form }).then(r => r.json()).then(d => {
                     if (d.status === 'success') {
                         state.data = state.data.filter(item => item.id !== state.editId);
-                        
-                        // REMOVE FROM CACHE
                         delete state.detailCache[state.editId];
-                        
                         window.mapLogic.render(); window.dashboard.render(); window.ui.closeModal('input-modal'); alert("Data successfully deleted.");
                     } else { alert("Delete Failed: " + d.message); }
                 }).catch(e => alert("Network Error: Could not delete.")).finally(() => {
-                    window.ui.toggleLoader(false); // HIDE LOADER
+                    window.ui.toggleLoader(false); 
                 });
             },
             switchTab: (t) => {
@@ -1751,19 +1726,14 @@
                 document.body.removeChild(a);
                 setTimeout(() => URL.revokeObjectURL(url), 100); 
             },
-            
-            // --- NEW: EXPORT SINGLE GEOJSON (ARCGIS READY) ---
             exportGeoJSON: () => {
                 if (!state.currentDetail) return;
                 const d = state.currentDetail;
                 
-                // Gunakan logika yang sama dengan footer PDF (ArcGIS Compatible)
                 let content = "";
-                
                 if (d.geometry_json) {
                     content = generateArcGISReadyFooter(d.geometry_json);
                 } else {
-                    // Fallback jika tidak ada poligon, buat Point Feature sederhana
                     const simpleFeature = {
                         "type": "FeatureCollection",
                         "features": [{
@@ -1779,7 +1749,6 @@
                     content = JSON.stringify(simpleFeature, null, 2);
                 }
 
-                // Create Blob & Download
                 const blob = new Blob([content], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -1790,13 +1759,8 @@
                 document.body.removeChild(a);
                 setTimeout(() => URL.revokeObjectURL(url), 100);
             },
-            
-            // --- NEW: EXPORT METADATA (DCMI) ---
             exportMetadata: () => {
-                 // Konversi semua data yang ada di state.data ke format Dublin Core
                  const dcData = state.data.map(convertToDublinCore);
-                 
-                 // Bungkus dalam array JSON yang rapi
                  const blob = new Blob([JSON.stringify(dcData, null, 2)], { type: 'application/json' });
                  const url = URL.createObjectURL(blob);
                  const a = document.createElement('a');
@@ -1808,13 +1772,11 @@
                  setTimeout(() => URL.revokeObjectURL(url), 100); 
             },
 
-            // --- UPDATED: EXPORT TO PDF FUNCTION WITH LOADING OVERLAY ---
             updatePdfProgress: (percent, text) => {
                 const bar = document.getElementById('pdf-progress-bar');
                 const txt = document.getElementById('pdf-progress-text');
                 if(bar) bar.style.width = `${percent}%`;
                 if(txt) txt.innerText = text;
-                // Force UI Repaint
                 return new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50))); 
             },
 
@@ -1823,7 +1785,6 @@
                 const d = state.currentDetail;
                 const btn = btnElement || event.target;
                 
-                // Show Overlay Modal immediately
                 window.ui.openModal('pdf-progress-modal');
                 document.body.classList.add('exporting');
                 btn.disabled = true;
@@ -1831,13 +1792,11 @@
                 try {
                     await window.app.updatePdfProgress(5, "Initializing Renderer...");
 
-                    // --- GHOST MAP SETUP ---
                     const ghostId = 'ghost-map-container';
                     let ghost = document.getElementById(ghostId);
                     if (!ghost) {
                         ghost = document.createElement('div');
                         ghost.id = ghostId;
-                        // Position off-screen but keep in DOM flow to ensure rendering
                         ghost.style.position = 'fixed';
                         ghost.style.left = '-9999px'; 
                         ghost.style.top = '0';
@@ -1847,9 +1806,7 @@
                         document.body.appendChild(ghost);
                     }
 
-                    // --- GENERATE SNAPSHOT HELPER ---
                     const generateMapSnapshot = async (type) => {
-                        // Reset Container
                         if (ghost._leaflet_id) { ghost._leaflet_id = null; }
                         ghost.innerHTML = ''; 
 
@@ -1864,7 +1821,6 @@
                         let hasLayer = false;
 
                         if (type === 'geo') {
-                            // Distribution Map Logic
                             if (d.geometry_json) {
                                 try {
                                     const pts = JSON.parse(d.geometry_json);
@@ -1878,13 +1834,10 @@
                                 hasLayer = true;
                             }
                         } else {
-                            // Influence Map Logic
-                            // Use main map logic to draw lines
                             let rootName = d.food_name;
                             let curr = d;
                             const pathUp = new Set([d.id]);
 
-                            // Find Root
                             while(curr && curr.origin_food_name) {
                                 const parentName = curr.origin_food_name;
                                 const parentNode = state.data.find(n => n.food_name.toLowerCase().trim() === parentName.toLowerCase().trim());
@@ -1896,7 +1849,6 @@
                                 } else break;
                             }
 
-                            // Collect Family
                             const familyNodes = [];
                             const queue = [rootName];
                             const visitedNames = new Set();
@@ -1952,39 +1904,29 @@
                             });
                         }
 
-                        // --- CRITICAL FIX FOR ZOOM ---
                         if (hasLayer && bounds.isValid()) {
-                            map.fitBounds(bounds, { 
-                                animate: false, 
-                                padding: [50, 50], 
-                                maxZoom: 4 // FORCE WIDER VIEW
-                            });
+                            map.fitBounds(bounds, { animate: false, padding: [50, 50], maxZoom: 4 });
                         } else {
                             map.setView([20, 0], 2, { animate: false });
                         }
 
-                        await new Promise(r => setTimeout(r, 800)); // Wait for tile load
+                        await new Promise(r => setTimeout(r, 800)); 
 
                         const canvas = await html2canvas(ghost, { useCORS: true, allowTaint: true, logging: false, scale: 2 });
                         map.remove();
                         return canvas.toDataURL('image/png');
                     };
 
-                    // Generate Maps off-screen with Progress Updates
                     await window.app.updatePdfProgress(20, "Generating Distribution Map (1/2)...");
                     const map1Img = await generateMapSnapshot('geo');
                     
                     await window.app.updatePdfProgress(40, "Generating Influence Map (2/2)...");
                     const map2Img = await generateMapSnapshot('conn');
 
-                    // 5. Prepare CLEAN GeoJSON Feature (REPLACED AS PER REQUEST)
                     let geoJsonString = "No Spatial Data Available";
-
                     if (d.geometry_json) {
-                        // Logic from User: generate ArcGIS ready Footer
                         geoJsonString = generateArcGISReadyFooter(d.geometry_json);
                     } else {
-                        // Fallback logic in case polygon is missing, but keep footer format valid
                          const simpleFeature = {
                             "type": "Feature",
                             "geometry": { "type": "Point", "coordinates": [d.lng, d.lat] },
@@ -1993,7 +1935,6 @@
                         geoJsonString = JSON.stringify(simpleFeature, null, 2);
                     }
 
-                    // Image Loading
                     await window.app.updatePdfProgress(60, "Processing High-Res Images...");
                     let processedImages = [];
                     if(d.image_url) {
@@ -2011,7 +1952,6 @@
 
                     await window.app.updatePdfProgress(80, "Compiling Document Layout...");
 
-                    // HTML Template
                     const content = `
                         <div style="font-family: 'Helvetica', sans-serif; color: #333; width: 750px; margin: 0 auto; padding: 40px; position: relative;">
                             <div style="text-align: center; border-bottom: 4px solid #ff1b2d; padding-bottom: 20px; margin-bottom: 30px;">
@@ -2032,7 +1972,6 @@
                                 </div>
                             </div>` : ''}
                             <h3 style="border-left: 4px solid #ff1b2d; padding-left: 10px; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Historical Narrative</h3>
-                            <!-- Use Parser for PDF -->
                             <div style="font-size: 11px; line-height: 1.6; text-align: justify; margin-bottom: 30px; color: #444;">${parseSafeMarkdown(d.description) || 'No detailed history available.'}</div>
                             
                             <h3 style="border-left: 4px solid #ff1b2d; padding-left: 10px; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Geographic Mapping</h3>
