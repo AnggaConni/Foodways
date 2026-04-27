@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Foodways: Shared Heritage (Secured)</title>
+
+    <script>
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+                     || window.innerWidth <= 768;
+    
+    if (isMobile) {
+        window.location.href = "mobile.html";
+    }
+    </script>
+    
     <link rel="icon" type="image/png" href="favicon.png">
     <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
