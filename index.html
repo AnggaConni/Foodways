@@ -41,6 +41,7 @@
     <!-- HTML2PDF & HTML2CANVAS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- Custom Styles -->
     <style>
@@ -488,10 +489,11 @@
     <!-- LOGIN -->
     <div id="login-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="bg-white w-96 p-8 rounded-2xl border border-gray-300 shadow-2xl text-gray-800">
-            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900">Admin Access</h3>
-            <input type="text" id="login-user" placeholder="Username" class="input-light w-full rounded-lg p-3 mb-4 text-sm">
-            <input type="password" id="login-pass" placeholder="Password" class="input-light w-full rounded-lg p-3 mb-6 text-sm">
-            <button onclick="window.app.login()" id="btn-login" class="w-full btn-opera py-3 rounded-lg font-bold shadow-lg">Login</button>
+            <h3 class="text-2xl font-bold mb-2 text-center text-gray-900">Admin Access</h3>
+            <p class="text-xs text-gray-500 text-center mb-6">Sign in with your authorized Google account.</p>
+            <button onclick="window.app.login()" id="btn-login" class="w-full btn-opera py-3 rounded-lg font-bold shadow-lg">
+                <i class="fab fa-google mr-2"></i> Continue with Google
+            </button>
             <button onclick="window.ui.closeModal('login-modal')" class="w-full mt-4 text-gray-500 text-xs hover:text-gray-900 transition">Cancel</button>
         </div>
     </div>
@@ -605,12 +607,13 @@
     </div>
 
     <script>
-        // Updated URL for the latest deployment
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyr5JxnjXhpWqgb0sgXFTCFTbFjjOSrCrYEDPwWbo8zkpwVoH0IbGJfcJRLBlaIBbEK/exec';
-        
+        const SUPABASE_URL = 'https://yyjwodgywizjbnrvdnpn.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_3dTLdT8jsmdLzG_fbM5OxQ_Yt9lE9Pg';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
         window.state = { 
             data: [], 
-            guides: [], // New Guide Data Store
+            guides: [],
             role: 'guest', 
             editId: null, 
             pickerTarget: null, 
@@ -1116,442 +1119,48 @@
 
         window.mapLogic = {
             map: null, layers: [], lines: [], markers: [],
-            init: () => {
-                window.mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: true, maxBounds: [[-90, -180], [90, 180]], maxBoundsViscosity: 1.0, minZoom: 2 }).setView([20, 0], 2);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, noWrap: true, bounds: [[-90, -180], [90, 180]], attribution: '&copy; OpenStreetMap contributors' }).addTo(window.mapLogic.map);
-                L.control.zoom({ position: 'topright' }).addTo(window.mapLogic.map);
-            },
-            resize: () => setTimeout(() => window.mapLogic.map.invalidateSize(), 200),
-            resetZoom: () => {
-                if (window.mapLogic.layers.length > 0) { const group = new L.featureGroup(window.mapLogic.layers); window.mapLogic.map.fitBounds(group.getBounds().pad(0.1)); } 
-                else window.mapLogic.map.setView([20, 0], 2);
-            },
-            render: () => { 
-                window.mapLogic.layers.forEach(l => window.mapLogic.map.removeLayer(l));
-                window.mapLogic.lines.forEach(l => window.mapLogic.map.removeLayer(l));
-                window.mapLogic.markers.forEach(l => window.mapLogic.map.removeLayer(l));
-                window.mapLogic.layers = []; window.mapLogic.lines = []; window.mapLogic.markers = [];
-                
-                const search = state.filter.search.toLowerCase();
-                const filteredData = state.data.filter(d => 
-                    d.food_name.toLowerCase().includes(search) || 
-                    d.country.toLowerCase().includes(search) ||
-                    (d.origin_country && d.origin_country.toLowerCase().includes(search))
-                );
-
-                const visibleIds = new Set(filteredData.map(d => d.id));
-                filteredData.forEach(d => {
-                    if (d.origin_food_name) {
-                        const originNode = state.data.find(n => n.food_name === d.origin_food_name);
-                        if (originNode) visibleIds.add(originNode.id);
-                    }
-                });
-
-                const dataToRender = state.data.filter(d => visibleIds.has(d.id));
-
-                dataToRender.forEach(d => {
-                    if (!d.lat || !d.lng) return;
-                    
-                    if (d.origin_lat && d.origin_lng) {
-                        const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], { 
-                            color: '#ff1b2d', // Opera Red
-                            weight: 1.5, opacity: 0.4, dashArray: '4, 8', className: 'leaflet-interactive' 
-                        }).addTo(window.mapLogic.map);
-                        
-                        line.bindTooltip(`${window.escapeHtml(d.origin_food_name)} ➔ ${window.escapeHtml(d.food_name)}`, { 
-                            sticky: true, direction: 'top',
-                            className: 'bg-white text-gray-800 text-[10px] font-bold px-2 py-1 rounded border border-gray-300 shadow-lg'
-                        });
-
-                        line.on('mouseover', function() { this.setStyle({ color: '#d40012', weight: 4, opacity: 1, dashArray: null }); this.bringToFront(); this.openTooltip(); });
-                        line.on('mouseout', function() { this.setStyle({ color: '#ff1b2d', weight: 1.5, opacity: 0.4, dashArray: '4, 8' }); this.closeTooltip(); });
-
-                        window.mapLogic.lines.push(line);
-                        window.mapLogic.layers.push(line);
-                        
-                        const isBlueNode = state.data.some(n => Math.abs(n.lat - d.origin_lat) < 0.001 && Math.abs(n.lng - d.origin_lng) < 0.001);
-                        if (!isBlueNode) {
-                            const origin = L.circleMarker([d.origin_lat, d.origin_lng], { color: '#fb923c', fillColor: '#fb923c', fillOpacity: 0.8, radius: 4 }).addTo(window.mapLogic.map);
-                            origin.bindTooltip(`Origin: ${window.escapeHtml(d.origin_food_name)}`, { direction: 'top', className: 'custom-tooltip' });
-                            window.mapLogic.markers.push(origin); window.mapLogic.layers.push(origin);
-                        }
-                    }
-                    const m = L.circleMarker([d.lat, d.lng], { 
-                        color: '#ff1b2d', fillColor: '#ff1b2d', fillOpacity: 0.8, radius: 6,
-                        className: 'node-pulse'
-                    }).addTo(window.mapLogic.map);
-                    m.on('click', () => window.dashboard.showDetail(d));
-                    m.bindTooltip(window.escapeHtml(d.food_name), { direction: 'top', className: 'custom-tooltip' });
-                    window.mapLogic.layers.push(m);
-                });
-                setTimeout(window.mapLogic.resetZoom, 500); 
-            },
-            enablePicker: (cb) => {
-                window.mapLogic.map.getContainer().classList.add('picker-mode');
-                window.mapLogic.pickerHandler = (e) => {
-                    if (window.mapLogic.pickerMarker) window.mapLogic.map.removeLayer(window.mapLogic.pickerMarker);
-                    const color = state.pickerTarget === 'main' ? '#ff1b2d' : '#fb923c';
-                    window.mapLogic.pickerMarker = L.circleMarker(e.latlng, { color: color, fillColor: color, fillOpacity: 1, radius: 8 }).addTo(window.mapLogic.map);
-                    cb(e.latlng.lat, e.latlng.lng);
-                };
-                window.mapLogic.map.on('click', window.mapLogic.pickerHandler);
-            },
-            disablePicker: () => {
-                window.mapLogic.map.getContainer().classList.remove('picker-mode');
-                if (window.mapLogic.pickerHandler) window.mapLogic.map.off('click', window.mapLogic.pickerHandler);
-                if (window.mapLogic.pickerMarker) window.mapLogic.map.removeLayer(window.mapLogic.pickerMarker);
-            }
-        };
-
-        window.geoEditor = {
-            map: null, layer: null, points: [], markers: [],
-            start: () => {
-                window.ui.closeModal('input-modal');
-                document.getElementById('geo-editor').classList.remove('hidden');
-                if(!window.geoEditor.map) {
-                    window.geoEditor.map = L.map('geo-map').setView([0,0], 2);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(window.geoEditor.map);
-                    window.geoEditor.map.on('click', e => window.geoEditor.addPoint(e.latlng));
-                }
-                window.geoEditor.points = [];
-                window.geoEditor.markers.forEach(m => window.geoEditor.map.removeLayer(m));
-                window.geoEditor.markers = [];
-                if(window.geoEditor.layer) window.geoEditor.map.removeLayer(window.geoEditor.layer);
-                setTimeout(()=>window.geoEditor.map.invalidateSize(), 200);
-            },
-            addPoint: (latlng) => {
-                const m = L.marker(latlng, { draggable: true, icon: L.divIcon({ className: 'geo-marker-icon', iconSize: [12,12] }) }).addTo(window.geoEditor.map);
-                m.on('drag', () => window.geoEditor.updatePoly());
-                window.geoEditor.markers.push(m);
-                window.geoEditor.updatePoly();
-            },
-            updatePoly: () => {
-                window.geoEditor.points = window.geoEditor.markers.map(m => [m.getLatLng().lat, m.getLatLng().lng]);
-                if(window.geoEditor.layer) window.geoEditor.map.removeLayer(window.geoEditor.layer);
-                if(window.geoEditor.points.length > 2) window.geoEditor.layer = L.polygon(window.geoEditor.points, {color:'#ff1b2d', weight:2}).addTo(window.geoEditor.map);
-                else if(window.geoEditor.points.length > 1) window.geoEditor.layer = L.polyline(window.geoEditor.points, {color:'#ff1b2d', weight:2}).addTo(window.geoEditor.map);
-            },
-            finish: () => {
-                if(window.geoEditor.points.length > 0) document.getElementById('inp-geometry').value = JSON.stringify(window.geoEditor.points);
-                window.geoEditor.cancel();
-            },
-            cancel: () => {
-                document.getElementById('geo-editor').classList.add('hidden');
-                window.ui.openModal('input-modal');
-            }
-        };
-
-        window.dashboard = {
-            chartCountry: null, chartType: null, chartUnesco: null,
-            init: () => { window.dashboard.render(); window.dashboard.listeners(); }, 
-            render: () => {
-                if(document.getElementById('view-dashboard').classList.contains('hidden')) return;
-                const ctx1 = document.getElementById('chart-country')?.getContext('2d');
-                const ctx2 = document.getElementById('chart-type')?.getContext('2d');
-                const ctx3 = document.getElementById('chart-unesco')?.getContext('2d');
-                if (!ctx1 || !ctx2 || !ctx3) return;
-
-                window.dashboard.updateKPI(); 
-                window.dashboard.renderCharts(ctx1, ctx2, ctx3); 
-                window.dashboard.renderTable();
-            },
-            updateKPI: () => {
-                const t = state.data.length, c = new Set([...state.data.map(d=>d.country), ...state.data.map(d=>d.origin_country).filter(x=>x)]).size, e = state.data.filter(d=>d.origin_food_name).length;
-                const u = state.data.filter(d=>d.unesco_status && d.unesco_status.toLowerCase() !== 'unlisted').length;
-                ['total','countries','edges','unesco'].forEach((k,i) => animateValue('kpi-'+k, 0, [t,c,e,u][i], 1000));
-            },
-            renderCharts: (ctx1, ctx2, ctx3) => {
-                const o = {}; state.data.forEach(d => { if(d.origin_country) o[d.origin_country]=(o[d.origin_country]||0)+1; });
-                const so = Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,5);
-                const t = {}; state.data.forEach(d => { if(d.connection_type) t[d.connection_type]=(t[d.connection_type]||0)+1; });
-                const u = { 'UNESCO': 0, 'National': 0, 'Icon': 0, 'Other': 0 };
-                state.data.forEach(d => {
-                    const s = d.unesco_status ? d.unesco_status.toLowerCase() : '';
-                    if(s.includes('unesco')) u['UNESCO']++; else if(s.includes('national')) u['National']++; else if(s.includes('cultural')) u['Icon']++; else u['Other']++;
-                });
-
-                if(window.dashboard.chartCountry) window.dashboard.chartCountry.destroy();
-                window.dashboard.chartCountry = new Chart(ctx1, { 
-                    type: 'bar', data: { labels: so.map(x=>x[0]), datasets: [{ label: 'Count', data: so.map(x=>x[1]), backgroundColor: '#ff1b2d', borderRadius: 4 }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } 
-                });
-                
-                if(window.dashboard.chartType) window.dashboard.chartType.destroy();
-                window.dashboard.chartType = new Chart(ctx2, { 
-                    type: 'doughnut', data: { labels: Object.keys(t), datasets: [{ data: Object.values(t), backgroundColor: ['#fbbf24', '#4ade80', '#f87171'], borderWidth: 0 }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } 
-                });
-
-                if(window.dashboard.chartUnesco) window.dashboard.chartUnesco.destroy();
-                window.dashboard.chartUnesco = new Chart(ctx3, { 
-                    type: 'bar', indexAxis: 'y', data: { labels: Object.keys(u), datasets: [{ label: 'Count', data: Object.values(u), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#9ca3af'], borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
-                });
-            },
-            changePage: (step) => {
-                state.pagination.page += step;
-                window.dashboard.renderTable();
-            },
-            renderTable: () => {
-                const b = document.getElementById('table-body'); b.innerHTML='';
-                const search = state.filter.search.toLowerCase();
-                const f = state.data.filter(d => d.food_name && d.food_name.toLowerCase().includes(search));
-                
-                const total = f.length;
-                const totalPages = Math.ceil(total / state.pagination.limit);
-                if(state.pagination.page < 1) state.pagination.page = 1;
-                if(state.pagination.page > totalPages && totalPages > 0) state.pagination.page = totalPages;
-
-                const start = (state.pagination.page - 1) * state.pagination.limit;
-                const end = start + state.pagination.limit;
-                const pageData = f.reverse().slice(start, end);
-
-                pageData.forEach(r => {
-                    const badge = getTypeBadge(r.connection_type);
-                    const tr = document.createElement('tr'); tr.className = "hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition";
-                    tr.onclick = () => window.dashboard.showDetail(r);
-                    tr.innerHTML = `<td class="p-4 text-gray-500 font-mono text-xs">${r.id}</td><td class="p-4 font-bold text-gray-900">${window.escapeHtml(r.food_name)}</td><td class="p-4 text-gray-600">${window.escapeHtml(r.country)}</td><td class="p-4 text-gray-500 text-xs">${window.escapeHtml(r.origin_food_name||'-')}</td><td class="p-4">${badge}</td><td class="p-4 text-right"><i class="fas fa-chevron-right text-gray-400 text-xs"></i></td>`;
-                    b.appendChild(tr);
-                });
-
-                document.getElementById('pagination-info').innerText = `Showing ${start+1}-${Math.min(end, total)} of ${total}`;
-                document.getElementById('btn-prev').disabled = state.pagination.page <= 1;
-                document.getElementById('btn-next').disabled = state.pagination.page >= totalPages || totalPages === 0;
-            },
-            listeners: () => {
-                document.getElementById('search-input').addEventListener('keyup', (e)=>{
-                    state.filter.search=e.target.value; 
-                    state.pagination.page = 1; 
-                    window.dashboard.renderTable();
-                });
-                const mapSearch = document.getElementById('map-search');
-                if(mapSearch) {
-                    mapSearch.addEventListener('keyup', (e)=>{
-                        state.filter.search = e.target.value;
-                        window.mapLogic.render(); 
-                    });
-                }
-            },
-            
-            // --- NEW: LAZY LOAD SIMULATION LOGIC ---
-            fetchNodeDetail: async (id) => {
-                if (state.detailCache[id]) return state.detailCache[id];
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const item = state.data.find(x => x.id === id);
-                        if (item) {
-                            state.detailCache[id] = item; // Save to Cache
-                            resolve(item);
-                        } else resolve(null);
-                    }, 800); 
-                });
-            },
-
-            showDetail: async (partialData) => {
-                const id = partialData.id;
-                window.ui.openModal('detail-modal');
-                state.loadingId = id; // Track current view
-
-                // Render Skeleton First
-                window.dashboard.renderDetailSkeleton(partialData);
-
-                // Fetch (Lazy Load)
-                const fullData = await window.dashboard.fetchNodeDetail(id);
-
-                // If user is still looking at this modal (didn't switch fast), render content
-                if (state.loadingId === id && fullData) {
-                    state.currentDetail = fullData;
-                    window.dashboard.renderDetailContent(fullData);
-                } else if (!fullData) {
-                    document.getElementById('detail-container').innerHTML = '<div class="p-8 text-center text-red-500">Failed to load data.</div>';
-                }
-            },
-
-            renderDetailSkeleton: (d) => {
-                const container = document.getElementById('detail-container');
-                container.innerHTML = `
-                    <div class="p-8 border-b border-gray-100 flex justify-between items-start bg-white">
-                        <div>
-                            <h2 class="text-4xl font-black text-gray-900 mb-2 leading-tight">${window.escapeHtml(d.food_name)}</h2>
-                             <div class="flex gap-2">
-                                <div class="h-6 w-24 skeleton"></div>
-                                <div class="h-6 w-32 skeleton"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-8 flex-1 flex flex-col items-center justify-center space-y-4">
-                        <div class="h-64 w-full skeleton rounded-2xl"></div>
-                        <div class="h-4 w-3/4 skeleton"></div>
-                        <div class="h-4 w-1/2 skeleton"></div>
-                        <div class="text-gray-400 text-sm animate-pulse mt-4"><i class="fas fa-sync fa-spin mr-2"></i> Fetching details...</div>
-                    </div>
-                `;
-            },
-
-            renderDetailContent: (d) => {
-                let images = extractImages(d.image_url);
-                let videos = extractYoutubeEmbeds(d.youtube_url);
-                
-                const container = document.getElementById('detail-container');
-                container.innerHTML = `
-                    <!-- HEADER -->
-                    <div class="px-8 pt-8 pb-4 bg-white z-10 shrink-0 relative group-header">
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h2 class="text-5xl font-black text-gray-900 mb-2 tracking-tight">${window.escapeHtml(d.food_name)}</h2>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="text-red-600 bg-red-50 px-4 py-1.5 rounded-full font-bold text-sm border border-red-100 shadow-sm flex items-center">
-                                        <i class="fas fa-map-marker-alt mr-2"></i> ${window.escapeHtml(d.country)}
-                                    </span>
-                                    ${d.unesco_status ? `
-                                    <span class="text-green-700 bg-green-50 px-4 py-1.5 rounded-full font-bold text-sm border border-green-100 shadow-sm flex items-center">
-                                        <i class="fas fa-award mr-2"></i> ${window.escapeHtml(d.unesco_status)}
-                                    </span>` : ''}
-                                </div>
-                            </div>
-                            
-                            <div class="flex gap-2 items-start mt-2">
-                                <!-- PDF EXPORT BUTTON -->
-                                <button onclick="window.app.exportToPDF(this)" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-bold text-xs transition flex items-center gap-2 shadow-sm">
-                                    <i class="fas fa-file-pdf"></i> Export to PDF
-                                </button>
-
-                                <!-- EDIT BUTTON -->
-                                ${state.role === 'admin' ? `
-                                <button onclick="window.app.openInputModal('edit')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-bold text-xs transition flex items-center gap-2 border border-gray-200 shadow-sm">
-                                    <i class="fas fa-edit text-[var(--opera-red)]"></i> Edit Entry
-                                </button>` : ''}
-                            </div>
-                        </div>
-                        
-                        <!-- TABS & GEOJSON BUTTON (Option Red) -->
-                        <div class="flex justify-between items-end border-b border-gray-200 mt-4">
-                            <div class="flex gap-6">
-                                <button onclick="window.ui.switchModalTab('overview')" id="tab-btn-overview" class="tab-btn active">Overview</button>
-                                <button onclick="window.ui.switchModalTab('multimedia')" id="tab-btn-multimedia" class="tab-btn">Multimedia & Data</button>
-                            </div>
-                            
-                            <!-- GEOJSON EXPORT BUTTON -->
-                            <button onclick="window.app.exportGeoJSON()" class="mb-2 bg-black hover:bg-gray-800 text-white px-3 py-1.5 rounded text-[10px] font-bold transition shadow-lg flex items-center gap-2" title="Download for ArcGIS/QGIS">
-                                <i class="fas fa-globe-americas"></i> Download GeoJSON
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- CONTENT SCROLL AREA (Fixed Scroll) -->
-                    <div class="flex-1 overflow-y-auto custom-scrollbar bg-gray-50 min-h-0">
-                        
-                        <!-- TAB 1: OVERVIEW -->
-                        <div id="tab-content-overview" class="tab-content active p-8">
-                            
-                            <!-- 1. IMAGE CAROUSEL -->
-                            ${images}
-
-                            <div class="flex flex-col gap-8">
-                                
-                                <!-- 2. CULTURAL ROOTS (Stacked Below Image) -->
-                                <div>
-                                    ${d.origin_food_name ? `
-                                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                                        <h3 class="text-xs font-bold text-orange-600 uppercase mb-6 tracking-wider flex items-center justify-center">
-                                            <span class="bg-orange-100 p-1.5 rounded mr-2"><i class="fas fa-history"></i></span> Cultural Roots
-                                        </h3>
-                                        <div class="flex items-center gap-4 relative justify-center">
-                                            <div class="text-center min-w-[100px]">
-                                                <div class="text-lg font-bold text-gray-800">${window.escapeHtml(d.origin_food_name)}</div>
-                                                <div class="text-xs text-gray-500">from ${window.escapeHtml(d.origin_country)}</div>
-                                            </div>
-                                            
-                                            <div class="w-32 border-t-2 border-dashed border-orange-300 relative mx-4">
-                                                <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-2 text-[10px] font-bold text-orange-500 uppercase border border-orange-200 rounded-full">
-                                                    ${window.escapeHtml(d.connection_type)}
-                                                </span>
-                                                <i class="fas fa-chevron-right absolute -right-1.5 -top-2 text-orange-300"></i>
-                                            </div>
-                                            
-                                            <div class="text-center min-w-[100px]">
-                                                <div class="text-lg font-bold text-[var(--opera-red)]">${window.escapeHtml(d.food_name)}</div>
-                                                <div class="text-xs text-gray-500">in ${window.escapeHtml(d.country)}</div>
-                                            </div>
-                                        </div>
-                                    </div>` 
-                                    : `<div class="bg-gray-100 p-6 rounded-2xl border border-dashed border-gray-300 flex items-center justify-center text-gray-400 h-24 text-sm font-bold">Origin data not available</div>`}
-                                </div>
-
-                                <!-- 3. HISTORICAL NARRATIVE (Stacked Below Roots) -->
-                                <div class="prose prose-sm max-w-none text-gray-700 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide border-b pb-2 mb-4">Historical Narrative</h3>
-                                    <!-- Use Safe Markdown Parser Here -->
-                                    <div class="leading-relaxed whitespace-pre-line">${parseSafeMarkdown(d.description) || 'No historical data available for this entry.'}</div>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <!-- TAB 2: MULTIMEDIA -->
-                        <div id="tab-content-multimedia" class="tab-content p-8">
-                            
-                            <!-- VIDEOS (Restored Carousel) -->
-                            <div class="mb-8">
-                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center"><i class="fab fa-youtube text-red-600 mr-2 text-xl"></i> Related Videos</h3>
-                                ${videos || '<div class="text-sm text-gray-400 italic">No videos linked.</div>'}
-                            </div>
-
-                            <!-- MINI MAP (Food Distribution Map) -->
-                            <div class="mb-8">
-                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center"><i class="fas fa-map mr-2 text-blue-600"></i> Food Distribution Map</h3>
-                                ${d.geometry_json ? `<div id="detail-geo-map" class="h-64 w-full bg-gray-200 rounded-xl border border-gray-300 shadow-inner"></div>` : '<div class="h-32 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300">No geographic polygon data.</div>'}
-                            </div>
-
-                            <!-- CONNECTED MAP (PETA TERHUBUNG) - NEW -->
-                            <div class="mb-8">
-                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center"><i class="fas fa-route mr-2 text-orange-600"></i> Culinary Influence Map (Foodways)</h3>
-                                ${d.origin_lat && d.origin_lng ? 
-                                `<div id="detail-conn-map" class="h-64 w-full bg-gray-200 rounded-xl border border-gray-300 shadow-inner"></div>` 
-                                : '<div class="h-32 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300">Origin data is incomplete (missing latitude/longitude).</div>'}
-                            </div>
-
-                            <!-- LINKS -->
-                            ${d.research_links ? `
-                            <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                                <h3 class="text-xs font-bold text-blue-800 uppercase mb-3 flex items-center"><i class="fas fa-graduation-cap mr-2"></i> Academic Sources (Riset)</h3>
-                                <div class="flex flex-col gap-2 text-sm text-blue-700">
-                                    ${d.research_links.split(',').map(l => `<a href="${window.escapeHtml(l.trim())}" target="_blank" class="hover:underline flex items-center gap-2"><i class="fas fa-external-link-alt text-xs opacity-50"></i> ${window.escapeHtml(l.trim())}</a>`).join('')}
-                                </div>
-                            </div>` : ''}
-                        </div>
-
-                    </div>
-                `;
-            }
-        };
-
-        window.app = {
-            init: () => {
+            init: async () => {
                 window.ui.renderAuth();
-                window.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const landing = document.getElementById('landing-page'); if (landing && landing.style.display !== 'none' && !document.getElementById('loading-container').classList.contains('hidden') === false) { window.app.enterAsGuest(); } } });
-                
-                // PANGGIL DATA UTAMA DARI BIGQUERY
-                fetch(GAS_URL + '?action=get_all')
-                .then(r => r.json())
-                .then(d => {
-                    if(d.status === 'success' && d.data.length > 0) {
-                        state.data = d.data.map(transformData).filter(x => x.lat && x.lng);
-                        window.mapLogic.init(); window.dashboard.init(); window.ui.loaded();
-                        window.mapLogic.render(); 
-                    } else {
-                        window.ui.showError("Data Kosong atau Gagal Dimuat dari BigQuery.");
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    window.ui.showError("Gagal menyambung ke Database BigQuery.");
+
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) await window.app.applySession(session);
+
+                supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+                    await window.app.applySession(session);
                 });
-                
-                // PANGGIL DATA GUIDES DARI BIGQUERY
+
+                const { data, error } = await supabaseClient
+                    .from('Heritage Foodways')
+                    .select('*')
+                    .order('id');
+
+                if (error) {
+                    console.error(error);
+                    window.ui.showError("Gagal menyambung ke database Foodways.");
+                    return;
+                }
+
+                state.data = (data || []).map(transformData).filter(x => x.lat !== null && x.lng !== null);
+                window.mapLogic.init(); window.dashboard.init(); window.ui.loaded();
+                window.mapLogic.render();
                 window.app.fetchGuides();
             },
-            
-            // --- NEW: FETCH GUIDES FROM SHEET ---
+
+            applySession: async (session) => {
+                if (!session) {
+                    state.role = 'guest';
+                    window.ui.renderAuth();
+                    return;
+                }
+
+                const { data: isAdmin, error } = await supabaseClient.rpc('is_foodways_admin');
+                state.role = !error && isAdmin === true ? 'admin' : 'guest';
+                window.ui.renderAuth();
+
+                const landing = document.getElementById('landing-page');
+                if (landing && landing.style.display !== 'none') window.app.enterAsGuest();
+            },
+
             fetchGuides: () => {
                 fetch(GAS_URL + '?action=get_guides')
                 .then(r => r.json())
@@ -1567,24 +1176,34 @@
                 .catch(e => console.error("Guide Fetch Error:", e));
             },
 
-            enterAsContributor: () => { if(state.role==='admin') return; window.ui.openModal('login-modal'); },
+            enterAsContributor: () => {
+                if(state.role==='admin') return;
+                window.ui.openModal('login-modal');
+            },
             enterAsGuest: () => { 
                 document.getElementById('landing-page').style.display='none'; 
                 document.getElementById('main-app').classList.add('active'); 
                 window.app.switchTab('dashboard'); 
                 window.mapLogic.resize(); 
             },
-            login: () => {
-                const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
-                const form = new URLSearchParams(); form.append('action', 'login'); form.append('username', u); form.append('password', p);
-                const btn = document.getElementById('btn-login'); btn.innerText='Verifying...';
-                fetch(GAS_URL, { method: 'POST', body: form }).then(r => r.json()).then(d => {
-                    btn.innerText='Login';
-                    if(d.status==='success') { state.role='admin'; window.ui.renderAuth(); window.ui.closeModal('login-modal'); if(document.getElementById('landing-page').style.display!=='none') window.app.enterAsGuest(); } 
-                    else alert(d.message);
-                }).catch(e => { btn.innerText='Login'; alert('Server Error.'); });
+            login: async () => {
+                const btn = document.getElementById('btn-login');
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Redirecting...';
+                const { error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.href.split('#')[0].split('?')[0] }
+                });
+                if (error) {
+                    btn.innerHTML = '<i class="fab fa-google mr-2"></i> Continue with Google';
+                    alert(error.message);
+                }
             },
-            logout: () => { state.role='guest'; window.ui.renderAuth(); alert('Logged Out'); },
+            logout: async () => {
+                const { error } = await supabaseClient.auth.signOut();
+                if(error) alert(error.message);
+                state.role='guest';
+                window.ui.renderAuth();
+            },
             initiateAddEntry: () => {
                 state.editId = null;
                 document.querySelectorAll('#input-modal input, #input-modal textarea').forEach(el => el.value = '');
@@ -1652,88 +1271,94 @@
                 });
             },
             cancelPicker: () => { document.getElementById('picker-notification').classList.add('hidden'); window.mapLogic.disablePicker(); window.ui.openModal('input-modal'); },
-            saveData: () => {
+            saveData: async () => {
+                if(state.role!=='admin') return alert('Admin Only');
+
                 const data = {
-                    id: state.editId || '', food_name: document.getElementById('inp-name').value, country: document.getElementById('inp-country').value,
-                    lat: parseFloat(document.getElementById('inp-lat').value.replace(',', '.')), 
+                    id: state.editId || window.app.nextFoodwayId(),
+                    food_name: document.getElementById('inp-name').value,
+                    country: document.getElementById('inp-country').value,
+                    lat: parseFloat(document.getElementById('inp-lat').value.replace(',', '.')),
                     lng: parseFloat(document.getElementById('inp-lng').value.replace(',', '.')),
-                    description: document.getElementById('inp-desc').value, geometry_json: document.getElementById('inp-geometry').value,
-                    unesco_status: document.getElementById('inp-unesco').value, research_links: document.getElementById('inp-research').value,
-                    image_url: document.getElementById('inp-image').value, youtube_url: document.getElementById('inp-youtube').value,
-                    origin_food_name: document.getElementById('inp-origin-name').value, origin_country: document.getElementById('inp-origin-country').value,
-                    origin_lat: parseFloat(document.getElementById('inp-origin-lat').value.replace(',', '.') || 0), 
-                    origin_lng: parseFloat(document.getElementById('inp-origin-lng').value.replace(',', '.') || 0),
+                    description: document.getElementById('inp-desc').value,
+                    geometry_json: document.getElementById('inp-geometry').value,
+                    unesco_status: document.getElementById('inp-unesco').value,
+                    research_links: document.getElementById('inp-research').value,
+                    image_url: document.getElementById('inp-image').value,
+                    youtube_url: document.getElementById('inp-youtube').value,
+                    origin_food_name: document.getElementById('inp-origin-name').value,
+                    origin_country: document.getElementById('inp-origin-country').value,
+                    origin_lat: document.getElementById('inp-origin-lat').value || null,
+                    origin_lng: document.getElementById('inp-origin-lng').value || null,
                     connection_type: document.getElementById('inp-conn-type').value
                 };
-                
-                window.ui.toggleLoader(true); 
-                
-                const action = state.editId ? 'update' : 'insert';
-                
-                if(state.editId) { const idx = state.data.findIndex(x=>x.id===state.editId); if(idx!==-1) state.data[idx] = {...state.data[idx], ...data}; } 
-                else { data.id = 'TEMP'; state.data.push(data); }
-                window.mapLogic.render(); window.dashboard.render();
 
-                const form = new URLSearchParams(); 
-                form.append('action', action); 
-                form.append('data', JSON.stringify(data));
+                window.ui.toggleLoader(true);
+                const isEdit = Boolean(state.editId);
 
-                if (action === 'update' && state.currentDetail) {
-                    const originalData = {
-                        food_name: state.currentDetail.food_name,
-                        lat: state.currentDetail.lat,
-                        lng: state.currentDetail.lng
-                    };
-                    form.append('original_data', JSON.stringify(originalData));
+                const { data: saved, error } = isEdit
+                    ? await supabaseClient.from('Heritage Foodways').update(data).eq('id', state.editId).select().single()
+                    : await supabaseClient.from('Heritage Foodways').insert(data).select().single();
+
+                if (error) {
+                    window.ui.toggleLoader(false);
+                    alert('Save failed: ' + error.message);
+                    return;
                 }
 
-                fetch(GAS_URL, { method: 'POST', body: form }).then(r=>r.json()).then(d => { 
-                    if(d.status==='success') { 
-                        alert('Saved to Cloud!'); 
-                        const finalId = (!state.editId && d.id) ? d.id : (state.editId || data.id);
-                        if(!state.editId && d.id) { state.data[state.data.length-1].id = d.id; }
-                        
-                        const newData = { ...data, id: finalId };
-                        state.detailCache[finalId] = newData; 
-                        
-                        if(state.currentDetail && state.currentDetail.id === finalId) {
-                            state.currentDetail = newData;
-                            window.dashboard.renderDetailContent(newData);
-                        }
+                const transformed = transformData(saved);
+                if (isEdit) {
+                    const idx = state.data.findIndex(x=>x.id===state.editId);
+                    if(idx!==-1) state.data[idx] = transformed;
+                } else {
+                    state.data.push(transformed);
+                }
 
-                        window.ui.closeModal('input-modal'); 
-                    } 
-                    else alert('Error: '+d.message); 
-                }).catch(e => alert('Offline Mode: Saved locally.')).finally(()=> {
-                    window.ui.toggleLoader(false); 
-                });
+                state.detailCache[transformed.id] = transformed;
+                window.mapLogic.render();
+                window.dashboard.render();
+                if(state.currentDetail && state.currentDetail.id === transformed.id) {
+                    state.currentDetail = transformed;
+                    window.dashboard.renderDetailContent(transformed);
+                }
+
+                window.ui.closeModal('input-modal');
+                window.ui.toggleLoader(false);
+                alert(isEdit ? 'Data updated in Supabase.' : 'Data saved to Supabase.');
             },
-            deleteData: () => {
+
+            nextFoodwayId: () => {
+                const nums = state.data
+                    .map(x => String(x.id || '').match(/^FH(\d+)$/i))
+                    .filter(Boolean)
+                    .map(m => parseInt(m[1], 10));
+                const next = (nums.length ? Math.max(...nums) : 0) + 1;
+                return 'FH' + String(next).padStart(3, '0');
+            },
+
+            deleteData: async () => {
                 if (!state.editId) return;
                 if (!confirm("Are you sure you want to DELETE this entry? This cannot be undone.")) return;
-                
-                window.ui.toggleLoader(true); 
-                
-                const dataPayload = JSON.stringify({ 
-                    food_name: state.currentDetail.food_name,
-                    lat: state.currentDetail.lat,
-                    lng: state.currentDetail.lng
-                });
 
-                const form = new URLSearchParams(); 
-                form.append('action', 'delete'); 
-                form.append('id', state.editId);
-                form.append('data', dataPayload); 
+                window.ui.toggleLoader(true);
+                const { error } = await supabaseClient
+                    .from('Heritage Foodways')
+                    .delete()
+                    .eq('id', state.editId);
 
-                fetch(GAS_URL, { method: 'POST', body: form }).then(r => r.json()).then(d => {
-                    if (d.status === 'success') {
-                        state.data = state.data.filter(item => item.id !== state.editId);
-                        delete state.detailCache[state.editId];
-                        window.mapLogic.render(); window.dashboard.render(); window.ui.closeModal('input-modal'); alert("Data successfully deleted.");
-                    } else { alert("Delete Failed: " + d.message); }
-                }).catch(e => alert("Network Error: Could not delete.")).finally(() => {
-                    window.ui.toggleLoader(false); 
-                });
+                if (error) {
+                    window.ui.toggleLoader(false);
+                    alert("Delete Failed: " + error.message);
+                    return;
+                }
+
+                state.data = state.data.filter(item => item.id !== state.editId);
+                delete state.detailCache[state.editId];
+                window.mapLogic.render();
+                window.dashboard.render();
+                window.ui.closeModal('input-modal');
+                window.ui.toggleLoader(false);
+                alert("Data successfully deleted from Supabase.");
             },
             switchTab: (t) => {
                 document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-map').classList.add('hidden');
