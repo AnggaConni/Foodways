@@ -2420,10 +2420,17 @@
                 const btn = document.getElementById('btn-login');
                 if (btn) btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Redirecting...';
 
+                // Always return to the app root, never an OAuth error page or stale query URL.
+                // Local development must use the same localhost origin so the PKCE verifier remains available.
+                const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+                const authRedirect = isLocal
+                    ? window.location.origin + '/'
+                    : 'https://anggaconni.github.io/Foodways/';
+
                 const { error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.href.split('#')[0].split('?')[0]
+                        redirectTo: authRedirect
                     }
                 });
 
