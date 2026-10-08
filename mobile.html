@@ -1169,17 +1169,61 @@
             },
             closeEditor:()=>document.getElementById('mobile-curate-editor').classList.add('hidden'),
             saveCurated:async()=>{
-                if(state.role!=='admin') return alert('Admin Only');
-                const record={id:window.app.nextFoodwayId(),food_name:document.getElementById('curate-mobile-name').value.trim(),country:document.getElementById('curate-mobile-country').value.trim(),lat:Number(document.getElementById('curate-mobile-lat').value),lng:Number(document.getElementById('curate-mobile-lng').value),origin_food_name:null,origin_country:null,origin_lat:null,origin_lng:null,connection_type:null,unesco_status:null,description:document.getElementById('curate-mobile-desc').value.trim(),research_links:document.getElementById('curate-mobile-links').value.trim()||null};
-                if(!record.food_name||!record.country||!Number.isFinite(record.lat)||!Number.isFinite(record.lng)) return alert('Food name, country, latitude and longitude are required.');
-                const {data,error}=await supabaseClient.from('Heritage Foodways').insert(record).select().single();
-                if(error) return alert('Save failed: '+error.message);
-                state.data.push(transformData(data));
-                window.dashboard.render();
-                window.mapLogic.render();
-                window.mobileAI.closeEditor();
-                alert('Saved to Supabase as '+record.id);
-            }
+                try{
+                    const {data:{user},error:userError}=await supabaseClient.auth.getUser();
+                    if(userError||!user){
+                        return alert('You are not signed in to Supabase. Please sign in with your authorized Google account first.');
+                    }
+
+                    const {data:isAdmin,error:adminError}=await supabaseClient.rpc('is_foodways_admin');
+                    if(adminError) return alert('Admin check failed: '+adminError.message);
+                    if(isAdmin!==true) return alert('Your Google account is signed in, but it is not registered as a Foodways Admin.');
+                    state.role='admin';
+
+                    const lat=Number(document.getElementById('curate-mobile-lat').value.replace(',','.'));
+                    const lng=Number(document.getElementById('curate-mobile-lng').value.replace(',','.'));
+
+                    const {data:latestRow,error:latestError}=await supabaseClient
+                        .from('Heritage Foodways')
+                        .select('id')
+                        .order('id',{ascending:false})
+                        .limit(1)
+                        .maybeSingle();
+                    if(latestError) throw latestError;
+
+                    const latestMatch=String(latestRow?.id||'').match(/^FH(\d+)$/i);
+                    const nextNumber=latestMatch?Number(latestMatch[1])+1:1;
+
+                    const record={
+                        id:'FH'+String(nextNumber).padStart(3,'0'),
+                        food_name:document.getElementById('curate-mobile-name').value.trim(),
+                        country:document.getElementById('curate-mobile-country').value.trim(),
+                        lat,lng,
+                        origin_food_name:null,origin_country:null,origin_lat:null,origin_lng:null,
+                        connection_type:null,unesco_status:null,
+                        description:document.getElementById('curate-mobile-desc').value.trim()||null,
+                        research_links:document.getElementById('curate-mobile-links').value.trim()||null
+                    };
+
+                    if(!record.food_name||!record.country||!Number.isFinite(record.lat)||!Number.isFinite(record.lng))
+                        return alert('Food name, country, latitude and longitude are required.');
+
+                    const {data,error}=await supabaseClient.from('Heritage Foodways').insert(record).select().single();
+                    if(error){
+                        console.error('Mobile Foodways insert failed:',error);
+                        throw error;
+                    }
+
+                    state.data.push(transformData(data));
+                    window.dashboard.render();
+                    window.mapLogic.render();
+                    window.mobileAI.closeEditor();
+                    alert('Saved to Supabase as '+record.id);
+                }catch(e){
+                    console.error('Mobile curate save failed:',e);
+                    alert('Save failed:\n\n'+[e?.message,e?.code?('Code: '+e.code):'',e?.details||'',e?.hint||''].filter(Boolean).join('\n'));
+                }
+            }            }
         };
 
                 window.dashboard = {
