@@ -1,0 +1,30 @@
+name: Foodways Supabase Keep Alive
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 3 lightweight read-only checks per day (UTC).
+    - cron: "0 */8 * * *"
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Foodways
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Ping Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: python keepalive.py
