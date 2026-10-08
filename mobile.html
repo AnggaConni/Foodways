@@ -554,7 +554,8 @@
                 
                 if(!window.geoEditor.map) {
                     window.geoEditor.map = L.map('geo-map', { zoomControl: false }).setView([20,0], 2);
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+                        attribution: '&copy; OpenStreetMap contributors',
                         noWrap: true,
                         bounds: [[-90, -180], [90, 180]],
                         maxBounds: [[-90, -180], [90, 180]],
@@ -643,8 +644,9 @@
         const generateMapSnapshot = async (d, type) => {
             if (ghost._leaflet_id) { ghost._leaflet_id = null; }
             ghost.innerHTML = ''; 
-            const map = L.map(ghostId, { zoomControl: false, attributionControl: false, fadeAnimation: false, zoomAnimation: false, preferCanvas: true });
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            const map = L.map(ghostId, { zoomControl: false, attributionControl: true, fadeAnimation: false, zoomAnimation: false, preferCanvas: true });
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
                 noWrap: true,
                 bounds: [[-90, -180], [90, 180]],
                 maxBounds: [[-90, -180], [90, 180]],
@@ -847,8 +849,8 @@
                 setTimeout(() => {
                     // Peta Distribusi Area
                     if(document.getElementById('detail-geo-map')) {
-                        const map1 = L.map('detail-geo-map', { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false }).setView([d.lat, d.lng], 5);
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        const map1 = L.map('detail-geo-map', { zoomControl: false, attributionControl: true, dragging: false, scrollWheelZoom: false }).setView([d.lat, d.lng], 5);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                             noWrap: true,
                             bounds: [[-90, -180], [90, 180]],
                             maxBounds: [[-90, -180], [90, 180]],
@@ -866,8 +868,8 @@
 
                     // Peta Foodways Connection (Family Tree)
                     if(document.getElementById('detail-conn-map')) {
-                        const map2 = L.map('detail-conn-map', { zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false }); 
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        const map2 = L.map('detail-conn-map', { zoomControl: false, attributionControl: true, dragging: true, scrollWheelZoom: false }); 
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                             noWrap: true,
                             bounds: [[-90, -180], [90, 180]],
                             maxBounds: [[-90, -180], [90, 180]],
@@ -993,7 +995,7 @@
             map: null, layers: [],
             init: () => {
                 window.mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false }).setView([20, 0], 2);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     noWrap: true,
                     bounds: [[-90, -180], [90, 180]],
                     maxBounds: [[-90, -180], [90, 180]],
