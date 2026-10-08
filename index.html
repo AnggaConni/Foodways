@@ -1359,6 +1359,7 @@
                     const payload = await res.json();
                     window.timelineResearch.lastPayload = payload;
                     window.timelineResearch.records = Array.isArray(payload.records) ? payload.records : [];
+                    window.timelineResearch.setupYearSlider();
                     window.timelineResearch.render();
                 } catch (e) {
                     console.error('Timeline research load failed:', e);
@@ -1368,6 +1369,45 @@
                         warning.textContent = 'Unable to load timeline research: ' + (e.message || e);
                     }
                 }
+            },
+            setupYearSlider: () => {
+                const slider=document.getElementById('timeline-year-slider');
+                if(!slider) return;
+                const years=window.timelineResearch.records.map(r=>Number(r.assessment?.earliest_supported_year)).filter(Number.isFinite);
+                const min=years.length?Math.min(...years):null;
+                const max=Math.max(new Date().getFullYear(),years.length?Math.max(...years):new Date().getFullYear());
+                if(min===null){
+                    slider.disabled=true;
+                    const v=document.getElementById('timeline-year-value'); if(v)v.textContent='No dated evidence yet';
+                    const s=document.getElementById('timeline-year-summary'); if(s)s.textContent='Use undated records';
+                    return;
+                }
+                slider.disabled=false;
+                slider.min=String(min);
+                slider.max=String(max);
+                if(window.timelineResearch.selectedYear===null || window.timelineResearch.selectedYear<min || window.timelineResearch.selectedYear>max){
+                    window.timelineResearch.selectedYear=max;
+                }
+                slider.value=String(window.timelineResearch.selectedYear);
+                const minEl=document.getElementById('timeline-year-min'); if(minEl)minEl.textContent=min;
+                const maxEl=document.getElementById('timeline-year-max'); if(maxEl)maxEl.textContent=max;
+                window.timelineResearch.updateYearUI();
+            },
+            updateYearUI: () => {
+                const y=window.timelineResearch.selectedYear;
+                const value=document.getElementById('timeline-year-value');
+                const mode=document.getElementById('timeline-year-mode');
+                const summary=document.getElementById('timeline-year-summary');
+                const minEl=document.getElementById('timeline-year-min');
+                const maxEl=document.getElementById('timeline-year-max');
+                if(value)value.textContent=y===null?'—':String(y);
+                const dated=window.timelineResearch.records.map(r=>Number(r.assessment?.earliest_supported_year)).filter(Number.isFinite);
+                const exact=dated.filter(v=>v===y).length;
+                const visible=window.timelineResearch.filtered().length;
+                if(mode)mode.textContent=exact?'Exact supported reference available':'No exact reference at this year — showing evidence accumulated up to this year';
+                if(summary)summary.textContent=visible+' visible • '+exact+' exact-year evidence'+(window.timelineResearch.showUndated?' • undated included':'');
+                if(minEl&&dated.length)minEl.textContent=Math.min(...dated);
+                if(maxEl&&dated.length)maxEl.textContent=Math.max(new Date().getFullYear(),Math.max(...dated));
             },
             render: () => { window.timelineResearch.renderStats(); window.timelineResearch.renderList(); window.timelineResearch.renderRoutes(); window.timelineResearch.renderMap(); },
             renderStats: () => {
