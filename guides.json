@@ -1,30 +1,234 @@
 [
   {
+    "id": "getting-started",
     "title": "1. Getting Started",
-    "desc": "Welcome to Foodways. On the landing page, click the red \"ENTER SYSTEM\" button to access the database as a Guest. If you are a data contributor, click the \"Admin Login\" link below the main button to sign in."
+    "category": "Basics",
+    "icon": "fa-rocket",
+    "desc": "Foodways is a web-based culinary heritage intelligence system. On desktop, use the main landing page and select <strong>ENTER SYSTEM</strong> to explore as a Guest, or choose <strong>Admin Login</strong> when you need contributor access. On mobile devices, Foodways automatically opens the dedicated mobile interface.",
+    "tips": [
+      "Guest access is intended for discovery and reading.",
+      "Contributor features require an authenticated account with Foodways Admin permission.",
+      "The application is deployed as a static web app and loads its live records from Supabase."
+    ]
   },
   {
-    "title": "2. Reading the Dashboard",
-    "desc": "Upon entry, you will see the Culinary Analytics dashboard. This section displays live statistics such as Total Foods, Countries, and UNESCO Status. Charts visualize data on \"Influencing Countries\" and \"Interaction Types\" (Trade, Migration, or Colonialism)."
+    "id": "navigation",
+    "title": "2. Navigating Foodways",
+    "category": "Basics",
+    "icon": "fa-compass",
+    "desc": "The main interface is organized around several views: <strong>Dashboard</strong>, <strong>Global Map</strong>, <strong>Timeline & Trade Routes</strong>, and research/AI-assisted layers. Use the sidebar tabs on desktop or the simplified bottom navigation on mobile.",
+    "tips": [
+      "The desktop interface is information-dense and optimized for research workflows.",
+      "The mobile interface deliberately simplifies navigation for small screens.",
+      "Some research views load on demand to keep the interface responsive."
+    ]
   },
   {
-    "title": "3. Navigating the Global Map",
-    "desc": "Switch to the \"Global Map\" tab via the sidebar. <br><br>• Red Dots: Current locations of the food.<br>• Orange Dots: Historical origin sources.<br>• Dashed Lines: Visualizes the historical path from origin to destination.<br><br>You can pan and zoom the map to explore specific regions."
+    "id": "dashboard",
+    "title": "3. Reading the Dashboard",
+    "category": "Explore",
+    "icon": "fa-chart-pie",
+    "desc": "The dashboard provides a high-level snapshot of the Foodways inventory. KPI cards summarize the size and geographic reach of the dataset, while the analytics area helps assess mapping, provenance, research evidence, UNESCO status, and other data-readiness indicators.",
+    "tips": [
+      "KPI values are calculated from the currently loaded Supabase dataset.",
+      "Use the dashboard as an overview; open individual records for detailed evidence.",
+      "A high data-readiness score means the underlying records contain more fields needed by mapping, provenance, research, and media workflows."
+    ]
   },
   {
-    "title": "4. Search & Filtering",
-    "desc": "Use the Search Bar located at the top left of the map or above the data table. Type keywords (e.g., \"Rendang\" or \"Indonesia\"). The application will instantly filter both the map markers and the table rows to match your query."
+    "id": "map",
+    "title": "4. Exploring the Global Map",
+    "category": "Explore",
+    "icon": "fa-map",
+    "desc": "The Global Map uses <strong>Leaflet</strong> to display culinary heritage records geographically. Food locations can be inspected directly, while origin and relationship fields help reveal possible foodway connections.",
+    "tips": [
+      "Pan and zoom to explore regions.",
+      "Select a map marker to open the corresponding food record.",
+      "Location coordinates are stored as latitude/longitude values in the data model.",
+      "Spatial polygons may be available through the geometry field for records that have been mapped in greater detail."
+    ]
   },
   {
-    "title": "5. Viewing Food Details",
-    "desc": "Click on any Red Dot on the map or a row in the table to open the Detail Modal. This view contains:<br><br>• Narrative: Full historical description.<br>• Multimedia: Image carousels and YouTube video embeds.<br>• Maps: Detailed distribution polygons and influence connection maps.<br>• Sources: Academic research links."
+    "id": "search",
+    "title": "5. Search & Filtering",
+    "category": "Explore",
+    "icon": "fa-magnifying-glass",
+    "desc": "Use the global search controls to find records by food name, country, or other indexed text. Search results update the visible feed and map so you can move quickly from a broad inventory to a small set of relevant records.",
+    "tips": [
+      "Start with a simple keyword such as a food name or country.",
+      "Combine searches with map exploration to understand geographic context.",
+      "On mobile, the search overlay is intentionally compact."
+    ]
   },
   {
-    "title": "6. Exporting Data & Reports",
-    "desc": "The app supports multiple export formats:<br><br>• Download .CSV: Get the raw dataset for Excel.<br>• Download Metadata (DCMI): For digital library integration.<br>• Export to PDF: (Inside Detail View) Generates a professional printable report with maps and images.<br>• GeoJSON: Spatial data compatible with GIS software (ArcGIS/QGIS)."
+    "id": "detail",
+    "title": "6. Understanding a Food Record",
+    "category": "Records",
+    "icon": "fa-utensils",
+    "desc": "A Foodways record combines descriptive, geographic, heritage, provenance, media, and research fields. A record can contain the food name, country, coordinates, narrative description, origin food, origin country, connection type, UNESCO status, research links, media URLs, and optional geometry.",
+    "tips": [
+      "<strong>Origin</strong> fields describe a possible predecessor or source foodway.",
+      "<strong>Connection Type</strong> captures the relationship used by the current data model, such as Trade, Migration, or Colonialism.",
+      "<strong>Research Links</strong> provide the provenance layer for further verification.",
+      "Treat historical relationships as claims that should be reviewed against sources, not automatically as proven facts."
+    ]
   },
   {
-    "title": "7. Admin Tools (Contributors)",
-    "desc": "If logged in as an Admin, the \"Add Data\" button appears in the sidebar. You can:<br><br>• Create/Edit: Add new food entries or update existing ones.<br>• Geo Editor: Draw distribution areas (polygons) directly on the map.<br>• Rich Text: Format descriptions using the built-in toolbar.<br>• Delete: Remove obsolete records safely."
+    "id": "timeline",
+    "title": "7. Timeline & Trade Routes",
+    "category": "Research",
+    "icon": "fa-timeline",
+    "desc": "The <strong>Timeline & Trade Routes</strong> layer is an AI-assisted historical exploration workspace. It loads <code>foodways_timeline_research.json</code> and presents dated evidence, probable origins, route hypotheses, confidence bands, and a map-based research view.",
+    "tips": [
+      "The year slider filters records using the earliest supported reference available to the research dataset.",
+      "Undated records can remain visible through the <strong>Show undated</strong> option.",
+      "Confidence is separated into date, origin, route, and overall dimensions.",
+      "Route overlays are explanatory research corridors—not reconstructed historical proof.",
+      "Use <strong>Refresh Research</strong> when a new research JSON has been generated."
+    ]
+  },
+  {
+    "id": "timeline-evidence",
+    "title": "8. How to Read Research Evidence",
+    "category": "Research",
+    "icon": "fa-scale-balanced",
+    "desc": "Foodways explicitly distinguishes between curated records and AI-assisted research. Timeline results may include source-backed evidence as well as heuristic hypotheses. The interface labels these distinctions so that users do not confuse exploratory analysis with verified historical reconstruction.",
+    "tips": [
+      "<strong>Evidence</strong> = a dated or otherwise source-linked claim available in the research payload.",
+      "<strong>Hypothesis</strong> = an AI-assisted interpretation of possible relationships or routes.",
+      "<strong>Confidence</strong> expresses the current strength of the research output, not historical certainty.",
+      "Human cross-checking remains the final step before treating a research hypothesis as authoritative."
+    ]
+  },
+  {
+    "id": "ai-radar",
+    "title": "9. AI Culinary Radar",
+    "category": "Research",
+    "icon": "fa-radar",
+    "desc": "Foodways can consume the synchronized culinary layer from <code>ai_culinary.json</code>. This research-oriented map surfaces culinary traditions discovered from the broader ICH-Radar workflow and lets Admin users review promising records before saving selected records into the main Supabase inventory.",
+    "tips": [
+      "The layer is designed for discovery and enrichment, not automatic publication.",
+      "Use the search box to filter culinary signals by name, country, category, province, or tags.",
+      "Open a signal to inspect its description, cultural significance, shared-heritage metadata, and source URLs.",
+      "Admin users can use <strong>Review & Save to Foodways</strong> to curate a record into Supabase."
+    ]
+  },
+  {
+    "id": "admin-login",
+    "title": "10. Admin Login & Access",
+    "category": "Administration",
+    "icon": "fa-user-shield",
+    "desc": "Foodways uses <strong>Supabase Auth</strong> for account authentication. The current browser flow uses <strong>Google OAuth</strong>. After sign-in, the application checks the <code>is_foodways_admin</code> database function to determine whether contributor tools should be enabled.",
+    "tips": [
+      "A signed-in user without Admin permission remains a viewer.",
+      "Admin status is enforced by the Supabase-backed authorization check.",
+      "Do not place private service-role keys in the frontend; the published application uses a public/publishable client key."
+    ]
+  },
+  {
+    "id": "crud",
+    "title": "11. Creating & Editing Records",
+    "category": "Administration",
+    "icon": "fa-pen-to-square",
+    "desc": "Admins can add, edit, and delete Foodways records directly from the application. The editor supports core descriptive fields, origins, geographic coordinates, connection types, media, UNESCO status, research links, and geometry.",
+    "tips": [
+      "New records receive the next Foodways-style identifier when needed.",
+      "Editing updates the selected record in the <code>Heritage Foodways</code> Supabase table.",
+      "Delete operations require Admin permission and a confirmation step.",
+      "Review coordinates and source links carefully before saving."
+    ]
+  },
+  {
+    "id": "geo-editor",
+    "title": "12. Geographic & Polygon Editing",
+    "category": "Administration",
+    "icon": "fa-draw-polygon",
+    "desc": "The Geo Editor allows contributors to define geographic distribution areas and store them as geometry data. This creates a bridge from simple point mapping to richer GIS-compatible heritage documentation.",
+    "tips": [
+      "Use point picking to select latitude/longitude when a precise coordinate is easier to identify on the map.",
+      "Polygon geometry is stored in the record and can be included in reporting workflows.",
+      "Validate the shape and coordinate order before saving a complex area."
+    ]
+  },
+  {
+    "id": "exports",
+    "title": "13. Exports & Reporting",
+    "category": "Outputs",
+    "icon": "fa-file-export",
+    "desc": "Foodways includes several output paths: CSV export for the working dataset, DCMI-oriented metadata export, GeoJSON-compatible spatial output, and PDF profile generation for individual records.",
+    "tips": [
+      "CSV is useful for spreadsheet analysis and archival snapshots.",
+      "DCMI output is intended to support digital-library style metadata exchange.",
+      "GeoJSON is useful for ArcGIS/QGIS workflows when spatial data is available.",
+      "PDF profiles combine narrative information with map snapshots and imagery."
+    ]
+  },
+  {
+    "id": "mobile",
+    "title": "14. Mobile Experience",
+    "category": "Mobile",
+    "icon": "fa-mobile-screen",
+    "desc": "Devices detected as mobile are redirected to <code>mobile.html</code>. The mobile experience uses a simpler dashboard, bottom navigation, compact search, Leaflet mapping, profile/detail views, and mobile-friendly editing access.",
+    "tips": [
+      "The mobile UI is intentionally less complex than the desktop interface.",
+      "Use the bottom navigation to switch between the main mobile views.",
+      "Mobile PDF generation is supported for record profiles.",
+      "The mobile map and detail panels are designed around touch interaction."
+    ]
+  },
+  {
+    "id": "data-architecture",
+    "title": "15. Data Architecture",
+    "category": "Technical",
+    "icon": "fa-database",
+    "desc": "The current application is a static-client architecture backed by Supabase. The browser loads the <strong>Heritage Foodways</strong> table, applies client-side transformation and rendering, and uses Supabase Auth for session management. Research layers are additionally delivered through versioned JSON files in the repository.",
+    "tips": [
+      "Primary live records: Supabase table <code>Heritage Foodways</code>.",
+      "Research cache: <code>foodways_timeline_research.json</code>.",
+      "AI culinary layer: <code>ai_culinary.json</code>.",
+      "UI guidance: <code>guides.json</code>.",
+      "The repository also contains GitHub Actions used for keepalive/research/synchronization workflows."
+    ]
+  },
+  {
+    "id": "technical-stack",
+    "title": "16. Technology Stack",
+    "category": "Technical",
+    "icon": "fa-layer-group",
+    "desc": "Foodways deliberately stays close to the browser platform: HTML5, CSS3, Vanilla JavaScript, Tailwind CSS, Leaflet, Chart.js, PapaParse, Font Awesome, html2pdf/html2canvas, and Supabase JS. This keeps deployment lightweight and makes the system easy to inspect and extend.",
+    "tips": [
+      "No Node.js build pipeline is required for the main static client.",
+      "Maps are rendered with Leaflet.",
+      "Charts are rendered with Chart.js.",
+      "CSV parsing uses PapaParse.",
+      "Authentication and database access use the Supabase JavaScript client."
+    ]
+  },
+  {
+    "id": "research-boundaries",
+    "title": "17. Research Boundaries & Responsible Use",
+    "category": "Governance",
+    "icon": "fa-triangle-exclamation",
+    "desc": "Foodways is both a heritage visualization tool and an exploratory research system. Historical narratives, origins, trade pathways, and AI-discovered signals should be treated according to their evidence status. The app itself warns when research content is heuristic or incomplete.",
+    "tips": [
+      "Do not cite an AI hypothesis as a verified historical fact without human/source review.",
+      "Preserve source URLs when curating records.",
+      "When publishing research outputs, distinguish evidence, interpretation, and uncertainty.",
+      "Use the system as a research accelerator—not as a substitute for specialist historical or heritage scholarship."
+    ]
+  },
+  {
+    "id": "troubleshooting",
+    "title": "18. Troubleshooting",
+    "category": "Help",
+    "icon": "fa-screwdriver-wrench",
+    "desc": "If data fails to load, first check browser connectivity and the Supabase service. If research views are empty, verify that the corresponding JSON file is present and valid. If Admin controls are missing, check the Google sign-in session and the account's Foodways Admin authorization.",
+    "tips": [
+      "A <strong>Connection Failed</strong> state usually points to a Supabase/network problem.",
+      "An empty guide panel usually means <code>guides.json</code> could not be loaded.",
+      "Timeline errors can occur when <code>foodways_timeline_research.json</code> is incomplete or unavailable.",
+      "AI radar problems can occur if <code>ai_culinary.json</code> is missing or malformed.",
+      "After OAuth redirects, reload once if the browser session has not yet propagated."
+    ]
   }
 ]
