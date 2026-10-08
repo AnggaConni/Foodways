@@ -1307,6 +1307,23 @@
                 }
             },
             render: () => { window.timelineResearch.renderStats(); window.timelineResearch.renderList(); window.timelineResearch.renderRoutes(); window.timelineResearch.renderMap(); },
+            renderStats: () => {
+                const s=window.timelineResearch.lastPayload?.stats||{};
+                const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+                set('timeline-kpi-researched',Number(s.researched||0));
+                set('timeline-kpi-total','of '+Number(s.ai_records||0)+' culinary records');
+                const bands={High:0,Medium:0,Low:0,'Very Low':0};
+                window.timelineResearch.records.forEach(r=>{const b=r.confidence?.band||'Very Low';bands[b]=(bands[b]||0)+1});
+                set('timeline-kpi-high',bands.High);
+                set('timeline-kpi-medium',bands.Medium);
+                set('timeline-kpi-low',bands.Low+bands['Very Low']);
+                set('timeline-kpi-errors',Number(s.errors||0));
+                set('timeline-generated',window.timelineResearch.lastPayload?.generated_at?'Research run: '+new Date(window.timelineResearch.lastPayload.generated_at).toLocaleString():'Research run: —');
+                const w=document.getElementById('timeline-warning');
+                const errors=Number(s.errors||0),cached=Number(s.cached||0),researched=Number(s.researched||0),total=Number(s.ai_records||0);
+                const pending=Math.max(total-researched-cached-errors,0);
+                if(w){w.classList.toggle('hidden',!(errors||pending));w.textContent='Partial research: '+researched+' researched, '+errors+' errors, '+pending+' pending.';}
+            },
             renderList: () => {
                 const box=document.getElementById('timeline-list');
                 if(!box) return;
