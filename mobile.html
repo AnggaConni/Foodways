@@ -1015,7 +1015,7 @@
                     return;
                 }
 
-                state.data = (data || []).map(transformData).filter(x => x.lat !== null && x.lng !== null);
+                state.data = (data || []).map(transformData);
                 if(loadingEl) loadingEl.innerHTML = '<i class="fas fa-check text-green-400"></i> <span class="text-[10px] text-gray-300 ml-2 font-bold uppercase tracking-widest">Cloud Synced</span>';
 
                 const btnEnter = document.getElementById('btn-enter');
