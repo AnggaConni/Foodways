@@ -955,14 +955,14 @@
                                 // Init - Disable Animation & Inertia STRICTLY for screenshot accuracy
                                 const map = L.map('detail-geo-map', { 
                                     zoomControl: false, 
-                                    attributionControl: false,
+                                    attributionControl: true,
                                     zoomAnimation: false, 
                                     fadeAnimation: false, 
                                     markerZoomAnimation: false,
                                     inertia: false, // Prevent kinetic scrolling
                                     zoomSnap: 0 // Disable snapping to integers for perfect fits
                                 }).setView([d.lat, d.lng], 6);
-                                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
                                 if(d.geometry_json) {
                                     try {
                                         const pts = JSON.parse(d.geometry_json);
@@ -986,7 +986,7 @@
                         if (mapDiv2) {
                             if (!mapDiv2._leaflet_map) {
                                 const map2 = L.map('detail-conn-map', { zoomControl: false, attributionControl: false }).setView([20,0], 2);
-                                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map2);
+                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map2);
                                 
                                 const bounds = L.latLngBounds();
 
@@ -1117,8 +1117,8 @@
         window.mapLogic = {
             map: null, layers: [], lines: [], markers: [],
             init: () => {
-                window.mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false, maxBounds: [[-90, -180], [90, 180]], maxBoundsViscosity: 1.0, minZoom: 2 }).setView([20, 0], 2);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, noWrap: true, bounds: [[-90, -180], [90, 180]] }).addTo(window.mapLogic.map);
+                window.mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: true, maxBounds: [[-90, -180], [90, 180]], maxBoundsViscosity: 1.0, minZoom: 2 }).setView([20, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, noWrap: true, bounds: [[-90, -180], [90, 180]], attribution: '&copy; OpenStreetMap contributors' }).addTo(window.mapLogic.map);
                 L.control.zoom({ position: 'topright' }).addTo(window.mapLogic.map);
             },
             resize: () => setTimeout(() => window.mapLogic.map.invalidateSize(), 200),
@@ -1210,7 +1210,7 @@
                 document.getElementById('geo-editor').classList.remove('hidden');
                 if(!window.geoEditor.map) {
                     window.geoEditor.map = L.map('geo-map').setView([0,0], 2);
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(window.geoEditor.map);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(window.geoEditor.map);
                     window.geoEditor.map.on('click', e => window.geoEditor.addPoint(e.latlng));
                 }
                 window.geoEditor.points = [];
@@ -1838,11 +1838,11 @@
                         ghost.innerHTML = ''; 
 
                         const map = L.map(ghostId, {
-                            zoomControl: false, attributionControl: false,
+                            zoomControl: false, attributionControl: true,
                             fadeAnimation: false, zoomAnimation: false, preferCanvas: true
                         });
                         
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
                         const bounds = L.latLngBounds();
                         let hasLayer = false;
