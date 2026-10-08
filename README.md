@@ -1,237 +1,296 @@
-# FOODWAYS - Shared Heritage by Taste
+# FOODWAYS — Shared Heritage by Taste
 
-> **Open Source Tools for Community & Governance Reform**
-> *Built by Angga Conni Saputra*
+> An open digital research and mapping system for culinary heritage, foodways, provenance, and AI-assisted historical exploration.
+>
+> Built by **Angga Conni Saputra**
 
----
+Foodways is a browser-based heritage intelligence application for documenting, mapping, exploring, and researching culinary traditions and the relationships that connect them across places and time.
 
-## 🇬🇧 About This Project
+The project combines a lightweight static web frontend with **Supabase** for live data and authentication, while repository-hosted JSON layers provide reproducible research and synchronization outputs.
 
-Foodways is a Single Page Application (SPA) web tool designed to map, inventory, and analyze global culinary heritage. This project visualizes the historical journey of food through trade routes, migration, and colonialism.
+## ✨ What Foodways Does
 
-The application is built using HTML5, Tailwind CSS, and Vanilla JavaScript, with a serverless backend utilizing Google Sheets & Google Apps Script (GAS).
+### 🗺️ Culinary Heritage Mapping
+Foodways uses **Leaflet** to visualize culinary heritage records geographically. Records can include:
 
-✨ Key Features
+- current food location
+- probable/original food source
+- geographic coordinates
+- optional distribution polygons
+- connection types such as Trade, Migration, or Colonialism
 
-🗺️ Mapping & Visualization
+The map is intended to support exploration of foodways as spatial cultural relationships.
 
-Global Interactive Map: An interactive map powered by Leaflet.js that displays food locations and historical connection lines (origin to current location).
+### 📊 Culinary Intelligence Dashboard
+The dashboard provides a live snapshot of the current inventory, including:
 
-Historical Paths: Visualization of dashed lines connecting the Origin to the current location, color-coded based on the connection type (Trade, Migration, Colonialism).
+- total food records
+- country coverage
+- mapped-data coverage
+- research/evidence coverage
+- UNESCO-related status
+- data-readiness indicators
+- analytical charts and tables
 
-Pulse Animation: Visual indicator for the currently selected food location.
+### 🧭 Timeline & Trade Routes
+Foodways includes an **AI-assisted historical research layer** driven by:
 
-📊 Analytical Dashboard
+`foodways_timeline_research.json`
 
-Real-time KPIs: Displays total foods, number of countries, historical connections, and UNESCO status.
+This layer can surface:
 
-Charts: Bar and doughnut charts (using Chart.js) to analyze influential countries, interaction types, and heritage status.
+- earliest supported references
+- probable origins
+- date evidence
+- route hypotheses
+- confidence scores
+- research warnings/errors
+- geographic research corridors
+- human cross-check status
 
-Data Table: A complete data table with search and pagination features.
+**Important:** route overlays and AI-generated historical interpretations are explicitly treated as research hypotheses. They are not automatically presented as verified historical reconstruction.
 
-🛠️ Data Management (CRUD)
+### 🛰️ AI Culinary Radar
+Foodways can load a culinary subset synchronized from the wider **ICH-Radar** workflow through:
 
-Integrated Database: Uses Google Sheets as a database (via CSV publish) and Google Apps Script for Write/Edit/Delete operations.
+`ai_culinary.json`
 
-Admin Mode: Admin login to add, edit, or delete data entries.
+The AI-assisted map helps researchers discover culinary heritage signals, inspect source material, and—when authorized—review and curate promising records before saving them into the main Foodways inventory.
 
-Geo Editor: Built-in polygon drawing feature to map specific food distribution areas.
+### 🔐 Authentication & Contributor Access
+The current web application uses **Supabase Auth** with **Google OAuth**.
 
-📥 Advanced Export & Reporting
+After login, the application checks the `is_foodways_admin` database function to determine whether the current user has Foodways Admin permission.
 
-Export to PDF: Generates complete food profile reports with professional layouts, including snapshots of distribution and influence maps (using html2pdf & html2canvas).
+That means:
 
-GeoJSON Export: Download spatial data compatible with ArcGIS/QGIS.
+- **Guest:** explore public data
+- **Signed-in Viewer:** authenticated, but without editing privileges
+- **Admin:** CRUD, curation, and contributor tools enabled
 
-DCMI Metadata: Export metadata in Dublin Core (JSON) format for digital library purposes.
+The frontend uses a Supabase **publishable client key**. Server-side secrets/service-role keys should never be embedded in the browser.
 
-CSV Download: Download the entire dataset in CSV format.
+## 🛠️ Data Management
 
-📱 Multimedia
+The main live dataset is stored in the Supabase table:
 
-Video Carousel: Integrated YouTube video player for each food entry.
+`Heritage Foodways`
 
-Image Gallery: Responsive image viewer.
+The current data model includes fields such as:
 
-🚀 Technologies Used
+`id`, `food_name`, `country`, `lat`, `lng`, `description`, `geometry_json`, `unesco_status`, `research_links`, `image_url`, `youtube_url`, `origin_food_name`, `origin_country`, `origin_lat`, `origin_lng`, `connection_type`
 
-Frontend: HTML5, CSS3, JavaScript (ES6+)
+Admins can create, edit, and delete records from the web interface.
 
-Styling: Tailwind CSS (CDN)
+### Geographic editing
 
-Mapping: Leaflet.js & CartoDB Tiles
+The application includes geographic picking and polygon editing so contributors can capture more than a single point.
 
-Charts: Chart.js
+### Research provenance
 
-Data Parsing: PapaParse
+Research links are stored directly with records, while the timeline research layer keeps its own evidence and uncertainty fields. This separation helps distinguish the live inventory from exploratory research.
 
-Export Tools: html2pdf.js, html2canvas
+## 📤 Export & Reporting
 
-Icons: FontAwesome 6
+Foodways provides several output paths:
 
-Backend: Google Apps Script (GAS)
+### CSV
+Download the current dataset as CSV for spreadsheet analysis and archival snapshots.
 
-Database: Google Sheets
+### DCMI-style metadata
+Generate Dublin Core-oriented metadata for digital-library and documentation workflows.
 
-====
+### GeoJSON
+Produce GIS-compatible spatial data for tools such as:
 
-💡 Technical Philosophy: The "Anomaly"
+- ArcGIS
+- QGIS
+- other GeoJSON-capable GIS applications
 
-Here is why this unorthodox architecture was chosen:
+### PDF
+Generate a printable food profile containing narrative, images, lineage information, and map snapshots.
 
-1. The "One-File Monolith"
+The PDF workflow uses browser-side rendering with **html2pdf.js** and **html2canvas**, avoiding a dedicated reporting server.
 
-In a modern web development world where apps are split into hundreds of files (React components, Node.js backends, etc.), this application places all logic (HTML, CSS, JS, Map Logic, PDF Engine) into a single index.html file.
+## 📱 Desktop & Mobile
 
-The Benefit: Extreme portability. The app can run offline (partially), be shared via email, requires no complex build steps (npm/webpack), and is server-agnostic. It is a "Guerrilla App": small, agile, and effective.
+The repository contains two client interfaces:
 
-2. The "Democratized" Database
+- `index.html` — full desktop/research interface
+- `mobile.html` — simplified mobile interface
 
-Cultural Heritage projects often rely on expensive, complex databases like PostgreSQL/PostGIS or Arches. This app forces Google Sheets to behave like a sophisticated relational database.
+The desktop page detects mobile-sized devices and redirects them to the dedicated mobile application.
 
-The Benefit: It lowers the barrier to entry for non-technical contributors. The script performs client-side CSV parsing (PapaParse) and handles complex parent-child relational logic (for food history) entirely in the browser memory. It is a "low-tech" solution for a "high-tech" problem.
+The mobile version provides a compact:
 
-3. "Ghost Mapping" PDF Engine
+- dashboard
+- search interface
+- Leaflet map
+- food detail view
+- admin entry workflow
+- profile/auth view
+- PDF reporting path
 
-Standard PDF exports with maps usually require dedicated print servers. This app uses a "Ghost Mapping" technique.
+## 🧩 Repository Structure
 
-The Technique: The app creates a hidden HTML container (ghost-map-container), re-renders the specific map views off-screen, takes a high-resolution snapshot using html2canvas, and embeds it into the PDF generation pipeline.
+| File | Purpose |
+| --- | --- |
+| `index.html` | Main desktop Foodways application |
+| `mobile.html` | Mobile-optimized application |
+| `guides.json` | In-app help/manual content |
+| `ai_culinary.json` | Culinary signals synchronized from ICH-Radar |
+| `foodways_timeline_research.json` | AI-assisted historical/timeline research output |
+| `foodways_timeline_cache.json` | Research/cache support data |
+| `radar_culinary_sync.py` | Culinary data synchronization logic |
+| `timeline_research.py` | Historical timeline research pipeline |
+| `keepalive.py` | Supabase keepalive utility |
+| `requirements.txt` | Python dependencies |
+| `.github/workflows/sync-ich-radar-culinary.yml` | Automated culinary synchronization |
+| `.github/workflows/research-foodways-timeline.yml` | Automated timeline research workflow |
+| `.github/workflows/supabase-keepalive.yml` | Scheduled Supabase keepalive workflow |
+| `assets/` | Screenshots and project assets |
 
-The Benefit: High-fidelity reporting with zero server costs.
+## 🔬 Research Architecture
 
-4. High Standards on a Simple Stack
+Foodways now operates as a layered research system rather than a simple CRUD map:
 
-While the technology stack is simple, the output adheres to strict academic standards.
+**Live heritage inventory**
+→ Supabase `Heritage Foodways`
 
-The Paradox: The "engine" is a simple HTML file, but it outputs DCMI (Dublin Core) metadata for digital libraries and GeoJSON for professional GIS software (ArcGIS/QGIS). It bridges the gap between hobbyist tools and professional requirements.
+**AI discovery layer**
+→ `ai_culinary.json`
 
-5. Digital Sustainability
+**Historical research layer**
+→ `foodways_timeline_research.json`
 
-Database projects often suffer from "Digital Rot"—sophisticated projects die after a few years when funding for servers or programmers runs out.
+**Human curation**
+→ Admin review and Supabase save
 
-The Benefit: This application is "immortal." As long as GitHub and Google Sheets exist, this application will run for $0 forever. It requires zero server maintenance, making it highly attractive for sustainable heritage initiatives.
+This creates a useful separation between:
 
-====
+1. **discovery**
+2. **research**
+3. **curation**
+4. **published inventory**
 
-📂 Project Structure
+That separation is especially important for heritage data where evidence quality and uncertainty matter.
 
-Since this is a single-file application, all logic resides within index.html. However, the code is logically divided into:
+## 🤖 AI-Assisted Research Disclaimer
 
-State Management: Global state object to store data, filters, and auth status.
+The timeline/research layer may contain:
 
-UI Controller: Handles modals, tab switching, and animations.
+- machine-discovered sources
+- probable origins
+- inferred route relationships
+- confidence scores
+- incomplete records
+- unresolved contradictions
 
-Map Logic: Leaflet initialization, layer rendering, and map interactions.
+These outputs are intended to **accelerate human research**, not replace it.
 
-Dashboard Logic: Chart and table rendering.
+A research hypothesis should be independently checked before being treated as a historical fact, publication claim, policy statement, or heritage determination.
 
-App Controller: Handles CRUD, connections to Google Apps Script, and initial setup.
+## 🚀 Running the Project
 
-⚙️ Usage (Installation)
+Foodways is intentionally lightweight.
 
-Since this app runs on the client-side, you don't need to install Node.js or set up a complex local server.
+You do not need a Node.js build process for the main web client.
 
-Run
-Simply open the index.html file using a modern browser (Chrome, Edge, Firefox).
+For local development, you can:
 
-Optional: Use the "Live Server" extension in VS Code for the best experience.
+1. Clone the repository.
+2. Serve it using a static web server such as VS Code Live Server.
+3. Open the site in a modern browser.
 
-🔧 Backend Configuration (Google Sheets)
+GitHub Pages is also suitable for the static frontend.
 
-This application connects to Google Sheets. If you want to use your own database:
+### Why use a static architecture?
 
-Create a Google Sheet with the following column headers:
-id, food_name, country, lat, lng, description, geometry_json, unesco_status, research_links, image_url, youtube_url, origin_food_name, origin_country, origin_lat, origin_lng, connection_type
+The project intentionally avoids a heavy application build stack.
 
-Create a new Google Apps Script attached to that sheet to handle doGet and doPost (for Login & CRUD features).
+Benefits include:
 
-Publish the Sheet as CSV (File > Share > Publish to web > CSV).
+- low deployment complexity
+- easy source inspection
+- simple hosting
+- easy portability
+- low maintenance overhead
+- browser-native extensibility
 
-Update the variables inside index.html:
+## 🔧 Supabase Configuration
 
-const GAS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL';
-const CSV_URL = 'YOUR_GOOGLE_SHEET_CSV_URL';
+The production client is configured in the HTML application using the Supabase project URL and publishable browser key.
 
+For your own deployment:
 
-<h2 align="center">📸 Screenshots</h2>
-<p align="center">Landing Page</p>
-<p align="center">
-  <img src="assets/lp.png" width="700">
-</p>
+1. Create a Supabase project.
+2. Create the `Heritage Foodways` table using the required fields.
+3. Configure Supabase Auth and Google OAuth.
+4. Implement the `is_foodways_admin` authorization function.
+5. Configure the appropriate Row Level Security (RLS) policies.
+6. Update the client configuration in the HTML application.
+7. Configure the OAuth redirect URL for your deployment domain.
 
-<p align="center">Dashboard</p>
-<p align="center">
-  <img src="assets/db.png" width="700">
-</p>
+**Security note:** a publishable client key is expected to be visible in browser code. A Supabase service-role key is not.
 
-<p align="center">Data Detail</p>
-<p align="center">
-  <img src="assets/detail.png" width="700">
-</p>
+## 🔄 Automation
 
-<p align="center">Interactive Map</p>
-<p align="center">
-  <img src="assets/map.png" width="700">
-</p>
+The repository includes GitHub Actions for:
 
+- keeping the Supabase project active
+- synchronizing culinary research from ICH-Radar
+- generating/updating Foodways timeline research
 
+This allows the application to remain largely static while the research datasets can evolve through scheduled automation.
 
-🤝 Contribution
+## 📚 In-App Guide
 
-Contributions are always welcome! Please create a Pull Request or open an Issue for improvement suggestions.
+The complete in-app manual is maintained in:
 
-Fork this project.
+`guides.json`
 
-Create your feature branch (git checkout -b feature-cool).
+It is designed to explain both everyday usage and the research philosophy of Foodways, including the distinction between curated data and AI-assisted hypotheses.
 
-Commit your changes (git commit -m 'Add some cool feature').
+## 🤝 Contribution
 
-Push to the branch (git push origin feature-cool).
+Contributions are welcome through:
 
-Open a Pull Request.
- 
+- GitHub Issues
+- Pull Requests
+- research feedback
+- source-quality corrections
+- UI/UX improvements
+- data model improvements
+- documentation improvements
 
+For heritage research, please preserve source provenance and clearly distinguish evidence from interpretation.
 
----
+## 🛡️ Security & Integrity
 
-## 🛡️ Security & Integrity (Why Open Source?) / Keamanan & Integritas
+Foodways is open source so that users can inspect how the application works.
 
-### 🇬🇧 Is it Safe? Yes.
-There is a misconception that web apps might contain ransomware. **Here, you can verify it yourself.**
-* **Auditable:** The code runs on the server (Google Apps Script/Web) or browser. You can inspect every `.gs`, `.html`, or `.js` file directly.
-* **No Hidden Scripts:** There are NO `.exe` files or hidden encryption scripts. What you see is exactly what runs.
-* **Safe to Use:** Designed to help, not to harm. Please check the source code before using.
+The browser application can be audited directly because the main client logic is published in the repository.
 
-### 🇮🇩 Apakah Aman? Ya, Sangat Aman.
-Ada kesalahpahaman bahwa aplikasi web bisa berisi *ransomware*. **Di sini, Anda bisa membuktikannya sendiri.**
-* **Bisa Diaudit:** Kode ini berjalan di server atau browser. Anda bisa melihat file `.gs`, `.html`, atau `.js` secara telanjang mata.
-* **Tidak Ada Script Tersembunyi:** TIDAK ADA file `.exe` (aplikasi eksekusi) atau skrip enkripsi data (ransomware). Apa yang Anda lihat di kode, itulah yang dijalankan sistem.
-* **Aman Digunakan:** Aplikasi ini dirancang untuk membantu, bukan merusak. Silakan bedah kodenya sebelum menggunakan.
+However, open source does **not** automatically mean every deployment is secure. Security ultimately depends on:
 
----
+- Supabase RLS policies
+- authentication configuration
+- authorization logic
+- OAuth redirect settings
+- database permissions
+- careful handling of private credentials
 
-## 🤝 Who Can Use This? / Siapa yang Boleh Pakai?
+Never expose service-role credentials or other privileged secrets in client-side code.
 
-I dedicate this code for **Social Impact & Education**.
-Saya mendedikasikan kode ini untuk **Dampak Sosial & Edukasi**.
+## 📄 License & Usage
 
-✅ **PERMITTED / DIPERBOLEHKAN:**
-* **Students/Researchers:** Free to clone/fork for learning, thesis, or research. *(Mahasiswa/Pelajar: Gratis untuk belajar/skripsi)*.
-* **NGOs/Communities:** Free to use for community empowerment. *(LSM/Komunitas: Gratis untuk pemberdayaan masyarakat)*.
-* **Public Sector:** Free to adopt for governance transparency. *(Pemerintah/Desa: Gratis untuk transparansi layanan)*.
+See [LICENSE](LICENSE) for the current license terms.
 
-❌ **PROHIBITED / DILARANG:**
-* **Commercial Use:** Do NOT sell this software or use it for business profit without permission. *(Dilarang menjual atau mencari keuntungan bisnis dari kode ini tanpa izin)*.
-* **Re-branding without Credit:** Please respect intellectual property. *(Mohon hargai karya intelektual dengan mencantumkan sumber)*.
+The project is intended for social impact, education, heritage research, and responsible digital experimentation. Commercial or derivative use should follow the actual license terms rather than relying on informal statements in earlier documentation.
 
-> *"If you want to make money from this code, let's talk first. If you want to help people with this code, go ahead."*
+## 📬 Contact
 
----
+**Angga Conni Saputra**  
+Governance Reform & Digital System Consultant
 
-## 📬 Contact / Kontak
-For bug reports, feature requests, or commercial licensing inquiries: https://www.linkedin.com/in/anggaconni/ 
-*(Untuk laporan bug, saran, atau izin komersial)*:
-
-**Angga Conni Saputra**
-*Governance Reform & Digital System Consultant*
-(https://www.linkedin.com/in/anggaconni/)
+LinkedIn: https://www.linkedin.com/in/anggaconni/
