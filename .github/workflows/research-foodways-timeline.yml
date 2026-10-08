@@ -78,11 +78,10 @@ jobs:
         env:
           TINYFISH_API_KEY: ${{ secrets.TINYFISH_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           TIMELINE_MAX_RECORDS: ${{ inputs.max_records || '0' }}
           FORCE_TIMELINE_RESEARCH: ${{ inputs.force_research || '0' }}
+          ENABLE_HUMAN_CROSSCHECK: "0"
         run: python timeline_research.py
 
       - name: Commit research dataset and cache
