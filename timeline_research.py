@@ -81,6 +81,9 @@ class TimelineAssessment(BaseModel):
     earliest_supported_year: int | None = None
     date_evidence: list[DateEvidence] = Field(default_factory=list)
     route_hypotheses: list[RouteHypothesis] = Field(default_factory=list)
+    date_confidence: float = Field(ge=0, le=1, description="Confidence in the earliest supported year.")
+    origin_confidence: float = Field(ge=0, le=1, description="Confidence in the probable origin.")
+    trade_route_confidence: float = Field(ge=0, le=1, description="Confidence in the overall trade-route interpretation.")
     origin_reasoning: str = ""
     uncertainty: str = ""
     contradictions: list[str] = Field(default_factory=list)
@@ -343,6 +346,14 @@ def main() -> None:
         try:
             web_results = tinyfish_search(query)
             assessment = gemini_inspect(client, record, human, web_results)
+
+            date_conf = float(assessment.date_confidence)
+            origin_conf = float(assessment.origin_confidence)
+            trade_conf = float(assessment.trade_route_confidence)
+            overall_conf = round(
+                (0.40 * date_conf) + (0.30 * origin_conf) + (0.30 * trade_conf),
+                4,
+            )
 
             date_conf = float(assessment.date_confidence)
             origin_conf = float(assessment.origin_confidence)
