@@ -2611,6 +2611,13 @@
             }
         };
 
+        document.addEventListener('input', (e) => {
+            if (e.target && e.target.id === 'timeline-search') window.timelineResearch.renderList();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') window.timelineResearch.closeDetail();
+        });
+
         window.addEventListener('DOMContentLoaded', window.app.init);
 
     </script>
