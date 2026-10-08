@@ -1248,7 +1248,7 @@
             },
             renderAnalytics: () => window.dashboard.renderCountryChart()
         };
-window.mapLogic = {
+window.app = {
             map: null, layers: [],
             init: async () => {
                 const loadingEl = document.getElementById('loading-indicator');
@@ -1514,7 +1514,262 @@ window.mapLogic = {
             }
         };
 
-        window.addEventListener('load', () => {
+        
+
+        // --- MOBILE MAP ENGINE ---
+        // Kept separate from window.app so navigation, CRUD and map state do not overwrite each other.
+        window.mapLogic = {
+            map: null,
+            layers: [],
+            dataLoaded: false,
+            pickerCancel: null,
+
+            initMap: () => {
+                const el = document.getElementById('map-container');
+                if (!el) return null;
+
+                if (!window.mapLogic.map) {
+                    window.mapLogic.map = L.map('map-container', {
+                        zoomControl: false,
+                        worldCopyJump: false,
+                        maxBounds: [[-85, -180], [85, 180]],
+                        maxBoundsViscosity: 1.0
+                    }).setView([10, 20], 2);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        noWrap: true,
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(window.mapLogic.map);
+                }
+
+                setTimeout(() => window.mapLogic.map?.invalidateSize(), 120);
+                return window.mapLogic.map;
+            },
+
+            init: async () => {
+                const loadingEl = document.getElementById('loading-indicator');
+
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('Heritage Foodways')
+                        .select('*')
+                        .order('id');
+
+                    if (error) throw error;
+
+                    state.data = (data || []).map(transformData);
+                    window.mapLogic.dataLoaded = true;
+
+                    if (loadingEl) {
+                        loadingEl.innerHTML =
+                            '<i class="fas fa-check text-green-400"></i> ' +
+                            '<span class="text-[10px] text-gray-300 ml-2 font-bold uppercase tracking-widest">Cloud Synced</span>';
+                    }
+
+                    const btnEnter = document.getElementById('btn-enter');
+                    if (btnEnter) btnEnter.classList.remove('hidden');
+
+                    window.mapLogic.initMap();
+                    window.mapLogic.render();
+                } catch (error) {
+                    console.error('Foodways data load failed:', error);
+
+                    if (loadingEl) {
+                        loadingEl.innerHTML =
+                            '<span class="text-red-400 text-xs font-bold">Database connection failed</span>';
+                    }
+
+                    const btnEnter = document.getElementById('btn-enter');
+                    if (btnEnter) btnEnter.classList.remove('hidden');
+
+                    const mapEl = document.getElementById('map-container');
+                    if (mapEl) {
+                        mapEl.innerHTML =
+                            '<div class="h-full flex items-center justify-center p-8 text-center">' +
+                            '<div>' +
+                            '<div class="text-red-500 text-3xl mb-3"><i class="fas fa-triangle-exclamation"></i></div>' +
+                            '<div class="font-black text-gray-700">Unable to load Foodways data</div>' +
+                            '<div class="text-xs text-gray-400 mt-2 max-w-xs">' +
+                            window.escapeHtml(error?.message || 'Supabase request failed') +
+                            '</div>' +
+                            '</div></div>';
+                    }
+                }
+            },
+
+            clearLayers: () => {
+                if (!window.mapLogic.map) return;
+                window.mapLogic.layers.forEach(layer => {
+                    try { window.mapLogic.map.removeLayer(layer); } catch (_) {}
+                });
+                window.mapLogic.layers = [];
+            },
+
+            render: () => {
+                const map = window.mapLogic.initMap();
+                if (!map) return;
+
+                window.mapLogic.clearLayers();
+
+                const q = String(state.filter || '').toLowerCase().trim();
+                const data = (state.data || []).filter(d => {
+                    if (!q) return true;
+                    return [
+                        d.food_name,
+                        d.country,
+                        d.origin_food_name,
+                        d.origin_country,
+                        d.connection_type
+                    ].join(' ').toLowerCase().includes(q);
+                });
+
+                const bounds = L.latLngBounds();
+                let mappedCount = 0;
+
+                data.forEach(d => {
+                    const lat = Number(d.lat);
+                    const lng = Number(d.lng);
+
+                    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                        mappedCount++;
+
+                        const marker = L.circleMarker([lat, lng], {
+                            radius: 7,
+                            color: '#ff1b2d',
+                            fillColor: '#ff1b2d',
+                            fillOpacity: 0.88,
+                            weight: 2
+                        });
+
+                        marker.bindTooltip(window.escapeHtml(d.food_name || 'Foodway'), {
+                            direction: 'top',
+                            className: 'custom-tooltip'
+                        });
+
+                        marker.on('click', () => window.dashboard.showDetail(d));
+                        marker.addTo(map);
+                        window.mapLogic.layers.push(marker);
+                        bounds.extend([lat, lng]);
+                    }
+
+                    const originLat = Number(d.origin_lat);
+                    const originLng = Number(d.origin_lng);
+
+                    if (Number.isFinite(originLat) && Number.isFinite(originLng)) {
+                        const originMarker = L.circleMarker([originLat, originLng], {
+                            radius: 5,
+                            color: '#d4af37',
+                            fillColor: '#d4af37',
+                            fillOpacity: 0.9,
+                            weight: 2
+                        });
+
+                        originMarker.bindTooltip(
+                            window.escapeHtml((d.origin_food_name || 'Origin') + ' • ' + (d.origin_country || '')),
+                            { direction: 'top', className: 'custom-tooltip' }
+                        );
+
+                        originMarker.on('click', () => {
+                            if (d.origin_food_name) {
+                                const parent = (state.data || []).find(
+                                    x => String(x.food_name || '').trim().toLowerCase() ===
+                                         String(d.origin_food_name || '').trim().toLowerCase()
+                                );
+                                if (parent) window.dashboard.showDetail(parent);
+                            }
+                        });
+
+                        originMarker.addTo(map);
+                        window.mapLogic.layers.push(originMarker);
+                        bounds.extend([originLat, originLng]);
+
+                        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                            const line = L.polyline(
+                                [[originLat, originLng], [lat, lng]],
+                                {
+                                    color: '#d4af37',
+                                    weight: 2,
+                                    opacity: 0.72,
+                                    dashArray: '6, 6'
+                                }
+                            ).addTo(map);
+
+                            window.mapLogic.layers.push(line);
+                        }
+                    }
+                });
+
+                const countBadge = document.getElementById('map-record-count');
+                if (countBadge) {
+                    countBadge.textContent = mappedCount + ' mapped';
+                }
+
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds, {
+                        padding: [35, 35],
+                        maxZoom: 5,
+                        animate: false
+                    });
+                } else {
+                    map.setView([10, 20], 2, { animate: false });
+                }
+
+                setTimeout(() => map.invalidateSize(), 150);
+            },
+
+            resetZoom: () => {
+                const map = window.mapLogic.initMap();
+                if (!map) return;
+
+                const bounds = L.latLngBounds();
+                let hasPoints = false;
+
+                (state.data || []).forEach(d => {
+                    const lat = Number(d.lat);
+                    const lng = Number(d.lng);
+                    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                        bounds.extend([lat, lng]);
+                        hasPoints = true;
+                    }
+                });
+
+                if (hasPoints && bounds.isValid()) {
+                    map.fitBounds(bounds, { padding: [35, 35], maxZoom: 5 });
+                } else {
+                    map.setView([10, 20], 2);
+                }
+            },
+
+            enablePicker: (callback) => {
+                const map = window.mapLogic.initMap();
+                if (!map) return;
+
+                if (window.mapLogic.pickerCancel) {
+                    map.off('click', window.mapLogic.pickerCancel);
+                }
+
+                window.mapLogic.pickerCancel = (e) => {
+                    callback(e.latlng.lat, e.latlng.lng);
+                    map.off('click', window.mapLogic.pickerCancel);
+                    window.mapLogic.pickerCancel = null;
+                    document.getElementById('picker-ui')?.classList.add('hidden');
+                };
+
+                map.on('click', window.mapLogic.pickerCancel);
+                document.getElementById('picker-ui')?.classList.remove('hidden');
+
+                setTimeout(() => map.invalidateSize(), 100);
+            }
+        };
+
+        window.addEventListener('resize', () => {
+            if (window.mapLogic?.map) {
+                setTimeout(() => window.mapLogic.map.invalidateSize(), 120);
+            }
+        });
+
+window.addEventListener('load', () => {
             if (typeof Papa !== 'undefined' && window.app && typeof window.app.init === 'function') {
                 window.app.init();
             }
