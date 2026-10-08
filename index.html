@@ -452,7 +452,48 @@
                         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm"><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Low</div><div id="timeline-kpi-low" class="text-3xl font-black text-rose-600 mt-1">0</div><div class="text-xs text-slate-500 mt-1">overall &lt; 0.60</div></div>
                         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm"><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Errors</div><div id="timeline-kpi-errors" class="text-3xl font-black text-slate-700 mt-1">0</div><div class="text-xs text-slate-500 mt-1">needs another run</div></div>
                     </div>
-                    <div id="timeline-main-grid" class="grid grid-cols-1 xl:grid-cols-[1.05fr_0.95fr] gap-6"></div>
+                    <div id="timeline-main-grid" class="grid grid-cols-1 xl:grid-cols-[1.05fr_0.95fr] gap-6">
+                        <div class="space-y-6">
+                            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div class="p-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <h3 class="font-black text-slate-900 flex items-center gap-2"><i class="fas fa-clock-rotate-left text-amber-500"></i> Evidence Timeline</h3>
+                                        <p class="text-xs text-slate-500 mt-1">Click a record to inspect evidence, uncertainty, and route hypotheses.</p>
+                                    </div>
+                                    <input id="timeline-search" type="text" placeholder="Search food, country, route..." class="px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-amber-400 w-64 max-w-full">
+                                </div>
+                                <div id="timeline-list" class="p-5 space-y-3"></div>
+                            </section>
+                            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div class="p-5 border-b border-slate-200">
+                                    <h3 class="font-black text-slate-900 flex items-center gap-2"><i class="fas fa-route text-cyan-600"></i> Trade-route Hypotheses</h3>
+                                    <p class="text-xs text-slate-500 mt-1">Conceptual relationships inferred by the research assistant. Not reconstructed historical route geometries.</p>
+                                </div>
+                                <div id="timeline-routes" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                            </section>
+                        </div>
+                        <div class="space-y-6">
+                            <section class="relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[520px]">
+                                <div id="timeline-map" class="absolute inset-0"></div>
+                                <div class="absolute top-4 left-4 z-[500] bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 p-3 max-w-xs">
+                                    <div class="text-[10px] uppercase tracking-widest font-black text-slate-400 mb-2">Research Map</div>
+                                    <div class="flex items-center gap-2 text-[11px] text-slate-600 mb-1"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> High confidence</div>
+                                    <div class="flex items-center gap-2 text-[11px] text-slate-600 mb-1"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Medium confidence</div>
+                                    <div class="flex items-center gap-2 text-[11px] text-slate-600"><span class="w-3 h-3 rounded-full bg-rose-500"></span> Low confidence</div>
+                                </div>
+                            </section>
+                            <section class="bg-white rounded-2xl border border-amber-200 shadow-sm p-5">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0"><i class="fas fa-circle-info"></i></div>
+                                    <div>
+                                        <h3 class="font-black text-slate-900">Research status & disclaimer</h3>
+                                        <p class="text-sm text-slate-600 mt-2 leading-6">This is a <strong>heuristic research dataset</strong>. AI is assisting discovery and hypothesis generation. Human curator cross-check is disabled for this stage.</p>
+                                        <div class="mt-3 text-[11px] text-slate-500" id="timeline-human-status">Human cross-check: 0 records</div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
                 </div>
                 <div id="timeline-detail-modal" class="hidden fixed inset-0 z-[2200] bg-black/50 backdrop-blur-sm p-5 flex items-center justify-center">
                     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-y-auto">
