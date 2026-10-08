@@ -296,9 +296,6 @@
                     <button onclick="window.app.switchTab('ai-map')" id="nav-ai-map" class="w-full text-left p-4 rounded-xl hover:bg-gray-800 text-gray-400 hover:text-white transition flex items-center text-md group">
                         <i class="fas fa-robot w-8 group-hover:text-cyan-400 transition"></i> Global Map AI
                     </button>
-                    <button onclick="window.app.switchTab('timeline')" id="nav-timeline" class="w-full text-left p-4 rounded-xl hover:bg-gray-800 text-gray-400 hover:text-white transition flex items-center text-md group">
-                        <i class="fas fa-clock w-8 group-hover:text-amber-400 transition"></i> Global Map Timeline
-                    </button>
 
                 </nav>
             </div>
@@ -500,48 +497,6 @@
                 </div>
                 <div class="absolute bottom-5 left-5 z-[500] bg-white/95 backdrop-blur px-3 py-2 rounded-xl border border-slate-200 shadow text-[10px] text-slate-500">
                     Source: ICH-Radar data.json
-                </div>
-            </div>
-
-            <!-- GLOBAL MAP TIMELINE -->
-            <div id="view-timeline" class="absolute inset-0 hidden bg-slate-50 overflow-y-auto">
-                <div class="p-8 max-w-7xl mx-auto">
-                    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-5">
-                        <div>
-                            <div class="text-[10px] uppercase tracking-widest font-black text-amber-600">Heuristic historical layer</div>
-                            <h2 class="text-3xl font-black text-gray-900 mt-1">Global Map Timeline</h2>
-                            <p class="text-sm text-gray-500 mt-2 max-w-3xl">Explore when culinary traditions are first tentatively referenced, where they appear today, and which trade corridors may have connected them.</p>
-                        </div>
-                        <div id="timeline-status" class="text-xs text-gray-400 font-mono">Preparing timeline...</div>
-                    </div>
-                    <div class="timeline-disclaimer mb-5">
-                        <strong>⚠️ Heuristic timeline & trade-pathway analysis.</strong>
-                        This is an AI-assisted research aid, not an authoritative historical chronology. Dates, origins, and trade-route relationships are hypotheses derived from AI-discovered ICH-Radar data and cross-checked against the human-curated Foodways database. <strong>No human curator has yet verified every timeline or causal trade relationship.</strong> AI currently acts as an assistant for discovery and hypothesis generation.
-                    </div>
-
-                    <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
-                        <div class="xl:col-span-8 timeline-shell p-4">
-                            <div id="timeline-map" class="h-[430px] rounded-2xl overflow-hidden border border-slate-200"></div>
-                        </div>
-                        <aside class="xl:col-span-4 timeline-shell p-5">
-                            <div class="text-[10px] font-black uppercase tracking-widest text-gray-400">Selected foodway</div>
-                            <div id="timeline-detail" class="mt-3 text-sm text-gray-500">Click a timeline item or map node.</div>
-                        </aside>
-                    </div>
-
-                    <div class="timeline-shell mt-5 p-4">
-                        <div class="flex items-center justify-between gap-3 mb-3">
-                            <div>
-                                <div class="text-[10px] uppercase tracking-widest font-black text-gray-400">Historical sequence</div>
-                                <div class="font-black text-gray-800">Possible origin / first-reference timeline</div>
-                            </div>
-                            <span id="timeline-count" class="text-[10px] font-bold px-2 py-1 rounded-full bg-amber-50 text-amber-700">0 records</span>
-                        </div>
-                        <div id="timeline-track" class="timeline-track">
-                            <div class="timeline-line"></div>
-                            <div id="timeline-items"></div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -1240,211 +1195,6 @@
             }
         };
 
-
-        window.foodwaysTimeline = {
-            map: null,
-            layer: null,
-            routeLayer: null,
-            items: [],
-
-            routes: {
-                "Indian Ocean": {
-                    color:"#2563eb",
-                    coords:[[-4.04,39.67],[12.79,45.03],[23.59,58.41],[19.08,72.88],[6.93,79.86],[3.14,101.69],[-6.15,106.82],
-                    countries:["Kenya","Tanzania","Oman","Yemen","India","Sri Lanka","Malaysia","Indonesia"]
-                },
-                "Spice Routes": {
-                    color:"#d97706",
-                    coords:[[-3.70,128.18],[1.49,103.74],[7.87,80.77],[9.93,76.27],[23.59,58.41],[41.01,28.98]],
-                    countries:["Indonesia","Malaysia","Sri Lanka","India","Oman","Turkey","Kenya"]
-                },
-                "Silk Roads": {
-                    color:"#0d9488",
-                    coords:[[34.26,108.94],[39.47,75.99],[39.65,66.96],[35.69,51.39],[33.31,44.37],[41.01,28.98]],
-                    countries:["China","India","Pakistan","Afghanistan","Uzbekistan","Iran","Iraq","Turkey"]
-                },
-                "Austronesian Exchange": {
-                    color:"#0891b2",
-                    coords:[[24.81,120.96],[14.60,121.00],[-6.21,106.85],[-8.56,125.58],[-18.87,47.51]],
-                    countries:["Taiwan","Philippines","Indonesia","Malaysia","Timor-Leste","Madagascar"]
-                },
-                "Mediterranean": {
-                    color:"#dc2626",
-                    coords:[[36.72,-3.70],[41.90,12.50],[37.98,23.73],[41.01,28.98],[31.24,29.96],[36.81,10.18]],
-                    countries:["Spain","Italy","Greece","Turkey","Egypt","Tunisia","Morocco"]
-                },
-                "Trans-Saharan": {
-                    color:"#b45309",
-                    coords:[[31.63,-7.98],[27.88,-0.29],[23.68,5.52],[16.27,-5.02],[13.51,2.11],[13.06,-8.00],[14.72,-17.47]],
-                    countries:["Morocco","Algeria","Libya","Mali","Niger","Chad","Nigeria","Senegal"]
-                },
-                "Incense Route": {
-                    color:"#7c3aed",
-                    coords:[[17.02,54.09],[15.55,48.52],[24.71,46.67],[30.33,35.44],[31.95,35.91],[30.04,31.24]],
-                    countries:["Oman","Yemen","Saudi Arabia","Jordan","Israel","Egypt"]
-                },
-                "Tea–Horse Road": {
-                    color:"#059669",
-                    coords:[[24.88,102.83],[29.65,91.12],[28.39,84.12],[27.47,89.64],[30.32,78.03]],
-                    countries:["China","Nepal","Bhutan","India"]
-                }
-            },
-
-            init: () => {
-                if(window.foodwaysTimeline.map) {
-                    setTimeout(()=>window.foodwaysTimeline.map.invalidateSize(),100);
-                    return;
-                }
-                window.foodwaysTimeline.map=L.map('timeline-map',{worldCopyJump:true}).setView([15,40],2);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-                    maxZoom:19,
-                    attribution:'&copy; OpenStreetMap contributors'
-                }).addTo(window.foodwaysTimeline.map);
-                window.foodwaysTimeline.layer=L.layerGroup().addTo(window.foodwaysTimeline.map);
-                window.foodwaysTimeline.routeLayer=L.layerGroup().addTo(window.foodwaysTimeline.map);
-                setTimeout(()=>window.foodwaysTimeline.map.invalidateSize(),100);
-            },
-
-            parseYear: (text) => {
-                const matches=[...String(text||'').matchAll(/(?<!\d)(1[0-9]{3}|20[0-2][0-9])\b/g)].map(m=>Number(m[1]));
-                return matches.length ? Math.min(...matches) : null;
-            },
-
-            inferRoutes: (item) => {
-                const text=String(item.description||'')+' '+JSON.stringify(item.shared_heritage||{})+' '+String(item.cultural_significance||'');
-                const hay=text.toLowerCase();
-                const routes=[];
-                const add=(name,patterns)=>{
-                    if(patterns.some(p=>hay.includes(p))) routes.push(name);
-                };
-                add('Indian Ocean',['indian ocean','monsoon','maritime','port','spice']);
-                add('Spice Routes',['spice','clove','nutmeg','pepper','mace','cinnamon']);
-                add('Silk Roads',['silk road','caravan','central asia']);
-                add('Austronesian Exchange',['austronesian','island southeast asia','seafaring','maritime mobility']);
-                add('Mediterranean',['mediterranean','levant','olive oil','wine']);
-                add('Trans-Saharan',['sahara','sahel','caravan']);
-                add('Incense Route',['incense','frankincense','myrrh','arabia']);
-                add('Tea–Horse Road',['tea-horse','tea horse','tibet','yunnan','himalaya']);
-                const country=item.country;
-                Object.entries(window.foodwaysTimeline.routes).forEach(([name,route])=>{
-                    if(!routes.includes(name) && route.countries.includes(country)) {
-                        const shared=(item.shared_heritage?.related_elements||[]);
-                        if(shared.some(r=>route.countries.includes(r.country))) routes.push(name);
-                    }
-                });
-                return [...new Set(routes)];
-            },
-
-            normalizeName: (s) => String(s||'').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim(),
-
-            build: () => {
-                const ai=window.aiRadar.records||[];
-                const human=state.data||[];
-                const humanIndex=new Map();
-                human.forEach(h=>humanIndex.set(window.foodwaysTimeline.normalizeName(h.food_name)+'|'+window.foodwaysTimeline.normalizeName(h.country),h));
-
-                window.foodwaysTimeline.items=ai.map(item=>{
-                    const humanMatch=humanIndex.get(window.foodwaysTimeline.normalizeName(item.element_name)+'|'+window.foodwaysTimeline.normalizeName(item.country));
-                    const year=window.foodwaysTimeline.parseYear(item.description);
-                    const routes=window.foodwaysTimeline.inferRoutes(item);
-                    const related=(item.shared_heritage?.related_elements||[]);
-                    const originNames=[...new Set(related.map(x=>x.element_name).filter(Boolean))];
-                    return {
-                        ...item,
-                        year,
-                        humanMatch,
-                        humanVerified:false,
-                        routes,
-                        originNames,
-                        heuristicNote: humanMatch
-                            ? 'AI signal cross-checked against a human-curated Foodways record. Timeline and route relationship are still heuristic.'
-                            : 'AI signal not yet matched to a human-curated Foodways record. Timeline and route relationship are heuristic.'
-                    };
-                }).filter(x=>Number.isFinite(x.year)).sort((a,b)=>a.year-b.year);
-
-                const count=document.getElementById('timeline-count');
-                if(count) count.textContent=window.foodwaysTimeline.items.length+' records';
-                const status=document.getElementById('timeline-status');
-                if(status) status.textContent=window.foodwaysTimeline.items.length+' heuristic timeline records';
-                window.foodwaysTimeline.render();
-            },
-
-            render: () => {
-                const track=document.getElementById('timeline-items');
-                if(!track || !window.foodwaysTimeline.map) return;
-                window.foodwaysTimeline.layer.clearLayers();
-                window.foodwaysTimeline.routeLayer.clearLayers();
-
-                const data=window.foodwaysTimeline.items.slice(0,120);
-                track.innerHTML='';
-                if(!data.length){
-                    track.innerHTML='<div class="absolute left-8 top-12 text-sm text-gray-400">No machine-readable dates found in the current AI dataset.</div>';
-                    return;
-                }
-                const min=Math.min(...data.map(x=>x.year)), max=Math.max(...data.map(x=>x.year)), span=Math.max(1,max-min);
-                data.forEach((x,i)=>{
-                    const pct=7+((x.year-min)/span)*86;
-                    const node=document.createElement('button');
-                    node.className='timeline-node';
-                    node.style.left=pct+'%';
-                    node.style.background=x.humanMatch?'#059669':'#f59e0b';
-                    node.title=x.element_name;
-                    node.onclick=()=>window.foodwaysTimeline.select(x);
-                    track.appendChild(node);
-
-                    const card=document.createElement('button');
-                    card.className='timeline-card '+(i%2?'bottom':'top')+' text-left bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:border-amber-400';
-                    card.style.left=pct+'%';
-                    card.innerHTML='<div class="text-[10px] font-black text-amber-700">'+x.year+(x.humanMatch?' · human match':' · AI only')+'</div><div class="text-xs font-extrabold text-gray-800 mt-1">'+window.escapeHtml(x.element_name)+'</div><div class="text-[10px] text-gray-500 mt-1">'+window.escapeHtml(x.country||'Unknown')+'</div>';
-                    card.onclick=()=>window.foodwaysTimeline.select(x);
-                    track.appendChild(card);
-
-                    if(Number.isFinite(x.lat)&&Number.isFinite(x.lng)){
-                        const marker=L.circleMarker([x.lat,x.lng],{
-                            radius:6,
-                            color:x.humanMatch?'#059669':'#f59e0b',
-                            fillColor:x.humanMatch?'#10b981':'#fbbf24',
-                            fillOpacity:.8,
-                            weight:1.5
-                        }).addTo(window.foodwaysTimeline.layer);
-                        marker.bindTooltip(window.escapeHtml(x.element_name));
-                        marker.on('click',()=>window.foodwaysTimeline.select(x));
-                    }
-                });
-                const coords=data.filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lng)).map(x=>[x.lat,x.lng]);
-                if(coords.length) window.foodwaysTimeline.map.fitBounds(L.latLngBounds(coords).pad(.1));
-
-                // Draw all route hypotheses lightly in the background.
-                const used=[...new Set(data.flatMap(x=>x.routes))];
-                used.forEach(name=>{
-                    const r=window.foodwaysTimeline.routes[name];
-                    if(!r)return;
-                    L.polyline(r.coords,{color:r.color,weight:4,opacity:.32,dashArray:'6 8',interactive:false}).addTo(window.foodwaysTimeline.routeLayer);
-                });
-            },
-
-            select: (x) => {
-                if(!x)return;
-                window.foodwaysTimeline.routeLayer.clearLayers();
-                (x.routes||[]).forEach(name=>{
-                    const r=window.foodwaysTimeline.routes[name];
-                    if(!r)return;
-                    L.polyline(r.coords,{color:r.color,weight:8,opacity:.78,dashArray:'8 8'}).addTo(window.foodwaysTimeline.routeLayer);
-                });
-                if(Number.isFinite(x.lat)&&Number.isFinite(x.lng)) window.foodwaysTimeline.map.setView([x.lat,x.lng],Math.max(4,window.foodwaysTimeline.map.getZoom()));
-                const d=document.getElementById('timeline-detail');
-                const related=(x.shared_heritage?.related_elements||[]);
-                d.innerHTML=
-                    '<div class="text-[10px] uppercase tracking-widest font-black text-gray-400">Selected Foodway</div>'+
-                    '<div class="text-2xl font-black text-gray-900 mt-1">'+window.escapeHtml(x.element_name)+'</div>'+
-                    '<div class="text-xs text-gray-500 mt-1">'+window.escapeHtml(x.country||'Unknown')+' • possible first reference '+(x.year||'Unknown')+'</div>'+
-                    '<div class="mt-4"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2">Human cross-check</div><div class="text-sm font-bold '+(x.humanMatch?'text-emerald-700':'text-amber-700')+'">'+(x.humanMatch?'Matched to human-curated Foodways record':'No direct human match yet')+'</div></div>'+
-                    '<div class="mt-4"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2">Trade-route hypotheses</div>'+(x.routes.length?x.routes.map(r=>'<span class="timeline-chip">'+window.escapeHtml(r)+'</span>').join(''):'<span class="text-xs text-gray-400">No route hypothesis detected.</span>')+'</div>'+
-                    '<div class="mt-4"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2">Possible heritage origins / shared links</div>'+(related.length?related.map(r=>'<div class="p-3 rounded-xl bg-violet-50 border border-violet-100 mb-2"><div class="font-bold text-xs text-violet-900">'+window.escapeHtml(r.element_name||'Related element')+' · '+window.escapeHtml(r.country||'')+'</div><div class="text-xs text-violet-800 mt-1">'+window.escapeHtml(r.relationship_reason||'')+'</div></div>').join(''):'<span class="text-xs text-gray-400">No related elements recorded.</span>')+
-                    '<div class="mt-4 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">'+window.escapeHtml(x.heuristicNote)+'</div>'+
-                    '<div class="mt-4"><button onclick="window.aiRadar.openDetail(window.aiRadar.records.findIndex(r=>r.source_id===\''+String(x.source_id).replace(/'/g,"\\'")+'\'))" class="w-full py-2 rounded-xl bg-cyan-600 text-white font-bold text-xs">Open AI Evidence</button></div>';
-            }
-        };
 
         window.aiRadar = {
             records: [],
@@ -2322,7 +2072,7 @@
             },
 
             switchTab: (t) => {
-                ['dashboard','map','ai-map','timeline'].forEach(id => {
+                ['dashboard','map','ai-map'].forEach(id => {
                     const el=document.getElementById('view-'+id);
                     if(el) el.classList.add('hidden');
                 });
@@ -2333,15 +2083,6 @@
                 if(t==='ai-map') {
                     window.aiRadar.initMaps();
                     window.aiRadar.refresh();
-                }
-                if(t==='timeline') {
-                    window.foodwaysTimeline.init();
-                    if(!window.aiRadar.records.length){
-                        window.aiRadar.refresh().then(()=>window.foodwaysTimeline.build());
-                    } else {
-                        window.foodwaysTimeline.build();
-                    }
-                    setTimeout(()=>window.foodwaysTimeline.map.invalidateSize(),120);
                 }
             },
             exportData: () => {
