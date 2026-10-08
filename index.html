@@ -1337,6 +1337,24 @@
                 }).join(''):'<div class="p-8 text-center text-sm text-slate-400">No researched records match.</div>';
             },
             openDetail: () => {},
+            renderRoutes: () => {
+                const box=document.getElementById('timeline-routes');
+                if(!box) return;
+                const groups={};
+                window.timelineResearch.records.forEach(r=>{
+                    (r.assessment?.route_hypotheses||[]).forEach(h=>{
+                        const key=h.route||'Unnamed route';
+                        if(!groups[key]) groups[key]=[];
+                        groups[key].push({food:r.food_name,confidence:Number(h.confidence||0),relationship:h.relationship||''});
+                    });
+                });
+                const entries=Object.entries(groups);
+                box.innerHTML=entries.length?entries.map(([route,items])=>{
+                    const avg=items.reduce((s,x)=>s+x.confidence,0)/items.length;
+                    return '<div class="rounded-2xl border border-slate-200 p-4"><div class="flex justify-between gap-3"><div class="font-black text-slate-900">'+window.timelineResearch.esc(route)+'</div><span class="text-[10px] font-black bg-cyan-50 text-cyan-700 px-2 py-1 rounded-full">'+(avg*100).toFixed(0)+'%</span></div>'
+                        +'<div class="mt-3 space-y-2">'+items.map(i=>'<div class="text-xs text-slate-600"><b class="text-slate-800">'+window.timelineResearch.esc(i.food)+'</b><div>'+window.timelineResearch.esc(i.relationship)+'</div></div>').join('')+'</div></div>';
+                }).join(''):'<div class="text-sm text-slate-400 md:col-span-2">No trade-route hypotheses yet.</div>';
+            },
             closeDetail: () => {
                 const modal = document.getElementById('timeline-detail-modal');
                 if (modal) modal.classList.add('hidden');
