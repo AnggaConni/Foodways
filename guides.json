@@ -1,0 +1,30 @@
+[
+  {
+    "title": "1. Getting Started",
+    "desc": "Welcome to Foodways. On the landing page, click the red \"ENTER SYSTEM\" button to access the database as a Guest. If you are a data contributor, click the \"Admin Login\" link below the main button to sign in."
+  },
+  {
+    "title": "2. Reading the Dashboard",
+    "desc": "Upon entry, you will see the Culinary Analytics dashboard. This section displays live statistics such as Total Foods, Countries, and UNESCO Status. Charts visualize data on \"Influencing Countries\" and \"Interaction Types\" (Trade, Migration, or Colonialism)."
+  },
+  {
+    "title": "3. Navigating the Global Map",
+    "desc": "Switch to the \"Global Map\" tab via the sidebar. <br><br>• Red Dots: Current locations of the food.<br>• Orange Dots: Historical origin sources.<br>• Dashed Lines: Visualizes the historical path from origin to destination.<br><br>You can pan and zoom the map to explore specific regions."
+  },
+  {
+    "title": "4. Search & Filtering",
+    "desc": "Use the Search Bar located at the top left of the map or above the data table. Type keywords (e.g., \"Rendang\" or \"Indonesia\"). The application will instantly filter both the map markers and the table rows to match your query."
+  },
+  {
+    "title": "5. Viewing Food Details",
+    "desc": "Click on any Red Dot on the map or a row in the table to open the Detail Modal. This view contains:<br><br>• Narrative: Full historical description.<br>• Multimedia: Image carousels and YouTube video embeds.<br>• Maps: Detailed distribution polygons and influence connection maps.<br>• Sources: Academic research links."
+  },
+  {
+    "title": "6. Exporting Data & Reports",
+    "desc": "The app supports multiple export formats:<br><br>• Download .CSV: Get the raw dataset for Excel.<br>• Download Metadata (DCMI): For digital library integration.<br>• Export to PDF: (Inside Detail View) Generates a professional printable report with maps and images.<br>• GeoJSON: Spatial data compatible with GIS software (ArcGIS/QGIS)."
+  },
+  {
+    "title": "7. Admin Tools (Contributors)",
+    "desc": "If logged in as an Admin, the \"Add Data\" button appears in the sidebar. You can:<br><br>• Create/Edit: Add new food entries or update existing ones.<br>• Geo Editor: Draw distribution areas (polygons) directly on the map.<br>• Rich Text: Format descriptions using the built-in toolbar.<br>• Delete: Remove obsolete records safely."
+  }
+]
