@@ -78,7 +78,7 @@ jobs:
         env:
           TINYFISH_API_KEY: ${{ secrets.TINYFISH_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.8-flash' }}
           TIMELINE_MAX_RECORDS: ${{ inputs.max_records || '0' }}
           FORCE_TIMELINE_RESEARCH: ${{ inputs.force_research || '0' }}
           ENABLE_HUMAN_CROSSCHECK: "0"
