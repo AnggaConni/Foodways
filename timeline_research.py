@@ -239,6 +239,11 @@ Tasks:
    or route hypothesis is correct.
 8. Do not treat a UNESCO inscription year as the origin year unless the source
    explicitly supports that interpretation.
+9. Score date_confidence, origin_confidence and trade_route_confidence independently.
+   Use 0.90-1.00 only when multiple strong sources agree; 0.70-0.89 when there is
+   strong but incomplete evidence; 0.40-0.69 when evidence is mixed/indirect; and
+   below 0.40 when the hypothesis is weak. Do not inflate scores merely because
+   a claim sounds plausible.
 
 Return strict JSON matching the requested schema.
 """.strip()
@@ -339,6 +344,14 @@ def main() -> None:
             web_results = tinyfish_search(query)
             assessment = gemini_inspect(client, record, human, web_results)
 
+            date_conf = float(assessment.date_confidence)
+            origin_conf = float(assessment.origin_confidence)
+            trade_conf = float(assessment.trade_route_confidence)
+            overall_conf = round(
+                (0.40 * date_conf) + (0.30 * origin_conf) + (0.30 * trade_conf),
+                4,
+            )
+
             result = {
                 "source_id": source_id,
                 "food_name": food_name,
@@ -352,6 +365,18 @@ def main() -> None:
                 "human_record_id": human.get("id") if human else None,
                 "human_origin": human_origin,
                 "assessment": assessment.model_dump(),
+                "confidence": {
+                    "date": round(date_conf, 4),
+                    "origin": round(origin_conf, 4),
+                    "trade_route": round(trade_conf, 4),
+                    "overall": overall_conf,
+                    "band": (
+                        "High" if overall_conf >= 0.80 else
+                        "Medium" if overall_conf >= 0.60 else
+                        "Low" if overall_conf >= 0.40 else
+                        "Very Low"
+                    ),
+                },
                 "tinyfish_sources": web_results,
                 "heuristic_disclaimer": (
                     "Research-assistant output only. Timeline dates, probable origins "
