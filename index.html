@@ -675,6 +675,9 @@
             <!-- GLOBAL MAP AI -->
             <div id="view-ai-map" class="absolute inset-0 hidden bg-slate-50">
                 <div id="ai-map-container" class="absolute inset-0"></div>
+                <button onclick="window.aiRadar.toggleFullscreen()" title="Full screen map" class="absolute top-5 right-5 z-[700] w-11 h-11 bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 text-slate-700 hover:bg-white">
+                    <i class="fas fa-expand" id="ai-map-fullscreen-icon"></i>
+                </button>
                 <div class="absolute top-5 left-5 z-[500] w-[390px] max-w-[calc(100%-40px)]">
                     <div class="bg-white/95 backdrop-blur rounded-2xl shadow-xl border border-cyan-200 p-5">
                         <div class="flex items-start justify-between gap-3">
@@ -1798,14 +1801,30 @@
             activeRecord: null,
 
             initMaps: () => {
+                const el=document.getElementById('ai-map-container');
+                if(!el) return;
                 if (!window.aiRadar.aiMap) {
-                    window.aiRadar.aiMap = L.map('ai-map-container', { zoomControl: true }).setView([20,0],2);
+                    window.aiRadar.aiMap = L.map('ai-map-container', {
+                        zoomControl: true,
+                        worldCopyJump: false,
+                        maxBounds:[[-85,-180],[85,180]],
+                        maxBoundsViscosity:1.0
+                    }).setView([20,0],2);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         maxZoom: 19,
+                        noWrap: true,
                         attribution: '&copy; OpenStreetMap contributors'
                     }).addTo(window.aiRadar.aiMap);
                 }
-                setTimeout(() => window.aiRadar.aiMap.invalidateSize(), 100);
+                setTimeout(() => window.aiRadar.aiMap.invalidateSize(), 250);
+            },
+            toggleFullscreen: async () => {
+                const el=document.getElementById('view-ai-map');
+                if(!el) return;
+                try{
+                    if(document.fullscreenElement) await document.exitFullscreen();
+                    else if(el.requestFullscreen) await el.requestFullscreen();
+                }catch(err){console.warn('AI map fullscreen failed:',err);}
             },
 
             isCulinary: (item) => {
@@ -2716,6 +2735,7 @@
                 if(t==='dashboard') setTimeout(() => window.dashboard.render(), 100);
                 if(t==='ai-map') {
                     window.aiRadar.initMaps();
+                    setTimeout(() => window.aiRadar.aiMap?.invalidateSize(), 250);
                     window.aiRadar.refresh();
                 }
                 if(t==='timeline') {
@@ -3055,11 +3075,14 @@
             }
         });
         document.addEventListener('fullscreenchange', () => {
-            const icon=document.getElementById('timeline-fullscreen-icon');
             const active=!!document.fullscreenElement;
+            const icon=document.getElementById('timeline-fullscreen-icon');
             if(icon) icon.className=active?'fas fa-compress':'fas fa-expand';
+            const aiIcon=document.getElementById('ai-map-fullscreen-icon');
+            if(aiIcon) aiIcon.className=active?'fas fa-compress':'fas fa-expand';
             setTimeout(() => {
                 if(window.timelineResearch?.map) window.timelineResearch.map.invalidateSize();
+                if(window.aiRadar?.aiMap) window.aiRadar.aiMap.invalidateSize();
             }, 150);
         });
         document.addEventListener('keydown', (e) => {
