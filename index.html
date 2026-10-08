@@ -202,6 +202,19 @@
         .markdown-body a { color: #2563eb; text-decoration: underline; }
         .markdown-body strong { font-weight: 700; color: #000; }
         .markdown-body em { font-style: italic; color: #4b5563; }
+        .markdown-body code {
+            display: inline-block;
+            padding: 0.08rem 0.4rem;
+            border-radius: 0.35rem;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #0f172a;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 0.9em;
+            font-weight: 700;
+        }
+        .markdown-body strong { color: #0f172a; }
+        .markdown-body br { display: block; content: ""; margin-top: 0.35rem; }
 
         /* Editor Toolbar Styles */
         .editor-btn {
@@ -1104,19 +1117,37 @@
             const inline = (value) => {
                 const raw = String(value ?? '');
                 const stash = [];
-                let tokenized = raw.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, (match,label,url) => {
+
+                // Preserve only a deliberately small set of harmless inline HTML tags
+                // used by guides.json. Everything else remains escaped as plain text.
+                let tokenized = raw.replace(/<\/?(strong|em|code|br)>/gi, (match) => {
+                    const tag = match.toLowerCase();
+                    const token = '__SAFE_TAG_' + stash.length + '__';
+                    stash.push(tag);
+                    return token;
+                });
+
+                // Convert Markdown links to safe HTML after URL validation.
+                tokenized = tokenized.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, (match,label,url) => {
                     const safe = safeUrl(url);
                     if (!safe) return match;
                     const token = '__SAFE_LINK_' + stash.length + '__';
                     stash.push('<a href="' + escape(safe) + '" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">' + escape(label) + '</a>');
                     return token;
                 });
+
                 tokenized = escape(tokenized);
                 tokenized = tokenized.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
                 tokenized = tokenized.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
                 stash.forEach((html,index) => {
-                    tokenized = tokenized.replace('__SAFE_LINK_' + index + '__', html);
+                    if (/^<(strong|em|code|br)>$|^<\/(strong|em|code|br)>$/i.test(html)) {
+                        tokenized = tokenized.replace('__SAFE_TAG_' + index + '__', html);
+                    } else {
+                        tokenized = tokenized.replace('__SAFE_LINK_' + index + '__', html);
+                    }
                 });
+
                 return tokenized;
             };
             const splitTableRow = (line) => {
