@@ -523,7 +523,7 @@
         const SUPABASE_URL = 'https://yyjwodgywizjbnrvdnpn.supabase.co';
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_3dTLdT8jsmdLzG_fbM5OxQ_Yt9lE9Pg';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-            auth: { flowType: 'implicit', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
         
         window.handleImageError = function(el) {
@@ -1394,7 +1394,7 @@ window.app = {
                 btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Redirecting...';
                 const { error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
-                    options: { redirectTo: 'https://anggaconni.github.io/Foodways/mobile.html' }
+                    options: { redirectTo: 'https://anggaconni.github.io/Foodways/' }
                 });
                 if(error) {
                     btn.innerHTML = '<i class="fab fa-google mr-2"></i> Continue with Google';
@@ -1554,6 +1554,7 @@ window.app = {
             map: null,
             layers: [],
             dataLoaded: false,
+            hasInitialView: false,
             pickerCancel: null,
 
             initMap: () => {
@@ -1694,14 +1695,11 @@ window.app = {
                     countBadge.textContent = mappedCount + ' mapped';
                 }
 
-                if (bounds.isValid()) {
-                    map.fitBounds(bounds, {
-                        padding: [35, 35],
-                        maxZoom: 5,
-                        animate: false
-                    });
-                } else {
-                    map.setView([10, 20], 2, { animate: false });
+                // Keep the first mobile map view intentionally global.
+                // Users can use the reset/fit control when they want the full dataset extent.
+                if (!window.mapLogic.hasInitialView) {
+                    map.setView([20, 10], 2, { animate: false });
+                    window.mapLogic.hasInitialView = true;
                 }
 
                 setTimeout(() => map.invalidateSize(), 150);
@@ -1724,9 +1722,9 @@ window.app = {
                 });
 
                 if (hasPoints && bounds.isValid()) {
-                    map.fitBounds(bounds, { padding: [35, 35], maxZoom: 5 });
+                    map.fitBounds(bounds, { padding: [45, 45], maxZoom: 3, animate: false });
                 } else {
-                    map.setView([10, 20], 2);
+                    map.setView([20, 10], 2, { animate: false });
                 }
             },
 
