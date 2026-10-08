@@ -344,54 +344,87 @@
             
             <!-- DASHBOARD TAB -->
             <div id="view-dashboard" class="absolute inset-0 p-8 overflow-y-auto hidden">
-                <header class="flex justify-between items-end pb-4 border-b border-gray-300 mb-8">
+                <header class="flex flex-wrap items-end justify-between gap-4 pb-5 border-b border-gray-300 mb-7">
                     <div>
-                        <h2 class="text-4xl font-black text-gray-900 mb-1">Culinary Analytics</h2>
-                        <p class="text-gray-500 text-sm">Global heritage data visualization.</p>
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-4xl font-black text-gray-900">Culinary Analytics</h2>
+                            <span class="px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wider border border-red-100">Curated Dataset</span>
+                        </div>
+                        <p class="text-gray-500 text-sm mt-1">A detailed view of the Foodways knowledge graph, geographic footprint, heritage status, and data coverage.</p>
+                    </div>
+                    <div class="text-right text-xs text-gray-400">
+                        <div class="font-bold text-gray-600">Supabase • Heritage Foodways</div>
+                        <div id="dashboard-updated-label">Live dataset</div>
                     </div>
                 </header>
 
-                <!-- KPI CARDS -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                    <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-[var(--opera-red)]">
-                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-total">0</div>
-                        <div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Total Foods</div>
+                <!-- CORE KPI -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-7">
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-[var(--opera-red)]"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400">Foodways</div><div id="kpi-total" class="text-4xl font-black text-gray-900 mt-1">0</div><div class="text-xs text-gray-500 mt-1">curated records</div></div>
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-blue-500"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400">Countries</div><div id="kpi-countries" class="text-4xl font-black text-gray-900 mt-1">0</div><div class="text-xs text-gray-500 mt-1">geographic footprint</div></div>
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-orange-500"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400">Origin Links</div><div id="kpi-edges" class="text-4xl font-black text-gray-900 mt-1">0</div><div class="text-xs text-gray-500 mt-1">derived / connected</div></div>
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-emerald-500"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400">Mapped</div><div id="kpi-mapped" class="text-4xl font-black text-gray-900 mt-1">0%</div><div id="kpi-mapped-sub" class="text-xs text-gray-500 mt-1">with coordinates</div></div>
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-cyan-500"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400">Research Linked</div><div id="kpi-research" class="text-4xl font-black text-gray-900 mt-1">0%</div><div id="kpi-research-sub" class="text-xs text-gray-500 mt-1">records with sources</div></div>
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-violet-500"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400">Media</div><div id="kpi-media" class="text-4xl font-black text-gray-900 mt-1">0%</div><div id="kpi-media-sub" class="text-xs text-gray-500 mt-1">image / video coverage</div></div>
+                </div>
+
+                <!-- NETWORK SUMMARY -->
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-7">
+                    <div class="glass-panel p-6 rounded-2xl xl:col-span-2">
+                        <div class="flex justify-between items-center mb-4">
+                            <div><h3 class="text-sm font-black text-gray-800 uppercase tracking-wide">Geographic Footprint</h3><p class="text-xs text-gray-500 mt-1">Countries represented by curated Foodways records.</p></div>
+                            <span id="dashboard-country-note" class="text-[10px] font-bold text-gray-400"></span>
+                        </div>
+                        <div class="relative h-80"><canvas id="chart-country"></canvas></div>
                     </div>
-                    <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-blue-500">
-                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-countries">0</div>
-                        <div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Countries</div>
-                    </div>
-                    <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-orange-500">
-                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-edges">0</div>
-                        <div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Connections</div>
-                    </div>
-                     <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border-l-4 border-green-600">
-                        <div class="text-5xl font-black text-gray-800 mb-1" id="kpi-unesco">0</div>
-                        <div class="text-xs text-gray-500 uppercase font-bold tracking-wider">Heritage Listed</div>
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-wide">Interaction Types</h3>
+                        <p class="text-xs text-gray-500 mt-1 mb-4">How cultural connections are currently classified.</p>
+                        <div class="relative h-80"><canvas id="chart-type"></canvas></div>
                     </div>
                 </div>
 
-                <!-- CHARTS -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-                    <div class="glass-panel p-6 rounded-2xl flex flex-col min-h-[400px]">
-                        <h3 class="text-sm font-bold text-gray-600 uppercase mb-4 border-b pb-2">Influencing Countries</h3>
-                        <div class="relative w-full h-80"><canvas id="chart-country"></canvas></div>
+                <!-- HERITAGE + QUALITY -->
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-7">
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <div class="flex justify-between items-center mb-4">
+                            <div><h3 class="text-sm font-black text-gray-800 uppercase tracking-wide">Heritage Status</h3><p class="text-xs text-gray-500 mt-1">Normalized view of the status text stored in the database.</p></div>
+                        </div>
+                        <div class="relative h-72"><canvas id="chart-unesco"></canvas></div>
                     </div>
-                    <div class="glass-panel p-6 rounded-2xl flex flex-col min-h-[400px]">
-                        <h3 class="text-sm font-bold text-gray-600 uppercase mb-4 border-b pb-2">Interaction Types</h3>
-                        <div class="relative w-full h-80 flex justify-center"><canvas id="chart-type"></canvas></div>
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-wide">Data Coverage & Quality</h3>
+                        <p class="text-xs text-gray-500 mt-1 mb-5">Completeness of the fields most useful for mapping, provenance, research, and storytelling.</p>
+                        <div id="dashboard-quality" class="space-y-4"></div>
                     </div>
                 </div>
 
-                <div class="glass-panel p-6 rounded-2xl mb-8 min-h-[350px]">
-                    <h3 class="text-sm font-bold text-gray-600 uppercase mb-4 border-b pb-2">Heritage Status Breakdown</h3>
-                    <div class="relative w-full h-80"><canvas id="chart-unesco"></canvas></div>
+                <!-- CURATORIAL INSIGHTS -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-7">
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                        <div class="flex items-center justify-between"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400">Root Traditions</div><i class="fas fa-tree text-emerald-600"></i></div>
+                        <div id="insight-root-count" class="text-3xl font-black text-gray-900 mt-2">0</div>
+                        <p class="text-xs text-gray-500 mt-1">records without a linked origin node.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                        <div class="flex items-center justify-between"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400">Origin Coordinates</div><i class="fas fa-location-crosshairs text-orange-500"></i></div>
+                        <div id="insight-origin-coords" class="text-3xl font-black text-gray-900 mt-2">0%</div>
+                        <p id="insight-origin-coords-note" class="text-xs text-gray-500 mt-1">derived nodes with mapped source locations.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                        <div class="flex items-center justify-between"><div class="text-[10px] uppercase tracking-widest font-black text-gray-400">UNESCO Mentions</div><i class="fas fa-award text-blue-600"></i></div>
+                        <div id="insight-unesco-count" class="text-3xl font-black text-gray-900 mt-2">0</div>
+                        <p class="text-xs text-gray-500 mt-1">records whose heritage field references UNESCO.</p>
+                    </div>
                 </div>
 
                 <!-- DATA TABLE -->
                 <div class="glass-panel rounded-2xl overflow-hidden">
                     <div class="p-5 bg-white border-b border-gray-200 flex flex-wrap gap-4 justify-between items-center">
-                        <h3 class="font-bold text-gray-800 flex items-center"><i class="fas fa-table mr-3 text-[var(--opera-red)]"></i> Database Records</h3>
+                        <div>
+                            <h3 class="font-black text-gray-800 flex items-center"><i class="fas fa-table mr-3 text-[var(--opera-red)]"></i> Database Records</h3>
+                            <p class="text-xs text-gray-500 mt-1">Click a row to inspect the full Foodways record.</p>
+                        </div>
                         <div class="relative">
                             <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-xs"></i>
                             <input type="text" id="search-input" placeholder="Search food..." class="pl-9 bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 w-64 focus:border-[var(--opera-red)] outline-none transition">
@@ -400,14 +433,7 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
                             <thead class="bg-gray-100 text-gray-500 text-xs uppercase font-bold">
-                                <tr>
-                                    <th class="p-4">ID</th>
-                                    <th class="p-4">Name</th>
-                                    <th class="p-4">Country</th>
-                                    <th class="p-4">Origin</th>
-                                    <th class="p-4">Type</th>
-                                    <th class="p-4 text-right">Action</th>
-                                </tr>
+                                <tr><th class="p-4">ID</th><th class="p-4">Name</th><th class="p-4">Country</th><th class="p-4">Origin</th><th class="p-4">Type</th><th class="p-4 text-right">Action</th></tr>
                             </thead>
                             <tbody id="table-body" class="divide-y divide-gray-100 bg-white"></tbody>
                         </table>
