@@ -1470,14 +1470,63 @@
                 window.timelineResearch.initMap();
                 const m=window.timelineResearch.map;
                 if(!m)return;
-                m.eachLayer(x=>{if(x instanceof L.CircleMarker)m.removeLayer(x);});
+
+                m.eachLayer(x=>{
+                    if(x instanceof L.CircleMarker || x instanceof L.Polyline || x instanceof L.Marker && x.options?.icon?.options?.className==='timeline-route-label'){
+                        m.removeLayer(x);
+                    }
+                });
+
+                const matched=new Set();
                 window.timelineResearch.filtered().forEach(r=>{
                     const lat=Number(r.ai_location?.lat),lng=Number(r.ai_location?.lng);
                     if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+
                     const b=r.confidence?.band||'Low',col=b==='High'?'#10b981':b==='Medium'?'#f59e0b':'#f43f5e';
-                    const p=L.circleMarker([lat,lng],{radius:8,color:col,fillColor:col,fillOpacity:.85,weight:2}).addTo(m);
+                    const p=L.circleMarker([lat,lng],{radius:8,color:col,fillColor:col,fillOpacity:.88,weight:2}).addTo(m);
                     p.bindTooltip(window.timelineResearch.esc(r.food_name||'Foodway'));
                     p.on('click',()=>window.timelineResearch.openDetail(r.source_id));
+
+                    (r.assessment?.route_hypotheses||[]).forEach(h=>{
+                        const name=String(h.route||'');
+                        const lower=name.toLowerCase();
+                        const key=lower.includes('spice')?'Spice Routes'
+                            :lower.includes('silk')||lower.includes('grand canal')||lower.includes('buddhist monastic')?'Silk Roads'
+                            :lower.includes('indian ocean')?'Indian Ocean'
+                            :lower.includes('austronesian')||lower.includes('polynesian')?'Austronesian'
+                            :lower.includes('incense')?'Incense Route'
+                            :lower.includes('tea-horse')||lower.includes('tea horse')?'Tea-Horse Road'
+                            :lower.includes('trans-saharan')||lower.includes('sahara')?'Trans-Saharan'
+                            :lower.includes('mediterranean')?'Mediterranean'
+                            :lower.includes('portuguese transatlantic')?'Portuguese Transatlantic Exchange'
+                            :lower.includes('estrada real')?'Grand Canal / Jiangnan'
+                            :lower.includes('east polynesian')?'East Polynesian Maritime Migration'
+                            :lower.includes('wuxi')||lower.includes('jiangnan')?'Grand Canal / Jiangnan'
+                            :lower.includes('china to japan')?'Buddhist Monastic Exchange'
+                            :null;
+                        if(key)matched.add(key);
+                    });
+                });
+
+                Object.entries(window.timelineResearch.routeOverlays).forEach(([name,cfg])=>{
+                    const active=matched.has(name);
+                    const line=L.polyline(cfg.points,{
+                        color:cfg.color,
+                        weight:active?5:3,
+                        opacity:active?0.72:0.16,
+                        dashArray:active?'10 7':'5 9',
+                        lineCap:'round',
+                        lineJoin:'round'
+                    }).addTo(m);
+
+                    const mid=cfg.points[Math.floor(cfg.points.length/2)];
+                    const icon=L.divIcon({
+                        className:'timeline-route-label',
+                        html:'<div style="background:rgba(255,255,255,.9);border:1px solid '+cfg.color+';color:'+cfg.color+';padding:3px 7px;border-radius:999px;font-size:9px;font-weight:900;box-shadow:0 2px 7px rgba(0,0,0,.12);white-space:nowrap;">'+window.timelineResearch.esc(name)+(active?' • active':' • heuristic')+'</div>',
+                        iconSize:null
+                    });
+                    L.marker(mid,{icon}).addTo(m);
+                    line.bindTooltip(window.timelineResearch.esc(name)+' — '+(active?'matched by current research hypothesis':'heuristic corridor'));
                 });
             },
             openDetail: (id) => {
