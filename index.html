@@ -234,6 +234,11 @@
         .timeline-route-active {
             filter: drop-shadow(0 0 4px rgba(255,255,255,0.95)) drop-shadow(0 0 7px rgba(15,23,42,0.75));
         }
+        #view-ai-map:fullscreen #ai-map-panel,
+        #view-ai-map:fullscreen #ai-map-panel-show {
+            top: 18px !important;
+            right: 18px !important;
+        }
         #timeline-map-card:fullscreen #timeline-map {
             height: 100vh !important;
         }
@@ -728,22 +733,32 @@
                 <button onclick="window.aiRadar.toggleFullscreen()" title="Full screen map" class="absolute top-5 right-5 z-[700] w-11 h-11 bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 text-slate-700 hover:bg-white">
                     <i class="fas fa-expand" id="ai-map-fullscreen-icon"></i>
                 </button>
-                <div class="absolute top-5 left-5 z-[500] w-[390px] max-w-[calc(100%-40px)]">
-                    <div class="bg-white/95 backdrop-blur rounded-2xl shadow-xl border border-cyan-200 p-5">
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <h2 class="text-xl font-black text-slate-900">Global Map AI</h2>
-                                <p class="text-xs text-slate-500 mt-1">ICH-Radar • Culinary Traditions only</p>
+                <div id="ai-map-panel" class="absolute top-5 right-5 z-[500] w-[390px] max-w-[calc(100%-40px)] transition-all duration-300">
+                    <div class="bg-white/95 backdrop-blur rounded-2xl shadow-xl border border-cyan-200 overflow-hidden">
+                        <div class="p-5">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <h2 class="text-xl font-black text-slate-900">Global Map AI</h2>
+                                    <p class="text-xs text-slate-500 mt-1">ICH-Radar • Culinary Traditions only</p>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <span id="ai-map-count" class="text-[10px] font-bold uppercase bg-cyan-50 text-cyan-700 px-2 py-1 rounded-full">0 signals</span>
+                                    <button onclick="window.aiRadar.togglePanel()" title="Hide AI panel" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200">
+                                        <i class="fas fa-chevron-right" id="ai-map-panel-icon"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <span id="ai-map-count" class="text-[10px] font-bold uppercase bg-cyan-50 text-cyan-700 px-2 py-1 rounded-full">0 signals</span>
+                            <div class="mt-4 flex gap-2">
+                                <input id="ai-map-search" type="text" placeholder="Search culinary signal..." class="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-cyan-400">
+                                <button onclick="window.aiRadar.refresh()" class="px-3 py-2 rounded-lg bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-700"><i class="fas fa-rotate"></i></button>
+                            </div>
+                            <div id="ai-map-list" class="mt-3 max-h-[58vh] overflow-y-auto space-y-2"></div>
                         </div>
-                        <div class="mt-4 flex gap-2">
-                            <input id="ai-map-search" type="text" placeholder="Search culinary signal..." class="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-cyan-400">
-                            <button onclick="window.aiRadar.refresh()" class="px-3 py-2 rounded-lg bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-700"><i class="fas fa-rotate"></i></button>
-                        </div>
-                        <div id="ai-map-list" class="mt-3 max-h-[54vh] overflow-y-auto space-y-2"></div>
                     </div>
                 </div>
+                <button id="ai-map-panel-show" onclick="window.aiRadar.togglePanel(true)" class="hidden absolute top-5 right-5 z-[500] px-3 py-2 rounded-xl bg-white/95 backdrop-blur shadow-lg border border-cyan-200 text-cyan-700 text-xs font-black hover:bg-white">
+                    <i class="fas fa-chevron-left mr-1"></i> Show AI panel
+                </button>
                 <div id="ai-detail-modal" class="hidden absolute inset-0 z-[650] flex items-center justify-center bg-black/40 backdrop-blur-sm p-6">
                     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                         <div class="p-5 border-b border-slate-200 flex items-start justify-between">
@@ -1933,6 +1948,23 @@
             records: [],
             aiMap: null,
             activeRecord: null,
+
+            togglePanel: (forceShow=null) => {
+                const panel=document.getElementById('ai-map-panel');
+                const show=document.getElementById('ai-map-panel-show');
+                const icon=document.getElementById('ai-map-panel-icon');
+                if(!panel||!show) return;
+                const hidden=forceShow===true ? false : forceShow===false ? true : !panel.classList.contains('hidden');
+                if(hidden){
+                    panel.classList.add('hidden');
+                    show.classList.remove('hidden');
+                } else {
+                    panel.classList.remove('hidden');
+                    show.classList.add('hidden');
+                }
+                if(icon) icon.className=hidden?'fas fa-chevron-left':'fas fa-chevron-right';
+                setTimeout(()=>window.aiRadar.aiMap?.invalidateSize(),200);
+            },
 
             initMaps: () => {
                 const el=document.getElementById('ai-map-container');
