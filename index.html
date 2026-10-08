@@ -1120,42 +1120,56 @@
         window.mapLogic = {
             map: null, layers: [], lines: [], markers: [], mounted: false, pickerHandler: null,
             mount: () => {
-                if (window.mapLogic.mounted) return;
+                if (window.mapLogic.mounted) return window.mapLogic.map;
                 const mapEl = document.getElementById('map');
-                if (!mapEl) return;
-                window.mapLogic.mounted = true;
+                if (!mapEl) return null;
                 window.mapLogic.map = L.map(mapEl, { worldCopyJump: true }).setView([20, 0], 2);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors'
                 }).addTo(window.mapLogic.map);
+                window.mapLogic.mounted = true;
+                return window.mapLogic.map;
             },
             init: async () => {
-                window.ui.renderAuth();
+                try {
+                    window.ui.renderAuth();
 
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session) await window.app.applySession(session);
-
-                supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+                    const sessionResult = await supabaseClient.auth.getSession();
+                    const session = sessionResult?.data?.session || null;
                     await window.app.applySession(session);
-                });
 
-                const { data, error } = await supabaseClient
-                    .from('Heritage Foodways')
-                    .select('*')
-                    .order('id');
+                    if (!window.mapLogic._authListenerInstalled) {
+                        window.mapLogic._authListenerInstalled = true;
+                        supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+                            await window.app.applySession(session);
+                        });
+                    }
 
-                if (error) {
-                    console.error(error);
-                    window.ui.showError("Gagal menyambung ke database Foodways.");
-                    return;
+                    const { data, error } = await supabaseClient
+                        .from('Heritage Foodways')
+                        .select('*')
+                        .order('id');
+
+                    if (error) throw error;
+
+                    state.data = (data || []).map(transformData);
+                    window.ui.loaded();
+
+                    const map = window.mapLogic.mount();
+                    if (map) setTimeout(() => map.invalidateSize(), 50);
+
+                    window.dashboard.init();
+                    window.mapLogic.render();
+                    await window.app.fetchGuides();
+
+                    window.app.enterAsGuest();
+                } catch (error) {
+                    console.error("Foodways init failed:", error);
+                    const loading = document.getElementById('loading-container');
+                    if (loading) {
+                        loading.innerHTML = '<span class="text-red-400 text-sm font-bold">Database connection failed.</span><div class="text-gray-400 text-xs mt-2 max-w-md">' + window.escapeHtml(error.message || String(error)) + '</div>';
+                    }
                 }
-
-                state.data = (data || []).map(transformData);
-                window.mapLogic.mount();
-                window.dashboard.init();
-                window.ui.loaded();
-                window.mapLogic.render();
-                window.app.fetchGuides();
             },
 
             applySession: async (session) => {
