@@ -2128,127 +2128,131 @@
 
         window.dashboard = {
             chartCountry: null, chartType: null, chartUnesco: null,
-            init: () => { window.dashboard.render(); window.dashboard.listeners(); }, 
+
+            init: () => { window.dashboard.render(); window.dashboard.listeners(); },
+
             render: () => {
-                if(document.getElementById('view-dashboard').classList.contains('hidden')) return;
-                const ctx1 = document.getElementById('chart-country')?.getContext('2d');
-                const ctx2 = document.getElementById('chart-type')?.getContext('2d');
-                const ctx3 = document.getElementById('chart-unesco')?.getContext('2d');
-                if (!ctx1 || !ctx2 || !ctx3) return;
-
-                window.dashboard.updateKPI(); 
-                window.dashboard.renderCharts(ctx1, ctx2, ctx3); 
+                const view=document.getElementById('view-dashboard');
+                if(!view || view.classList.contains('hidden')) return;
+                window.dashboard.updateKPI();
+                window.dashboard.renderCharts();
+                window.dashboard.renderQuality();
                 window.dashboard.renderTable();
             },
+
             updateKPI: () => {
-                const t = state.data.length, c = new Set([...state.data.map(d=>d.country), ...state.data.map(d=>d.origin_country).filter(x=>x)]).size, e = state.data.filter(d=>d.origin_food_name).length;
-                const u = state.data.filter(d=>d.unesco_status && d.unesco_status.toLowerCase() !== 'unlisted').length;
-                ['total','countries','edges','unesco'].forEach((k,i) => animateValue('kpi-'+k, 0, [t,c,e,u][i], 1000));
+                const data=state.data||[], total=data.length;
+                const countries=new Set(data.map(d=>String(d.country||'').trim()).filter(Boolean)).size;
+                const linked=data.filter(d=>String(d.origin_food_name||'').trim()!=='').length;
+                const mapped=data.filter(d=>Number.isFinite(Number(d.lat))&&Number.isFinite(Number(d.lng))).length;
+                const researched=data.filter(d=>String(d.research_links||'').trim()!=='').length;
+                const media=data.filter(d=>String(d.image_url||'').trim()!==''||String(d.youtube_url||'').trim()!=='').length;
+                const pct=n=>total?Math.round(n/total*100):0;
+                const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+                set('kpi-total',total); set('kpi-countries',countries); set('kpi-edges',linked);
+                set('kpi-mapped',pct(mapped)+'%'); set('kpi-research',pct(researched)+'%'); set('kpi-media',pct(media)+'%');
+                set('kpi-mapped-sub',mapped+' of '+total+' records'); set('kpi-research-sub',researched+' of '+total+' records'); set('kpi-media-sub',media+' of '+total+' records');
+                set('dashboard-country-note',countries+' countries • '+total+' records');
+                const roots=total-linked; set('insight-root-count',roots);
+                const originCoords=data.filter(d=>String(d.origin_food_name||'').trim()!=='').filter(d=>Number.isFinite(Number(d.origin_lat))&&Number.isFinite(Number(d.origin_lng))).length;
+                set('insight-origin-coords',linked?pct(originCoords)+'%':'0%'); set('insight-origin-coords-note',originCoords+' of '+linked+' derived records');
+                const unesco=data.filter(d=>String(d.unesco_status||'').toLowerCase().includes('unesco')).length;
+                set('insight-unesco-count',unesco);
+                set('dashboard-updated-label','Updated '+new Date().toLocaleString());
             },
-            renderCharts: (ctx1, ctx2, ctx3) => {
-                const o = {}; state.data.forEach(d => { if(d.origin_country) o[d.origin_country]=(o[d.origin_country]||0)+1; });
-                const so = Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,5);
-                const t = {}; state.data.forEach(d => { if(d.connection_type) t[d.connection_type]=(t[d.connection_type]||0)+1; });
-                const u = { 'UNESCO': 0, 'National': 0, 'Icon': 0, 'Other': 0 };
-                state.data.forEach(d => {
-                    const s = d.unesco_status ? d.unesco_status.toLowerCase() : '';
-                    if(s.includes('unesco')) u['UNESCO']++; else if(s.includes('national')) u['National']++; else if(s.includes('cultural')) u['Icon']++; else u['Other']++;
+
+            renderCharts: () => {
+                const ctx1=document.getElementById('chart-country')?.getContext('2d');
+                const ctx2=document.getElementById('chart-type')?.getContext('2d');
+                const ctx3=document.getElementById('chart-unesco')?.getContext('2d');
+                if(!ctx1||!ctx2||!ctx3)return;
+                const data=state.data||[];
+
+                const country={};
+                data.forEach(d=>{const k=String(d.country||'Unspecified').trim()||'Unspecified';country[k]=(country[k]||0)+1;});
+                const top=Object.entries(country).sort((a,b)=>b[1]-a[1]).slice(0,10);
+                if(window.dashboard.chartCountry)window.dashboard.chartCountry.destroy();
+                window.dashboard.chartCountry=new Chart(ctx1,{
+                    type:'bar',data:{labels:top.map(x=>x[0]),datasets:[{label:'Foodways',data:top.map(x=>x[1]),backgroundColor:'#ff1b2d',borderRadius:6}]},
+                    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}},y:{grid:{display:false}}}}
                 });
 
-                if(window.dashboard.chartCountry) window.dashboard.chartCountry.destroy();
-                window.dashboard.chartCountry = new Chart(ctx1, { 
-                    type: 'bar', data: { labels: so.map(x=>x[0]), datasets: [{ label: 'Count', data: so.map(x=>x[1]), backgroundColor: '#ff1b2d', borderRadius: 4 }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } 
-                });
-                
-                if(window.dashboard.chartType) window.dashboard.chartType.destroy();
-                window.dashboard.chartType = new Chart(ctx2, { 
-                    type: 'doughnut', data: { labels: Object.keys(t), datasets: [{ data: Object.values(t), backgroundColor: ['#fbbf24', '#4ade80', '#f87171'], borderWidth: 0 }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } 
+                const type={};
+                data.forEach(d=>{const k=String(d.connection_type||'Unspecified').trim()||'Unspecified';type[k]=(type[k]||0)+1;});
+                const te=Object.entries(type).sort((a,b)=>b[1]-a[1]);
+                if(window.dashboard.chartType)window.dashboard.chartType.destroy();
+                window.dashboard.chartType=new Chart(ctx2,{
+                    type:'doughnut',data:{labels:te.map(x=>x[0]),datasets:[{data:te.map(x=>x[1]),backgroundColor:['#fbbf24','#4ade80','#f87171','#38bdf8','#a78bfa','#94a3b8'],borderWidth:2,borderColor:'#fff'}]},
+                    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:14}}}}
                 });
 
-                if(window.dashboard.chartUnesco) window.dashboard.chartUnesco.destroy();
-                window.dashboard.chartUnesco = new Chart(ctx3, { 
-                    type: 'bar', indexAxis: 'y', data: { labels: Object.keys(u), datasets: [{ label: 'Count', data: Object.values(u), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#9ca3af'], borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
+                const h={UNESCO:0,National:0,'Cultural Icon':0,'Other Heritage':0,'Not Specified':0};
+                data.forEach(d=>{
+                    const s=String(d.unesco_status||'').trim().toLowerCase();
+                    if(!s)h['Not Specified']++; else if(s.includes('unesco'))h.UNESCO++; else if(s.includes('national'))h.National++; else if(s.includes('cultural icon'))h['Cultural Icon']++; else h['Other Heritage']++;
+                });
+                if(window.dashboard.chartUnesco)window.dashboard.chartUnesco.destroy();
+                window.dashboard.chartUnesco=new Chart(ctx3,{
+                    type:'bar',indexAxis:'y',data:{labels:Object.keys(h),datasets:[{label:'Records',data:Object.values(h),backgroundColor:['#3b82f6','#10b981','#f59e0b','#a78bfa','#cbd5e1'],borderRadius:6}]},
+                    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}},y:{grid:{display:false}}}}
                 });
             },
-            changePage: (step) => {
-                state.pagination.page += step;
-                window.dashboard.renderTable();
+
+            renderQuality: () => {
+                const box=document.getElementById('dashboard-quality'); if(!box)return;
+                const data=state.data||[],total=data.length||1;
+                const metrics=[
+                    ['Coordinates',d=>Number.isFinite(Number(d.lat))&&Number.isFinite(Number(d.lng)),'Mapping'],
+                    ['Origin link',d=>String(d.origin_food_name||'').trim()!=='','Network'],
+                    ['Origin coordinates',d=>Number.isFinite(Number(d.origin_lat))&&Number.isFinite(Number(d.origin_lng)),'Provenance'],
+                    ['Description',d=>String(d.description||'').trim()!=='','Narrative'],
+                    ['Research links',d=>String(d.research_links||'').trim()!=='','Evidence'],
+                    ['Image / video',d=>String(d.image_url||'').trim()!==''||String(d.youtube_url||'').trim()!=='','Media']
+                ];
+                box.innerHTML=metrics.map(([label,fn,tag])=>{
+                    const n=data.filter(fn).length,p=Math.round(n/total*100);
+                    const color=p>=80?'bg-emerald-500':p>=50?'bg-amber-500':'bg-rose-500';
+                    return '<div><div class="flex items-center justify-between text-xs mb-1"><span class="font-bold text-gray-700">'+label+'</span><span class="text-gray-500">'+n+' / '+data.length+' • '+p+'%</span></div><div class="h-2 bg-gray-100 rounded-full overflow-hidden"><div class="h-full '+color+' rounded-full" style="width:'+p+'%"></div></div><div class="mt-1 text-[9px] uppercase tracking-wider text-gray-400">'+tag+'</div></div>';
+                }).join('');
             },
+
+            changePage: (step) => { state.pagination.page+=step; window.dashboard.renderTable(); },
+
             renderTable: () => {
-                const b = document.getElementById('table-body'); b.innerHTML='';
-                const search = state.filter.search.toLowerCase();
-                const f = state.data.filter(d => d.food_name && d.food_name.toLowerCase().includes(search));
-                
-                const total = f.length;
-                const totalPages = Math.ceil(total / state.pagination.limit);
-                if(state.pagination.page < 1) state.pagination.page = 1;
-                if(state.pagination.page > totalPages && totalPages > 0) state.pagination.page = totalPages;
-
-                const start = (state.pagination.page - 1) * state.pagination.limit;
-                const end = start + state.pagination.limit;
-                const pageData = f.reverse().slice(start, end);
-
-                pageData.forEach(r => {
-                    const badge = getTypeBadge(r.connection_type);
-                    const tr = document.createElement('tr'); tr.className = "hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition";
-                    tr.onclick = () => window.dashboard.showDetail(r);
-                    tr.innerHTML = `<td class="p-4 text-gray-500 font-mono text-xs">${r.id}</td><td class="p-4 font-bold text-gray-900">${window.escapeHtml(r.food_name)}</td><td class="p-4 text-gray-600">${window.escapeHtml(r.country)}</td><td class="p-4 text-gray-500 text-xs">${window.escapeHtml(r.origin_food_name||'-')}</td><td class="p-4">${badge}</td><td class="p-4 text-right"><i class="fas fa-chevron-right text-gray-400 text-xs"></i></td>`;
+                const b=document.getElementById('table-body'); if(!b)return;
+                b.innerHTML='';
+                const search=state.filter.search.toLowerCase();
+                const f=state.data.filter(d=>d.food_name&&d.food_name.toLowerCase().includes(search));
+                const total=f.length,totalPages=Math.ceil(total/state.pagination.limit);
+                if(state.pagination.page<1)state.pagination.page=1;
+                if(state.pagination.page>totalPages&&totalPages>0)state.pagination.page=totalPages;
+                const start=(state.pagination.page-1)*state.pagination.limit,end=start+state.pagination.limit;
+                f.slice().reverse().slice(start,end).forEach(r=>{
+                    const tr=document.createElement('tr');tr.className='hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition';tr.onclick=()=>window.dashboard.showDetail(r);
+                    tr.innerHTML='<td class="p-4 text-gray-500 font-mono text-xs">'+window.escapeHtml(r.id)+'</td><td class="p-4 font-bold text-gray-900">'+window.escapeHtml(r.food_name)+'</td><td class="p-4 text-gray-600">'+window.escapeHtml(r.country)+'</td><td class="p-4 text-gray-500 text-xs">'+window.escapeHtml(r.origin_food_name||'-')+'</td><td class="p-4">'+getTypeBadge(r.connection_type)+'</td><td class="p-4 text-right"><i class="fas fa-chevron-right text-gray-400 text-xs"></i></td>';
                     b.appendChild(tr);
                 });
+                const info=document.getElementById('pagination-info');if(info)info.innerText='Showing '+(total?start+1:0)+'-'+Math.min(end,total)+' of '+total;
+                const prev=document.getElementById('btn-prev'),next=document.getElementById('btn-next');if(prev)prev.disabled=state.pagination.page<=1;if(next)next.disabled=state.pagination.page>=totalPages||totalPages===0;
+            },
 
-                document.getElementById('pagination-info').innerText = `Showing ${start+1}-${Math.min(end, total)} of ${total}`;
-                document.getElementById('btn-prev').disabled = state.pagination.page <= 1;
-                document.getElementById('btn-next').disabled = state.pagination.page >= totalPages || totalPages === 0;
-            },
             listeners: () => {
-                document.getElementById('search-input').addEventListener('keyup', (e)=>{
-                    state.filter.search=e.target.value; 
-                    state.pagination.page = 1; 
-                    window.dashboard.renderTable();
-                });
-                const mapSearch = document.getElementById('map-search');
-                if(mapSearch) {
-                    mapSearch.addEventListener('keyup', (e)=>{
-                        state.filter.search = e.target.value;
-                        window.mapLogic.render(); 
-                    });
-                }
+                const search=document.getElementById('search-input');
+                if(search&&!search.dataset.bound){search.dataset.bound='1';search.addEventListener('keyup',e=>{state.filter.search=e.target.value;state.pagination.page=1;window.dashboard.renderTable();});}
+                const mapSearch=document.getElementById('map-search');
+                if(mapSearch&&!mapSearch.dataset.bound){mapSearch.dataset.bound='1';mapSearch.addEventListener('keyup',e=>{state.filter.search=e.target.value;window.mapLogic.render();});}
             },
-            
-            // --- NEW: LAZY LOAD SIMULATION LOGIC ---
+
             fetchNodeDetail: async (id) => {
-                if (state.detailCache[id]) return state.detailCache[id];
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const item = state.data.find(x => x.id === id);
-                        if (item) {
-                            state.detailCache[id] = item; // Save to Cache
-                            resolve(item);
-                        } else resolve(null);
-                    }, 800); 
-                });
+                if(state.detailCache[id])return state.detailCache[id];
+                return new Promise(resolve=>setTimeout(()=>{const item=state.data.find(x=>x.id===id);if(item){state.detailCache[id]=item;resolve(item);}else resolve(null);},500));
             },
 
             showDetail: async (partialData) => {
-                const id = partialData.id;
-                window.ui.openModal('detail-modal');
-                state.loadingId = id; // Track current view
-
-                // Render Skeleton First
-                window.dashboard.renderDetailSkeleton(partialData);
-
-                // Fetch (Lazy Load)
-                const fullData = await window.dashboard.fetchNodeDetail(id);
-
-                // If user is still looking at this modal (didn't switch fast), render content
-                if (state.loadingId === id && fullData) {
-                    state.currentDetail = fullData;
-                    window.dashboard.renderDetailContent(fullData);
-                } else if (!fullData) {
-                    document.getElementById('detail-container').innerHTML = '<div class="p-8 text-center text-red-500">Failed to load data.</div>';
-                }
+                const id=partialData.id;window.ui.openModal('detail-modal');state.loadingId=id;window.dashboard.renderDetailSkeleton(partialData);
+                const fullData=await window.dashboard.fetchNodeDetail(id);
+                if(state.loadingId===id&&fullData){state.currentDetail=fullData;window.dashboard.renderDetailContent(fullData);}
+                else if(!fullData)document.getElementById('detail-container').innerHTML='<div class="p-8 text-center text-red-500">Failed to load data.</div>';
             },
 
             renderDetailSkeleton: (d) => {
