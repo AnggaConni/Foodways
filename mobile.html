@@ -20,6 +20,7 @@
     <!-- HTML2PDF & HTML2CANVAS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
         tailwind.config = {
@@ -435,12 +436,10 @@
         <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-opera-red"></div>
             <h3 class="text-2xl font-black text-opera-midnight mb-1 text-center">Admin Access</h3>
-            <p class="text-xs text-gray-400 text-center mb-6">Restricted Area</p>
-            <div class="space-y-4">
-                <input type="text" id="login-user" placeholder="Username" class="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 text-center font-bold focus:ring-2 focus:ring-opera-red/20 outline-none">
-                <input type="password" id="login-pass" placeholder="••••••••" class="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 text-center font-bold focus:ring-2 focus:ring-opera-red/20 outline-none">
-            </div>
-            <button onclick="window.app.login()" id="btn-login" class="w-full bg-opera-midnight text-white font-bold py-4 rounded-xl mt-6 shadow-xl shadow-blue-900/20 active:scale-95 transition-transform">Verify Credentials</button>
+            <p class="text-xs text-gray-400 text-center mb-6">Sign in with your authorized Google account.</p>
+            <button onclick="window.app.login()" id="btn-login" class="w-full bg-opera-midnight text-white font-bold py-4 rounded-xl shadow-xl active:scale-95 transition-transform">
+                <i class="fab fa-google mr-2"></i> Continue with Google
+            </button>
             <button onclick="window.ui.closeModal('login-modal')" class="w-full text-gray-400 text-xs font-bold mt-4 hover:text-gray-600">CANCEL</button>
         </div>
     </div>
@@ -462,8 +461,10 @@
     </div>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyr5JxnjXhpWqgb0sgXFTCFTbFjjOSrCrYEDPwWbo8zkpwVoH0IbGJfcJRLBlaIBbEK/exec';
-                
+        const SUPABASE_URL = 'https://yyjwodgywizjbnrvdnpn.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_3dTLdT8jsmdLzG_fbM5OxQ_Yt9lE9Pg';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        
         window.handleImageError = function(el) {
             el.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-xl text-gray-300"><i class="fas fa-utensils"></i></div>';
         };
@@ -993,226 +994,58 @@
 
         window.mapLogic = {
             map: null, layers: [],
-            init: () => {
-                window.mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false }).setView([20, 0], 2);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    noWrap: true,
-                    bounds: [[-90, -180], [90, 180]],
-                    maxBounds: [[-90, -180], [90, 180]],
-                    maxBoundsViscosity: 1.0
-                }).addTo(window.mapLogic.map);
-            },
-            render: () => {
-                window.mapLogic.layers.forEach(l => window.mapLogic.map.removeLayer(l));
-                window.mapLogic.layers = [];
-                const filtered = state.filter ? state.data.filter(d => d.food_name.toLowerCase().includes(state.filter.toLowerCase()) || d.country.toLowerCase().includes(state.filter.toLowerCase())) : state.data;
-                filtered.forEach(d => {
-                    // RULES: Must have destination coordinates
-                    if(d.lat == null || d.lng == null) return;
-
-                    // RULES: Check for VALID origin data (coords + name) using STRICT helper
-                    // If valid, DRAW LINE and DRAW ORIGIN DOT (Fix for "Tak Bernodes")
-                    // IMPORTANT: Also check for valid origin country to be robust
-                    if(d.origin_lat != null && d.origin_lng != null && isValidStr(d.origin_food_name) && isValidStr(d.food_name) && isValidStr(d.origin_country)) {
-                        
-                        // 1. Draw The Line
-                        const line = L.polyline([[d.origin_lat, d.origin_lng], [d.lat, d.lng]], { 
-                            color: '#d4af37', 
-                            weight: 1.5, 
-                            opacity: 0.3, 
-                            dashArray: '4, 6' 
-                        }).addTo(window.mapLogic.map);
-                        window.mapLogic.layers.push(line);
-
-                        // 2. Draw The Origin Node (The "Ghost" Fix)
-                        const originNode = L.circleMarker([d.origin_lat, d.origin_lng], {
-                            color: '#d4af37',       // Gold border
-                            fillColor: '#fff',      // White fill
-                            fillOpacity: 1,
-                            radius: 3,              // Small radius
-                            weight: 1
-                        }).addTo(window.mapLogic.map);
-                        
-                        // Optional: Tooltip for origin
-                        originNode.bindTooltip(`Origin: ${window.escapeHtml(d.origin_food_name)}`, { direction: 'top', className: 'custom-tooltip' });
-                        window.mapLogic.layers.push(originNode);
-                    }
-
-                    // Destination Node (Main Red Dot) - Only if food_name is valid
-                    if (isValidStr(d.food_name)) {
-                        const m = L.circleMarker([d.lat, d.lng], { 
-                            color: '#fff', 
-                            fillColor: '#ff1b2d', 
-                            fillOpacity: 1, 
-                            radius: 6, 
-                            weight: 2 
-                        }).addTo(window.mapLogic.map);
-                        m.on('click', () => { window.dashboard.showDetail(d); });
-                        window.mapLogic.layers.push(m);
-                    }
-                });
-            },
-            resetZoom: () => { window.mapLogic.map.setView([20,0], 2); },
-            enablePicker: (cb) => {
-                document.getElementById('picker-ui').classList.remove('hidden');
-                const handler = (e) => { cb(e.latlng.lat, e.latlng.lng); window.mapLogic.map.off('click', handler); document.getElementById('picker-ui').classList.add('hidden'); window.ui.openModal('input-modal'); };
-                window.mapLogic.map.on('click', handler); window.mapLogic.pickerCancel = handler;
-            },
-            cancelPicker: () => { if(window.mapLogic.map && window.mapLogic.pickerCancel) { window.mapLogic.map.off('click', window.mapLogic.pickerCancel); document.getElementById('picker-ui').classList.add('hidden'); window.ui.openModal('input-modal'); } }
-        };
-
-        window.dashboard = {
-            renderKPI: () => {
-                document.getElementById('kpi-total').innerText = state.data.length;
-                document.getElementById('kpi-countries').innerText = new Set(state.data.map(d=>d.country)).size;
-            },
-            renderAnalytics: () => {
-                const ctx = document.getElementById('chart-type').getContext('2d');
-                if (state.charts.types) state.charts.types.destroy();
-                const counts = { Trade: 0, Migration: 0, Colonialism: 0 };
-                state.data.forEach(d => { const type = d.connection_type ? d.connection_type.trim() : 'Trade'; if (counts[type] !== undefined) counts[type]++; else counts['Trade']++; });
-                state.charts.types = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: { labels: ['Trade', 'Migration', 'Colonialism'], datasets: [{ data: [counts.Trade, counts.Migration, counts.Colonialism], backgroundColor: ['#d4af37', '#ff1b2d', '#1a1a2e'], borderWidth: 0 }] },
-                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right' } } }
-                });
-            },
-            renderFeed: () => {
-                const container = document.getElementById('card-feed');
-                if(state.pagination.page === 1) container.innerHTML = '';
-                const filtered = state.filter ? state.data.filter(d => d.food_name.toLowerCase().includes(state.filter.toLowerCase()) || d.country.toLowerCase().includes(state.filter.toLowerCase())) : state.data;
-                const start = (state.pagination.page - 1) * state.pagination.limit;
-                const end = start + state.pagination.limit;
-                filtered.slice().reverse().slice(start, end).forEach(d => {
-                    let img = d.image_url ? d.image_url.split(',')[0] : null;
-                    const card = document.createElement('div');
-                    card.className = 'mobile-card p-4 flex items-center gap-4 active:bg-gray-50';
-                    card.onclick = () => window.dashboard.showDetail(d);
-                    card.innerHTML = `<div class="w-14 h-14 rounded-2xl bg-gray-100 flex-shrink-0 overflow-hidden shadow-sm relative">${img ? `<img src="${window.escapeHtml(img)}" class="w-full h-full object-cover" onerror="handleImageError(this)">` : `<div class="w-full h-full flex items-center justify-center text-xl text-gray-300"><i class="fas fa-utensils"></i></div>`}</div><div class="flex-1 min-w-0"><h4 class="font-bold text-gray-800 text-sm truncate mb-1">${window.escapeHtml(d.food_name)}</h4><div class="flex items-center gap-2"><span class="text-[10px] text-gray-500 font-medium flex items-center bg-gray-50 px-2 py-0.5 rounded border border-gray-100"><i class="fas fa-map-marker-alt text-opera-red mr-1.5"></i> ${window.escapeHtml(d.country)}</span></div></div>`;
-                    container.appendChild(card);
-                });
-                document.getElementById('btn-load-more').style.display = end >= filtered.length ? 'none' : 'inline-block';
-            },
-            loadMore: () => { state.pagination.page++; window.dashboard.renderFeed(); },
-            
-            // --- DIPERBAIKI: Mengembalikan Tampilan Detail yang Lengkap + SECURE ---
-            showDetail: (d) => {
-                state.currentDetail = d;
-                window.ui.openModal('detail-modal');
-                document.getElementById('dt-header-title').innerText = d.food_name;
-                const btnEdit = document.getElementById('btn-edit-entry');
-                if(state.role === 'admin') btnEdit.classList.remove('hidden'); else btnEdit.classList.add('hidden');
-                
-                const container = document.getElementById('detail-container');
-                
-                // 1. Image Carousel
-                let imagesHtml = ''; 
-                if(d.image_url) { 
-                    const urls = d.image_url.split(','); 
-                    imagesHtml = `<div class="flex overflow-x-auto gap-3 p-4 snap-x no-scrollbar">${urls.map(u => `<img src="${window.escapeHtml(u.trim())}" class="snap-center w-72 h-56 object-cover rounded-2xl border border-gray-100 shadow-md" onerror="this.style.display='none'">`).join('')}</div>`; 
-                }
-                
-                // 2. Video Carousel
-                const videoHtml = extractYoutubeCarousel(d.youtube_url);
-
-                // 3. Render HTML with ESCAPED variables
-                container.innerHTML = `
-                    ${imagesHtml}
-                    <div class="px-5 pb-8">
-                        <!-- Title & UNESCO -->
-                        <div class="flex justify-between items-start mb-2">
-                            <h1 class="text-3xl font-black text-opera-midnight leading-tight tracking-tight flex-1">${window.escapeHtml(d.food_name)}</h1>
-                            ${d.unesco_status ? `<div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center border border-green-200" title="UNESCO"><i class="fas fa-landmark text-green-600 text-xs"></i></div>` : ''}
-                        </div>
-                        
-                        <!-- Badges -->
-                        <div class="flex items-center gap-2 mb-8">
-                            <span class="px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-[10px] font-bold uppercase tracking-wider">${window.escapeHtml(d.country)}</span>
-                            ${d.connection_type ? `<span class="px-3 py-1 rounded-md ${d.connection_type==='Trade'?'bg-yellow-50 text-yellow-700':d.connection_type==='Migration'?'bg-red-50 text-red-700':'bg-blue-50 text-blue-800'} text-[10px] font-bold uppercase tracking-wider">${window.escapeHtml(d.connection_type)}</span>` : ''}
-                        </div>
-                        
-                        <!-- Evolutionary Path (Tree) -->
-                        ${d.origin_food_name ? `
-                        <div class="bg-gray-50 rounded-2xl p-5 mb-8 border border-gray-100 relative overflow-hidden">
-                            <div class="absolute top-0 right-0 w-20 h-20 bg-opera-gold/5 rounded-bl-full"></div>
-                            <div class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-4 text-center">Evolutionary Path</div>
-                            <div class="flex flex-col items-center gap-1 relative z-10">
-                                <div class="text-center">
-                                    <div class="font-bold text-gray-600 text-sm">${window.escapeHtml(d.origin_food_name)}</div>
-                                    <div class="text-[10px] text-gray-400 font-medium tracking-wide">${window.escapeHtml(d.origin_country)}</div>
-                                </div>
-                                <div class="h-6 w-0.5 bg-gray-300 my-1"></div>
-                                <div class="w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center z-10 shadow-sm"><i class="fas fa-arrow-down text-[10px] text-gray-400"></i></div>
-                                <div class="h-6 w-0.5 bg-gray-300 my-1"></div>
-                                <div class="text-center">
-                                    <div class="font-black text-opera-red text-xl">${window.escapeHtml(d.food_name)}</div>
-                                    <div class="text-[10px] text-gray-500 font-medium tracking-wide">${window.escapeHtml(d.country)}</div>
-                                </div>
-                            </div>
-                        </div>` : ''}
-                        
-                        <!-- Narrative (UPDATED: Using Markdown Parser) -->
-                        <h4 class="font-bold text-opera-midnight text-xs uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">Historical Narrative</h4>
-                        ${parseSafeMarkdown(d.description) || '<p class="text-sm text-gray-400 italic">No description provided.</p>'}
-                    </div>
-                    
-                    ${videoHtml}
-                    
-                    <div class="px-5">
-                        <div class="mb-6">
-                            <h4 class="font-bold text-opera-midnight text-xs uppercase tracking-wider mb-3">Distribution</h4>
-                            ${d.geometry_json ? `<div id="detail-geo-map" class="h-48 w-full bg-gray-100 rounded-2xl border border-gray-200 overflow-hidden shadow-inner"></div>` : '<div class="text-xs text-gray-400 italic bg-gray-50 p-4 rounded-xl text-center">No distribution data available.</div>'}
-                        </div>
-                        
-                        <div class="mb-8">
-                            <h4 class="font-bold text-opera-midnight text-xs uppercase tracking-wider mb-3">Foodways Connection</h4>
-                            <div id="detail-conn-map" class="h-48 w-full bg-gray-100 rounded-2xl border border-gray-200 overflow-hidden shadow-inner"></div>
-                        </div>
-
-                        <!-- Sources -->
-                        ${d.research_links ? `
-                        <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-50 mb-8">
-                            <h4 class="font-bold text-blue-900 text-[10px] uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fas fa-book"></i> Sources</h4>
-                            <div class="flex flex-col gap-3 text-xs text-blue-700">
-                                ${d.research_links.split(',').map(l => `<a href="${window.escapeHtml(l)}" target="_blank" class="flex items-center gap-2 truncate hover:underline"><i class="fas fa-external-link-alt text-[10px] opacity-50"></i> <span class="truncate">${window.escapeHtml(l)}</span></a>`).join('')}
-                            </div>
-                        </div>` : ''}
-                    </div>
-                `;
-                
-                window.detailMaps.init(d);
-            }
-        };
-
-        window.app = {
-            init: () => {
-                // --- KODE BARU: FETCH DARI BIGQUERY VIA GAS ---
+            init: async () => {
                 const loadingEl = document.getElementById('loading-indicator');
-                
-                // Pastikan GAS_URL sudah didefinisikan di bagian atas script
-                fetch(GAS_URL + '?action=get_all')
-                .then(r => r.json())
-                .then(d => {
-                    if(d.status === 'success' && d.data.length > 0) {
-                        // 1. Simpan Data ke State & Filter yang valid
-                        state.data = d.data.map(transformData).filter(x => x.lat && x.lng);
-                        
-                        // 2. Update Status UI (Hijau "Cloud Synced")
-                        if(loadingEl) {
-                             loadingEl.innerHTML = '<i class="fas fa-check text-green-400"></i> <span class="text-[10px] text-gray-300 ml-2 font-bold uppercase tracking-widest">Cloud Synced</span>';
-                        }
 
-                        // 3. Munculkan Tombol Masuk
-                        const btnEnter = document.getElementById('btn-enter');
-                        if(btnEnter) btnEnter.classList.remove('hidden');
-                    } else {
-                        if(loadingEl) loadingEl.innerHTML = '<span class="text-red-400 text-xs font-bold">Data Empty</span>';
-                    }
-                })
-                .catch(err => {
-                    console.error("Fetch Error:", err);
-                    if(loadingEl) loadingEl.innerHTML = '<span class="text-red-400 text-xs font-bold">Connection Failed</span>';
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) await window.app.applySession(session);
+
+                supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+                    await window.app.applySession(session);
                 });
+
+                const { data, error } = await supabaseClient
+                    .from('Heritage Foodways')
+                    .select('*')
+                    .order('id');
+
+                if (error) {
+                    console.error("Supabase fetch error:", error);
+                    if(loadingEl) loadingEl.innerHTML = '<span class="text-red-400 text-xs font-bold">Connection Failed</span>';
+                    return;
+                }
+
+                state.data = (data || []).map(transformData).filter(x => x.lat !== null && x.lng !== null);
+                if(loadingEl) loadingEl.innerHTML = '<i class="fas fa-check text-green-400"></i> <span class="text-[10px] text-gray-300 ml-2 font-bold uppercase tracking-widest">Cloud Synced</span>';
+
+                const btnEnter = document.getElementById('btn-enter');
+                if(btnEnter) btnEnter.classList.remove('hidden');
+            },
+            
+            applySession: async (session) => {
+                if (!session) {
+                    state.role='guest';
+                    document.getElementById('profile-role').innerText='Guest User';
+                    document.getElementById('btn-login-profile').classList.remove('hidden');
+                    document.getElementById('btn-logout-profile').classList.add('hidden');
+                    document.getElementById('header-add-btn').classList.add('hidden');
+                    return;
+                }
+
+                const { data: isAdmin, error } = await supabaseClient.rpc('is_foodways_admin');
+                state.role = !error && isAdmin === true ? 'admin' : 'guest';
+
+                if(state.role==='admin'){
+                    document.getElementById('profile-role').innerText='Admin Access';
+                    document.getElementById('btn-login-profile').classList.add('hidden');
+                    document.getElementById('btn-logout-profile').classList.remove('hidden');
+                    document.getElementById('header-add-btn').classList.remove('hidden');
+                } else {
+                    document.getElementById('profile-role').innerText='Signed-in Viewer';
+                    document.getElementById('btn-login-profile').classList.remove('hidden');
+                    document.getElementById('btn-logout-profile').classList.add('hidden');
+                    document.getElementById('header-add-btn').classList.add('hidden');
+                }
             },
             
             // ... (Kode di bawah ini JANGAN DIHAPUS, biarkan apa adanya)
@@ -1267,8 +1100,23 @@
             
             pickLocation: (target) => { state.pickerTarget = target; window.ui.closeModal('input-modal'); document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-profile').classList.add('hidden'); document.getElementById('view-map').classList.remove('hidden'); window.mapLogic.enablePicker((lat, lng) => { if(state.pickerTarget === 'main') { document.getElementById('inp-lat').value = lat.toFixed(5); document.getElementById('inp-lng').value = lng.toFixed(5); } else { document.getElementById('inp-origin-lat').value = lat.toFixed(5); document.getElementById('inp-origin-lng').value = lng.toFixed(5); } }); },
             cancelPicker: () => { if(window.mapLogic.map && window.mapLogic.pickerCancel) { window.mapLogic.map.off('click', window.mapLogic.pickerCancel); document.getElementById('picker-ui').classList.add('hidden'); window.ui.openModal('input-modal'); } },
-            login: () => { const u = document.getElementById('login-user').value; const p = document.getElementById('login-pass').value; const btn = document.getElementById('btn-login'); btn.innerText = 'Verifying...'; const form = new URLSearchParams(); form.append('action', 'login'); form.append('username', u); form.append('password', p); fetch(GAS_URL, { method: 'POST', body: form }).then(r=>r.json()).then(d => { if(d.status === 'success') { state.role = 'admin'; document.getElementById('profile-role').innerText = 'Admin Access'; document.getElementById('btn-login-profile').classList.add('hidden'); document.getElementById('btn-logout-profile').classList.remove('hidden'); document.getElementById('header-add-btn').classList.remove('hidden'); window.ui.closeModal('login-modal'); } else { alert('Invalid Credentials'); } btn.innerText = 'Login'; }).catch(e => { alert('Network Error'); btn.innerText = 'Login'; }); },
-            logout: () => { state.role = 'guest'; document.getElementById('profile-role').innerText = 'Guest User'; document.getElementById('btn-login-profile').classList.remove('hidden'); document.getElementById('btn-logout-profile').classList.add('hidden'); document.getElementById('header-add-btn').classList.add('hidden'); },
+            login: async () => {
+                const btn = document.getElementById('btn-login');
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Redirecting...';
+                const { error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.href.split('#')[0].split('?')[0] }
+                });
+                if(error) {
+                    btn.innerHTML = '<i class="fab fa-google mr-2"></i> Continue with Google';
+                    alert(error.message);
+                }
+            },
+            logout: async () => {
+                const { error } = await supabaseClient.auth.signOut();
+                if(error) alert(error.message);
+                await window.app.applySession(null);
+            },
             
             // ... (Fungsi saveData, deleteData, exportToPDF, dll tetap sama, hanya memastikan ID inp-desc terpanggil benar)
             handleOriginSearch: (val) => {
@@ -1316,111 +1164,69 @@
                 }
             },
 
-            saveData: () => { 
-                try {
-                    const d = { 
-                        id: state.editId || '', 
-                        food_name: document.getElementById('inp-name').value, 
-                        country: document.getElementById('inp-country').value, 
-                        lat: document.getElementById('inp-lat').value, 
-                        lng: document.getElementById('inp-lng').value, 
-                        description: document.getElementById('inp-desc').value, 
-                        origin_food_name: document.getElementById('inp-origin-name').value, 
-                        origin_country: document.getElementById('inp-origin-country').value, 
-                        origin_lat: document.getElementById('inp-origin-lat').value, 
-                        origin_lng: document.getElementById('inp-origin-lng').value, 
-                        connection_type: document.getElementById('inp-conn-type').value, 
-                        image_url: document.getElementById('inp-image').value, 
-                        youtube_url: document.getElementById('inp-youtube').value, 
-                        unesco_status: document.getElementById('inp-unesco').value, 
-                        research_links: document.getElementById('inp-research').value,
-                        geometry_json: document.getElementById('inp-geometry').value 
-                    }; 
+            saveData: async () => {
+                if(state.role!=='admin') return alert('Admin Only');
+                const d = {
+                    id: state.editId || window.app.nextFoodwayId(),
+                    food_name: document.getElementById('inp-name').value,
+                    country: document.getElementById('inp-country').value,
+                    lat: parseFloat(document.getElementById('inp-lat').value.replace(',', '.')),
+                    lng: parseFloat(document.getElementById('inp-lng').value.replace(',', '.')),
+                    description: document.getElementById('inp-desc').value,
+                    origin_food_name: document.getElementById('inp-origin-name').value,
+                    origin_country: document.getElementById('inp-origin-country').value,
+                    origin_lat: document.getElementById('inp-origin-lat').value || null,
+                    origin_lng: document.getElementById('inp-origin-lng').value || null,
+                    connection_type: document.getElementById('inp-conn-type').value,
+                    image_url: document.getElementById('inp-image').value,
+                    youtube_url: document.getElementById('inp-youtube').value,
+                    unesco_status: document.getElementById('inp-unesco').value,
+                    research_links: document.getElementById('inp-research').value,
+                    geometry_json: document.getElementById('inp-geometry').value
+                };
 
-                    window.ui.showLoader(true); 
-                    const action = state.editId ? 'update' : 'insert'; 
-                    const form = new URLSearchParams(); 
-                    form.append('action', action); 
-                    form.append('data', JSON.stringify(d)); 
-                    
-                    if (action === 'update' && state.currentDetail) { 
-                        form.append('original_data', JSON.stringify({ food_name: state.currentDetail.food_name, lat: state.currentDetail.lat, lng: state.currentDetail.lng })); 
-                    } 
-                    
-                    fetch(GAS_URL, { method: 'POST', body: form })
-                        .then(r => r.json())
-                        .then(res => { 
-                            window.ui.showLoader(false); 
-                            if(res.status === 'success') { 
-                                if (action === 'insert') { 
-                                    state.data.push({ ...d, id: 'temp-' + Date.now() }); 
-                                } else { 
-                                    const idx = state.data.findIndex(x => x.id === state.editId); 
-                                    if (idx > -1) state.data[idx] = { ...state.data[idx], ...d }; 
-                                } 
-                                
-                                window.dashboard.renderFeed(); 
-                                window.mapLogic.render(); 
-                                window.dashboard.renderKPI(); 
-                                window.ui.closeModal('input-modal'); 
-                                
-                                document.getElementById('landing-page').classList.add('hidden');
-                                document.getElementById('main-app').classList.remove('hidden');
+                window.ui.showLoader(true);
+                const isEdit = Boolean(state.editId);
+                const { data: saved, error } = isEdit
+                    ? await supabaseClient.from('Heritage Foodways').update(d).eq('id', state.editId).select().single()
+                    : await supabaseClient.from('Heritage Foodways').insert(d).select().single();
 
-                                if (action === 'update' && state.currentDetail && state.currentDetail.id === state.editId) { 
-                                    const updated = state.data.find(x => x.id === state.editId); 
-                                    if(updated) window.dashboard.showDetail(updated); 
-                                } 
-                            } else {
-                                alert(res.message); 
-                            }
-                        })
-                        .catch(err => {
-                            window.ui.showLoader(false);
-                            alert("Connection Error. Data not saved.");
-                            console.error(err);
-                        });
-                } catch(e) {
-                    window.ui.showLoader(false);
-                    console.error("Critical Save Error", e);
+                window.ui.showLoader(false);
+                if(error) return alert('Save failed: ' + error.message);
+
+                const transformed = transformData(saved);
+                if(isEdit){
+                    const idx=state.data.findIndex(x=>x.id===state.editId);
+                    if(idx>-1) state.data[idx]=transformed;
+                } else {
+                    state.data.push(transformed);
                 }
+
+                window.dashboard.renderFeed();
+                window.mapLogic.render();
+                window.dashboard.renderKPI();
+                window.ui.closeModal('input-modal');
             },
             
-            deleteData: () => { 
-                if(!confirm('Delete this entry?')) return; 
-                try {
-                    window.ui.showLoader(true); 
-                    const form = new URLSearchParams(); 
-                    form.append('action', 'delete'); 
-                    form.append('id', state.editId); 
-                    form.append('data', JSON.stringify({ food_name: state.currentDetail.food_name, lat: state.currentDetail.lat, lng: state.currentDetail.lng })); 
-                    
-                    fetch(GAS_URL, { method: 'POST', body: form })
-                        .then(r => r.json())
-                        .then(res => { 
-                            window.ui.showLoader(false); 
-                            if(res.status === 'success') { 
-                                state.data = state.data.filter(x => x.id !== state.editId); 
-                                window.dashboard.renderFeed(); 
-                                window.mapLogic.render(); 
-                                window.dashboard.renderKPI(); 
-                                window.ui.closeModal('input-modal'); 
-                                window.ui.closeModal('detail-modal'); 
-                                
-                                document.getElementById('landing-page').classList.add('hidden');
-                                document.getElementById('main-app').classList.remove('hidden');
-                            } else {
-                                alert(res.message); 
-                            }
-                        })
-                        .catch(err => {
-                            window.ui.showLoader(false);
-                            alert("Connection Error during delete.");
-                        });
-                } catch(e) {
-                    window.ui.showLoader(false);
-                    console.error("Critical Delete Error", e);
-                }
+            nextFoodwayId: () => {
+                const nums=state.data.map(x=>String(x.id||'').match(/^FH(\d+)$/i)).filter(Boolean).map(m=>parseInt(m[1],10));
+                const next=(nums.length?Math.max(...nums):0)+1;
+                return 'FH'+String(next).padStart(3,'0');
+            },
+            
+            deleteData: async () => {
+                if(state.role!=='admin') return alert('Admin Only');
+                if(!confirm('Delete this entry?')) return;
+                window.ui.showLoader(true);
+                const { error } = await supabaseClient.from('Heritage Foodways').delete().eq('id', state.editId);
+                window.ui.showLoader(false);
+                if(error) return alert('Delete failed: ' + error.message);
+                state.data=state.data.filter(x=>x.id!==state.editId);
+                window.dashboard.renderFeed();
+                window.mapLogic.render();
+                window.dashboard.renderKPI();
+                window.ui.closeModal('input-modal');
+                window.ui.closeModal('detail-modal');
             },
             exportData: () => {
                 const csv = Papa.unparse(state.data);
