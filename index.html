@@ -226,6 +226,14 @@
             min-height: 100vh !important;
             border-radius: 0 !important;
         }
+        .timeline-route-path {
+            cursor: pointer;
+            pointer-events: stroke;
+            transition: opacity 0.2s, stroke-width 0.2s, filter 0.2s;
+        }
+        .timeline-route-active {
+            filter: drop-shadow(0 0 4px rgba(255,255,255,0.95)) drop-shadow(0 0 7px rgba(15,23,42,0.75));
+        }
         #timeline-map-card:fullscreen #timeline-map {
             height: 100vh !important;
         }
@@ -520,7 +528,9 @@
                                     <i class="fas fa-expand" id="timeline-fullscreen-icon"></i>
                                 </button>
                                 <div class="absolute top-4 left-4 z-[500] bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-slate-200 p-3 w-[180px]">
-                                    <div class="text-[10px] uppercase tracking-widest font-black text-slate-400 mb-2">Confidence</div>
+                                    <div class="text-[10px] uppercase tracking-widest font-black text-slate-400 mb-2">Map</div>
+                    <div class="text-[10px] text-slate-500 mb-2">Click a route line to highlight it and show its hypothesis.</div>
+                    <div class="text-[10px] uppercase tracking-widest font-black text-slate-400 mb-2">Confidence</div>
                                     <div class="flex items-center gap-2 text-[11px] text-slate-600 mb-1"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> High</div>
                                     <div class="flex items-center gap-2 text-[11px] text-slate-600 mb-1"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Medium</div>
                                     <div class="flex items-center gap-2 text-[11px] text-slate-600"><span class="w-3 h-3 rounded-full bg-rose-500"></span> Low</div>
@@ -1602,7 +1612,6 @@
                             :lower.includes('grand canal')||lower.includes('jiangnan')||lower.includes('wuxi')?'Grand Canal / Jiangnan'
                             :lower.includes('buddhist monastic')||lower.includes('china to japan')?'Buddhist Monastic Exchange'
                             :lower.includes('silk')?'Silk Roads'
-                            :lower.includes('spice')?'Spice Routes'
                             :lower.includes('incense')?'Incense Route'
                             :lower.includes('tea-horse')||lower.includes('tea horse')?'Tea-Horse Road'
                             :lower.includes('trans-saharan')||lower.includes('sahara')?'Trans-Saharan'
@@ -1612,6 +1621,7 @@
                     });
                 });
 
+                window.timelineResearch.routeLineState = {};
                 Object.entries(window.timelineResearch.routeOverlays).forEach(([name,cfg])=>{
                     const active=matched.has(name);
                     const line=L.polyline(cfg.points,{
@@ -1620,17 +1630,35 @@
                         opacity:active?0.72:0.16,
                         dashArray:active?'10 7':'5 9',
                         lineCap:'round',
-                        lineJoin:'round'
+                        lineJoin:'round',
+                        className:'timeline-route-path'
                     }).addTo(m);
 
-                    const mid=cfg.points[Math.floor(cfg.points.length/2)];
-                    const icon=L.divIcon({
-                        className:'timeline-route-label',
-                        html:'<div style="background:rgba(255,255,255,.9);border:1px solid '+cfg.color+';color:'+cfg.color+';padding:3px 7px;border-radius:999px;font-size:9px;font-weight:900;box-shadow:0 2px 7px rgba(0,0,0,.12);white-space:nowrap;">'+window.timelineResearch.esc(name)+(active?' • active':' • heuristic')+'</div>',
-                        iconSize:null
+                    const status=active
+                        ? 'Matched by a current research hypothesis.'
+                        : 'Contextual heuristic corridor only.';
+                    const tooltip='<div style="min-width:190px"><div style="font-weight:900;font-size:12px">'+window.timelineResearch.esc(name)+'</div>'
+                        +'<div style="font-size:10px;margin-top:3px;color:#64748b">'+status+'</div>'
+                        +'<div style="font-size:10px;margin-top:5px;color:#0f766e">Click the route to highlight it</div></div>';
+
+                    line.bindTooltip(tooltip,{sticky:true,direction:'top',opacity:0.98});
+
+                    line.on('click',()=>{
+                        Object.entries(window.timelineResearch.routeLineState).forEach(([key,item])=>{
+                            const a=item.active;
+                            item.line.setStyle({
+                                weight:a?5:3,
+                                opacity:a?0.72:0.16,
+                                dashArray:a?'10 7':'5 9'
+                            });
+                            if(item.line._path)item.line._path.classList.remove('timeline-route-active');
+                        });
+                        line.setStyle({weight:10,opacity:1,dashArray:'12 5'});
+                        if(line._path)line._path.classList.add('timeline-route-active');
+                        line.openTooltip();
                     });
-                    L.marker(mid,{icon}).addTo(m);
-                    line.bindTooltip(window.timelineResearch.esc(name)+' — '+(active?'matched by current research hypothesis':'heuristic corridor'));
+
+                    window.timelineResearch.routeLineState[name]={line,active};
                 });
             },
             openDetail: (id) => {
