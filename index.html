@@ -1306,7 +1306,7 @@
                     }
                 }
             },
-            render: () => {},
+            render: () => { window.timelineResearch.renderList(); window.timelineResearch.renderRoutes(); window.timelineResearch.renderMap(); },
             openDetail: () => {},
             closeDetail: () => {
                 const modal = document.getElementById('timeline-detail-modal');
