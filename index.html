@@ -2302,9 +2302,11 @@
                 const media=data.filter(d=>String(d.image_url||'').trim()!==''||String(d.youtube_url||'').trim()!=='').length;
                 const pct=n=>total?Math.round(n/total*100):0;
                 const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+                const ring=(id,value,color)=>{const el=document.getElementById(id);if(el)el.style.background='conic-gradient('+color+' '+(value*3.6)+'deg, #e2e8f0 0deg)';};
                 set('kpi-total',total); set('kpi-countries',countries); set('kpi-edges',linked);
                 set('kpi-mapped',pct(mapped)+'%'); set('kpi-research',pct(researched)+'%'); set('kpi-media',pct(media)+'%');
-                set('kpi-mapped-sub',mapped+' of '+total+' records'); set('kpi-research-sub',researched+' of '+total+' records'); set('kpi-media-sub',media+' of '+total+' records');
+                set('kpi-mapped-sub',mapped+' of '+total+' records'); set('kpi-research-sub',researched+' of '+total+' linked'); set('kpi-media-sub',media+' of '+total+' linked');
+                ring('kpi-ring-mapped',pct(mapped),'#10b981'); ring('kpi-ring-research',pct(researched),'#06b6d4'); ring('kpi-ring-media',pct(media),'#8b5cf6');
                 set('dashboard-country-note',countries+' countries • '+total+' records');
                 const roots=total-linked; set('insight-root-count',roots);
                 const originCoords=data.filter(d=>String(d.origin_food_name||'').trim()!=='').filter(d=>Number.isFinite(Number(d.origin_lat))&&Number.isFinite(Number(d.origin_lng))).length;
@@ -2335,9 +2337,17 @@
                 const te=Object.entries(type).sort((a,b)=>b[1]-a[1]);
                 if(window.dashboard.chartType)window.dashboard.chartType.destroy();
                 window.dashboard.chartType=new Chart(ctx2,{
-                    type:'doughnut',data:{labels:te.map(x=>x[0]),datasets:[{data:te.map(x=>x[1]),backgroundColor:['#fbbf24','#4ade80','#f87171','#38bdf8','#a78bfa','#94a3b8'],borderWidth:2,borderColor:'#fff'}]},
-                    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:14}}}}
+                    type:'doughnut',
+                    data:{labels:te.map(x=>x[0]),datasets:[{data:te.map(x=>x[1]),backgroundColor:['#fbbf24','#4ade80','#f87171','#38bdf8','#a78bfa','#94a3b8'],borderWidth:3,borderColor:'#fff'}]},
+                    options:{responsive:true,maintainAspectRatio:false,cutout:'66%',plugins:{legend:{display:false},tooltip:{callbacks:{label:(ctx)=>ctx.label+': '+ctx.raw+' records'}}}}
                 });
+                const interactionSummary=document.getElementById('interaction-summary');
+                if(interactionSummary){
+                    interactionSummary.innerHTML=te.slice(0,4).map((x,i)=>{
+                        const dots=['bg-amber-400','bg-emerald-400','bg-rose-400','bg-cyan-400'];
+                        return '<div class="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2"><span class="flex items-center gap-2 text-[11px] font-bold text-slate-600"><span class="w-2.5 h-2.5 rounded-full '+(dots[i]||'bg-slate-400')+'"></span>'+window.escapeHtml(x[0])+'</span><span class="text-xs font-black text-slate-800">'+x[1]+'</span></div>';
+                    }).join('');
+                }
 
                 const h={UNESCO:0,National:0,'Cultural Icon':0,'Other Heritage':0,'Not Specified':0};
                 data.forEach(d=>{
