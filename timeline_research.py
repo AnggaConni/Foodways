@@ -55,7 +55,7 @@ ENABLE_HUMAN_CROSSCHECK = os.getenv("ENABLE_HUMAN_CROSSCHECK", "0") == "1"
 
 TINYFISH_KEY = os.getenv("TINYFISH_API_KEY", "")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+GEMINI_MODEL = (os.getenv("GEMINI_MODEL") or "gemini-3.8-flash").strip()
 
 MAX_RECORDS = int(os.getenv("TIMELINE_MAX_RECORDS", "0"))  # 0 = all
 SEARCH_RESULTS = int(os.getenv("TINYFISH_RESULTS", "8"))
