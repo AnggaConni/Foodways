@@ -24,7 +24,8 @@
                      || window.innerWidth <= 768;
     
     if (isMobile) {
-        window.location.href = "mobile.html";
+        // Preserve OAuth query/hash parameters when forwarding the mobile experience.
+        window.location.replace("mobile.html" + window.location.search + window.location.hash);
     }
     </script>
     
