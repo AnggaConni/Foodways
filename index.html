@@ -293,6 +293,12 @@
                     <button onclick="window.app.switchTab('map')" id="nav-map" class="w-full text-left p-4 rounded-xl hover:bg-gray-800 text-gray-400 hover:text-white transition flex items-center text-md group">
                         <i class="fas fa-map-marked-alt w-8 group-hover:text-[var(--opera-red)] transition"></i> Global Map
                     </button>
+                    <button onclick="window.app.switchTab('ai-map')" id="nav-ai-map" class="w-full text-left p-4 rounded-xl hover:bg-gray-800 text-gray-400 hover:text-white transition flex items-center text-md group">
+                        <i class="fas fa-robot w-8 group-hover:text-cyan-400 transition"></i> Global Map AI
+                    </button>
+                    <button onclick="window.app.switchTab('curate-map')" id="nav-curate-map" class="w-full text-left p-4 rounded-xl hover:bg-gray-800 text-gray-400 hover:text-white transition flex items-center text-md group">
+                        <i class="fas fa-user-check w-8 group-hover:text-emerald-400 transition"></i> Global Map Curate
+                    </button>
                 </nav>
             </div>
             
@@ -420,6 +426,80 @@
                     <div class="relative shadow-2xl">
                         <input type="text" id="map-search" placeholder="Search Map..." class="bg-white border-none text-gray-800 rounded-xl px-5 py-3 text-sm w-72 shadow-lg focus:ring-2 focus:ring-[var(--opera-red)] outline-none" oninput="window.app.updateMapFilter(this.value)">
                         <i class="fas fa-search absolute right-4 top-3.5 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GLOBAL MAP AI -->
+            <div id="view-ai-map" class="absolute inset-0 hidden bg-slate-50">
+                <div id="ai-map-container" class="absolute inset-0"></div>
+                <div class="absolute top-5 left-5 z-[500] w-[390px] max-w-[calc(100%-40px)]">
+                    <div class="bg-white/95 backdrop-blur rounded-2xl shadow-xl border border-cyan-200 p-5">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h2 class="text-xl font-black text-slate-900">Global Map AI</h2>
+                                <p class="text-xs text-slate-500 mt-1">ICH-Radar • Culinary Traditions only</p>
+                            </div>
+                            <span id="ai-map-count" class="text-[10px] font-bold uppercase bg-cyan-50 text-cyan-700 px-2 py-1 rounded-full">0 signals</span>
+                        </div>
+                        <div class="mt-4 flex gap-2">
+                            <input id="ai-map-search" type="text" placeholder="Search culinary signal..." class="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-cyan-400">
+                            <button onclick="window.aiRadar.refresh()" class="px-3 py-2 rounded-lg bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-700"><i class="fas fa-rotate"></i></button>
+                        </div>
+                        <div id="ai-map-list" class="mt-3 max-h-[54vh] overflow-y-auto space-y-2"></div>
+                    </div>
+                </div>
+                <div class="absolute bottom-5 left-5 z-[500] bg-white/95 backdrop-blur px-3 py-2 rounded-xl border border-slate-200 shadow text-[10px] text-slate-500">
+                    Source: ICH-Radar data.json
+                </div>
+            </div>
+
+            <!-- GLOBAL MAP CURATE -->
+            <div id="view-curate-map" class="absolute inset-0 hidden bg-slate-50">
+                <div id="curate-map-container" class="absolute inset-0"></div>
+                <div class="absolute top-5 left-5 z-[500] w-[460px] max-w-[calc(100%-40px)]">
+                    <div class="bg-white/95 backdrop-blur rounded-2xl shadow-xl border border-emerald-200 p-5">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h2 class="text-xl font-black text-slate-900">Global Map Curate</h2>
+                                <p class="text-xs text-slate-500 mt-1">Review AI discoveries before publishing to Foodways</p>
+                            </div>
+                            <span id="curate-count" class="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full">0 candidates</span>
+                        </div>
+                        <div class="mt-3">
+                            <input id="curate-search" type="text" placeholder="Search candidate..." class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-emerald-400">
+                        </div>
+                        <div id="curate-list" class="mt-3 max-h-[58vh] overflow-y-auto space-y-3"></div>
+                    </div>
+                </div>
+                <div id="curate-editor-modal" class="hidden absolute inset-0 z-[700] flex items-center justify-center bg-black/40 backdrop-blur-sm p-6">
+                    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-black">Curate Foodways Record</h3>
+                                <p class="text-xs text-slate-500 mt-1">Review the AI extraction, revise it, then save.</p>
+                            </div>
+                            <button onclick="window.aiRadar.closeEditor()" class="text-slate-400 hover:text-slate-700"><i class="fas fa-times"></i></button>
+                        </div>
+                        <form onsubmit="return false" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="hidden" id="curate-source-id">
+                            <div><label class="text-xs font-bold text-slate-500">Food Name</label><input id="curate-food-name" class="w-full mt-1 input-light rounded-lg p-2"></div>
+                            <div><label class="text-xs font-bold text-slate-500">Country</label><input id="curate-country" class="w-full mt-1 input-light rounded-lg p-2"></div>
+                            <div><label class="text-xs font-bold text-slate-500">Latitude</label><input id="curate-lat" type="number" step="any" class="w-full mt-1 input-light rounded-lg p-2"></div>
+                            <div><label class="text-xs font-bold text-slate-500">Longitude</label><input id="curate-lng" type="number" step="any" class="w-full mt-1 input-light rounded-lg p-2"></div>
+                            <div class="md:col-span-2"><label class="text-xs font-bold text-slate-500">Origin Food</label><input id="curate-origin-name" class="w-full mt-1 input-light rounded-lg p-2"></div>
+                            <div><label class="text-xs font-bold text-slate-500">Origin Country</label><input id="curate-origin-country" class="w-full mt-1 input-light rounded-lg p-2"></div>
+                            <div><label class="text-xs font-bold text-slate-500">Connection Type</label><select id="curate-connection-type" class="w-full mt-1 input-light rounded-lg p-2"><option>Trade</option><option>Migration</option><option>Colonialism</option></select></div>
+                            <div><label class="text-xs font-bold text-slate-500">Origin Latitude</label><input id="curate-origin-lat" type="number" step="any" class="w-full mt-1 input-light rounded-lg p-2"></div>
+                            <div><label class="text-xs font-bold text-slate-500">Origin Longitude</label><input id="curate-origin-lng" type="number" step="any" class="w-full mt-1 input-light rounded-lg p-2"></div>
+                            <div><label class="text-xs font-bold text-slate-500">Heritage Status</label><input id="curate-unesco" class="w-full mt-1 input-light rounded-lg p-2"></div>
+                            <div class="md:col-span-2"><label class="text-xs font-bold text-slate-500">Description</label><textarea id="curate-description" rows="7" class="w-full mt-1 input-light rounded-lg p-2"></textarea></div>
+                            <div class="md:col-span-2"><label class="text-xs font-bold text-slate-500">Research Links</label><textarea id="curate-links" rows="3" class="w-full mt-1 input-light rounded-lg p-2"></textarea></div>
+                            <div class="md:col-span-2 flex justify-end gap-2">
+                                <button type="button" onclick="window.aiRadar.closeEditor()" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold text-sm">Cancel</button>
+                                <button type="button" onclick="window.aiRadar.saveCurated()" class="px-5 py-2 rounded-lg bg-emerald-600 text-white font-bold text-sm">Save to Supabase</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -1118,6 +1198,195 @@
             }
         };
 
+
+        window.aiRadar = {
+            records: [],
+            aiMap: null,
+            curateMap: null,
+            _initialized: false,
+
+            initMaps: () => {
+                if (!window.aiRadar.aiMap) {
+                    window.aiRadar.aiMap = L.map('ai-map-container', { zoomControl: true }).setView([20,0],2);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(window.aiRadar.aiMap);
+                }
+                if (!window.aiRadar.curateMap) {
+                    window.aiRadar.curateMap = L.map('curate-map-container', { zoomControl: true }).setView([20,0],2);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(window.aiRadar.curateMap);
+                }
+                setTimeout(() => {
+                    window.aiRadar.aiMap.invalidateSize();
+                    window.aiRadar.curateMap.invalidateSize();
+                }, 100);
+            },
+
+            isCulinary: (item) => {
+                const categories = Array.isArray(item.categories) ? item.categories.join(' ') : '';
+                const category = String(item.category || '');
+                return /culinary/i.test(categories + ' ' + category);
+            },
+
+            normalize: (item) => {
+                const loc = item.location || {};
+                const analysis = item.resume_analisa || {};
+                const cats = Array.isArray(item.categories) ? item.categories : (item.category ? [item.category] : []);
+                return {
+                    source_id: item.id || crypto.randomUUID(),
+                    element_name: item.element_name || '',
+                    category: cats.join(' | '),
+                    country: loc.country || '',
+                    provinces: Array.isArray(loc.provinces) ? loc.provinces : [],
+                    lat: Number(loc.lat),
+                    lng: Number(loc.lng),
+                    thumbnail_url: item.thumbnail_url || '',
+                    source_urls: Array.isArray(item.source_urls) ? item.source_urls : [],
+                    description: analysis.description || '',
+                    significance: analysis.cultural_significance || '',
+                    tags: Array.isArray(analysis.gemini_tags) ? analysis.gemini_tags : [],
+                    completion_status: item.completion_status || '',
+                    shared: item.shared_heritage_detection?.is_shared === true,
+                    confidence: Number(item.shared_heritage_detection?.confidence_score || 0)
+                };
+            },
+
+            refresh: async () => {
+                try {
+                    const response = await fetch('https://raw.githubusercontent.com/AnggaConni/ICH-Radar/main/data.json', { cache: 'no-store' });
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    const payload = await response.json();
+                    const inventory = Array.isArray(payload) ? payload : (payload.inventory || []);
+                    window.aiRadar.records = inventory
+                        .filter(window.aiRadar.isCulinary)
+                        .map(window.aiRadar.normalize)
+                        .filter(x => Number.isFinite(x.lat) && Number.isFinite(x.lng));
+                    window.aiRadar.render();
+                } catch (e) {
+                    console.error('ICH-Radar culinary load failed:', e);
+                    const msg='<div class="p-4 text-sm text-red-500">Unable to load ICH-Radar data.json.</div>';
+                    const a=document.getElementById('ai-map-list'), b=document.getElementById('curate-list');
+                    if(a) a.innerHTML=msg;
+                    if(b) b.innerHTML=msg;
+                }
+            },
+
+            filtered: () => {
+                const aiQ=(document.getElementById('ai-map-search')?.value||'').toLowerCase().trim();
+                const curateQ=(document.getElementById('curate-search')?.value||'').toLowerCase().trim();
+                const q=curateQ || aiQ;
+                return window.aiRadar.records.filter(x=>!q || [x.element_name,x.country,x.category,x.provinces.join(' '),...x.tags].join(' ').toLowerCase().includes(q));
+            },
+
+            render: () => {
+                if (!window.aiRadar.aiMap || !window.aiRadar.curateMap) return;
+                const data=window.aiRadar.filtered();
+                window.aiRadar.aiMap.eachLayer(layer => {
+                    if (layer instanceof L.CircleMarker) window.aiRadar.aiMap.removeLayer(layer);
+                });
+                window.aiRadar.curateMap.eachLayer(layer => {
+                    if (layer instanceof L.CircleMarker) window.aiRadar.curateMap.removeLayer(layer);
+                });
+
+                const esc=window.escapeHtml;
+                const aiList=document.getElementById('ai-map-list');
+                const curateList=document.getElementById('curate-list');
+
+                if(aiList){
+                    aiList.innerHTML=data.map((x,i)=>'<button onclick="window.aiRadar.focus('+i+')" class="w-full text-left p-3 bg-white rounded-xl border border-slate-200 hover:border-cyan-400 transition"><div class="font-bold text-sm text-slate-800">'+esc(x.element_name)+'</div><div class="text-[11px] text-slate-500 mt-1">'+esc(x.country)+' • '+esc(x.category)+'</div></button>').join('') || '<div class="p-4 text-sm text-slate-400">No culinary signals.</div>';
+                }
+                if(curateList){
+                    curateList.innerHTML=data.map((x,i)=>{
+                        const action=state.role==='admin'
+                            ? '<button onclick="window.aiRadar.openEditor('+i+')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[10px] font-bold">Review & Save</button>'
+                            : '<span class="text-[10px] text-slate-400">Admin only</span>';
+                        return '<div class="bg-white rounded-xl border border-slate-200 p-3"><div class="flex justify-between gap-2"><div><div class="font-bold text-sm">'+esc(x.element_name)+'</div><div class="text-[11px] text-slate-500">'+esc(x.country)+' • '+esc(x.category)+'</div></div>'+action+'</div><p class="text-xs text-slate-600 mt-2 line-clamp-3">'+esc(x.description)+'</p></div>';
+                    }).join('') || '<div class="p-4 text-sm text-slate-400">No candidates.</div>';
+                }
+                const n=String(data.length)+' signals';
+                const aCount=document.getElementById('ai-map-count'), cCount=document.getElementById('curate-count');
+                if(aCount) aCount.textContent=n;
+                if(cCount) cCount.textContent=String(data.length)+' candidates';
+
+                data.forEach(x=>{
+                    L.circleMarker([x.lat,x.lng],{radius:6,color:'#0891b2',fillColor:'#06b6d4',fillOpacity:.85,weight:1.5}).addTo(window.aiRadar.aiMap).bindTooltip(esc(x.element_name));
+                    L.circleMarker([x.lat,x.lng],{radius:5,color:'#059669',fillColor:'#10b981',fillOpacity:.75,weight:1.3}).addTo(window.aiRadar.curateMap).bindTooltip(esc(x.element_name));
+                });
+            },
+
+            focus: (index) => {
+                const data=window.aiRadar.filtered();
+                const x=data[index];
+                if(x) window.aiRadar.aiMap.setView([x.lat,x.lng],Math.max(window.aiRadar.aiMap.getZoom(),5));
+            },
+
+            openEditor: (index) => {
+                if(state.role!=='admin') return alert('Admin Only');
+                const x=window.aiRadar.filtered()[index];
+                if(!x) return;
+                const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v??''; };
+                set('curate-source-id',x.source_id);
+                set('curate-food-name',x.element_name);
+                set('curate-country',x.country);
+                set('curate-lat',x.lat);
+                set('curate-lng',x.lng);
+                set('curate-origin-name','');
+                set('curate-origin-country','');
+                set('curate-origin-lat','');
+                set('curate-origin-lng','');
+                set('curate-connection-type','Migration');
+                set('curate-unesco','');
+                set('curate-description',x.description + (x.significance ? '\n\n'+x.significance : ''));
+                set('curate-links',x.source_urls.join(', '));
+                document.getElementById('curate-editor-modal').classList.remove('hidden');
+            },
+
+            closeEditor: () => {
+                const el=document.getElementById('curate-editor-modal');
+                if(el) el.classList.add('hidden');
+            },
+
+            saveCurated: async () => {
+                if(state.role!=='admin') return alert('Admin Only');
+                const record={
+                    id:window.app.nextFoodwayId(),
+                    food_name:document.getElementById('curate-food-name').value.trim(),
+                    country:document.getElementById('curate-country').value.trim(),
+                    lat:Number(document.getElementById('curate-lat').value),
+                    lng:Number(document.getElementById('curate-lng').value),
+                    origin_food_name:document.getElementById('curate-origin-name').value.trim()||null,
+                    origin_country:document.getElementById('curate-origin-country').value.trim()||null,
+                    origin_lat:document.getElementById('curate-origin-lat').value||null,
+                    origin_lng:document.getElementById('curate-origin-lng').value||null,
+                    connection_type:document.getElementById('curate-connection-type').value,
+                    unesco_status:document.getElementById('curate-unesco').value.trim()||null,
+                    description:document.getElementById('curate-description').value.trim(),
+                    research_links:document.getElementById('curate-links').value.trim()||null
+                };
+                if(!record.food_name || !record.country || !Number.isFinite(record.lat) || !Number.isFinite(record.lng)) return alert('Food name, country, latitude and longitude are required.');
+                if(!confirm('Save this curated AI record to Supabase as '+record.id+'?')) return;
+
+                window.ui.toggleLoader(true);
+                try{
+                    const {data,error}=await supabaseClient.from('Heritage Foodways').insert(record).select().single();
+                    if(error) throw error;
+                    state.data.push(transformData(data));
+                    window.mapLogic.render();
+                    window.dashboard.render();
+                    window.aiRadar.closeEditor();
+                    alert('Saved to Supabase: '+record.id);
+                }catch(e){
+                    alert('Save failed: '+e.message);
+                }finally{
+                    window.ui.toggleLoader(false);
+                }
+            }
+        };
+
         window.mapLogic = {
             map: null, layers: [], lines: [], markers: [],
             init: () => {
@@ -1792,11 +2061,20 @@
                     window.ui.toggleLoader(false);
                 }
             },
+
             switchTab: (t) => {
-                document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-map').classList.add('hidden');
-                document.getElementById('view-'+t).classList.remove('hidden');
+                ['dashboard','map','ai-map','curate-map'].forEach(id => {
+                    const el=document.getElementById('view-'+id);
+                    if(el) el.classList.add('hidden');
+                });
+                const target=document.getElementById('view-'+t);
+                if(target) target.classList.remove('hidden');
                 if(t==='map') window.mapLogic.resize();
                 if(t==='dashboard') setTimeout(() => window.dashboard.render(), 100);
+                if(t==='ai-map' || t==='curate-map') {
+                    window.aiRadar.initMaps();
+                    window.aiRadar.refresh();
+                }
             },
             exportData: () => {
                 const csv = Papa.unparse(state.data);
