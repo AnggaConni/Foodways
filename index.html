@@ -917,7 +917,14 @@
     <script>
         const SUPABASE_URL = 'https://yyjwodgywizjbnrvdnpn.supabase.co';
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_3dTLdT8jsmdLzG_fbM5OxQ_Yt9lE9Pg';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+            auth: {
+                flowType: 'pkce',
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: false
+            }
+        });
 
         window.state = { 
             data: [], 
@@ -2336,15 +2343,38 @@
                 window.ui.renderAuth();
 
                 try {
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    await window.app.applySession(session);
-
+                    // Install the auth listener before resolving the OAuth callback.
+                    // This avoids missing the post-redirect SIGNED_IN event.
                     if (!window.app._authListenerInstalled) {
                         window.app._authListenerInstalled = true;
                         supabaseClient.auth.onAuthStateChange(async (_event, nextSession) => {
                             await window.app.applySession(nextSession);
                         });
                     }
+
+                    // Handle the OAuth callback explicitly on the app root.
+                    // We disable detectSessionInUrl above so the PKCE exchange happens exactly once.
+                    const params = new URLSearchParams(window.location.search);
+                    const oauthError = params.get('error');
+                    const oauthErrorCode = params.get('error_code');
+                    const oauthErrorDescription = params.get('error_description');
+                    const oauthCode = params.get('code');
+
+                    if (oauthError || oauthErrorCode) {
+                        const detail = [oauthErrorCode, oauthErrorDescription].filter(Boolean).join(' — ') || oauthError;
+                        console.error('OAuth callback error:', detail);
+                        history.replaceState({}, document.title, window.location.pathname);
+                        setTimeout(() => alert('Google sign-in failed: ' + detail), 50);
+                    }
+
+                    if (oauthCode) {
+                        const { error: exchangeError } = await supabaseClient.auth.exchangeCodeForSession(oauthCode);
+                        history.replaceState({}, document.title, window.location.pathname);
+                        if (exchangeError) throw exchangeError;
+                    }
+
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    await window.app.applySession(session);
 
                     const { data, error } = await supabaseClient
                         .from('Heritage Foodways')
