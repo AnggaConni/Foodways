@@ -1401,7 +1401,8 @@
                 "Portuguese Transatlantic Exchange": {color:"#7c2d12", points:[[38,-28],[28,-25],[12,-20],[-2,-25],[-18,-35],[-20,-44]]},
                 "East Polynesian Maritime Migration": {color:"#0f766e", points:[[-15,145],[-18,160],[-20,-180],[-22,-150],[-27,-125],[-27,-109]]},
                 "Buddhist Monastic Exchange": {color:"#9333ea", points:[[30,105],[32,118],[35,128],[36,139],[35,145]]},
-                "Grand Canal / Jiangnan": {color:"#334155", points:[[31,121],[32,120],[34,119],[36,118],[38,116]]}
+                "Grand Canal / Jiangnan": {color:"#334155", points:[[31,121],[32,120],[34,119],[36,118],[38,116]]},
+                "Estrada Real / Gold Rush": {color:"#c2410c", points:[[-21,-44],[-20,-44.5],[-19,-44.2],[-18.6,-44.1],[-18.2,-43.9]]}
             },
             esc: (value) => window.escapeHtml ? window.escapeHtml(String(value ?? '')) : String(value ?? ''),
             initMap: () => {
@@ -1555,18 +1556,19 @@
                         const name=String(h.route||'');
                         const lower=name.toLowerCase();
                         const key=lower.includes('spice')?'Spice Routes'
-                            :lower.includes('silk')||lower.includes('grand canal')||lower.includes('buddhist monastic')?'Silk Roads'
                             :lower.includes('indian ocean')?'Indian Ocean'
+                            :lower.includes('east polynesian')?'East Polynesian Maritime Migration'
                             :lower.includes('austronesian')||lower.includes('polynesian')?'Austronesian'
+                            :lower.includes('portuguese transatlantic')?'Portuguese Transatlantic Exchange'
+                            :lower.includes('estrada real')?'Estrada Real / Gold Rush'
+                            :lower.includes('grand canal')||lower.includes('jiangnan')||lower.includes('wuxi')?'Grand Canal / Jiangnan'
+                            :lower.includes('buddhist monastic')||lower.includes('china to japan')?'Buddhist Monastic Exchange'
+                            :lower.includes('silk')?'Silk Roads'
+                            :lower.includes('spice')?'Spice Routes'
                             :lower.includes('incense')?'Incense Route'
                             :lower.includes('tea-horse')||lower.includes('tea horse')?'Tea-Horse Road'
                             :lower.includes('trans-saharan')||lower.includes('sahara')?'Trans-Saharan'
                             :lower.includes('mediterranean')?'Mediterranean'
-                            :lower.includes('portuguese transatlantic')?'Portuguese Transatlantic Exchange'
-                            :lower.includes('estrada real')?'Grand Canal / Jiangnan'
-                            :lower.includes('east polynesian')?'East Polynesian Maritime Migration'
-                            :lower.includes('wuxi')||lower.includes('jiangnan')?'Grand Canal / Jiangnan'
-                            :lower.includes('china to japan')?'Buddhist Monastic Exchange'
                             :null;
                         if(key)matched.add(key);
                     });
