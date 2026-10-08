@@ -609,7 +609,6 @@
     <script>
         const SUPABASE_URL = 'https://yyjwodgywizjbnrvdnpn.supabase.co';
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_3dTLdT8jsmdLzG_fbM5OxQ_Yt9lE9Pg';
-        const GAS_URL_LEGACY = 'https://script.google.com/macros/s/AKfycbyr5JxnjXhpWqgb0sgXFTCFTbFjjOSrCrYEDPwWbo8zkpwVoH0IbGJfcJRLBlaIBbEK/exec';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
         window.state = { 
@@ -1119,7 +1118,17 @@
         };
 
         window.mapLogic = {
-            map: null, layers: [], lines: [], markers: [],
+            map: null, layers: [], lines: [], markers: [], mounted: false, pickerHandler: null,
+            mount: () => {
+                if (window.mapLogic.mounted) return;
+                const mapEl = document.getElementById('map');
+                if (!mapEl) return;
+                window.mapLogic.mounted = true;
+                window.mapLogic.map = L.map(mapEl, { worldCopyJump: true }).setView([20, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(window.mapLogic.map);
+            },
             init: async () => {
                 window.ui.renderAuth();
 
@@ -1141,8 +1150,10 @@
                     return;
                 }
 
-                state.data = (data || []).map(transformData).filter(x => x.lat !== null && x.lng !== null);
-                window.mapLogic.init(); window.dashboard.init(); window.ui.loaded();
+                state.data = (data || []).map(transformData);
+                window.mapLogic.mount();
+                window.dashboard.init();
+                window.ui.loaded();
                 window.mapLogic.render();
                 window.app.fetchGuides();
             },
@@ -1162,21 +1173,20 @@
                 if (landing && landing.style.display !== 'none') window.app.enterAsGuest();
             },
 
-            fetchGuides: () => {
-                fetch(GAS_URL_LEGACY + '?action=get_guides')
-                .then(r => r.json())
-                .then(d => {
-                    if(d.status === 'success') {
-                        state.guides = d.data;
-                        // Pre-render the guide UI so it's ready when clicked
-                        window.ui.renderHelp();
-                    } else {
-                        console.warn("Failed to load guides:", d.message);
-                    }
-                })
-                .catch(e => console.error("Guide Fetch Error:", e));
+            fetchGuides: async () => {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('guides')
+                        .select('*')
+                        .order('id');
+                    if (error) throw error;
+                    state.guides = data || [];
+                    window.ui.renderHelp();
+                } catch (e) {
+                    console.warn("Supabase Guide Fetch Error:", e);
+                    state.guides = [];
+                }
             },
-
             enterAsContributor: () => {
                 if(state.role==='admin') return;
                 window.ui.openModal('login-modal');
@@ -1677,7 +1687,7 @@
             }
         };
 
-        window.addEventListener('DOMContentLoaded', window.app.init);
+        window.app.init();
     </script>
 </body>
 </html>
