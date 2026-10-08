@@ -1321,6 +1321,9 @@
             records: [],
             map: null,
             lastPayload: null,
+            selectedYear: null,
+            showUndated: true,
+            routeLines: [],
             esc: (value) => window.escapeHtml ? window.escapeHtml(String(value ?? '')) : String(value ?? ''),
             initMap: () => {
                 const el = document.getElementById('timeline-map');
@@ -1334,7 +1337,21 @@
                 }
                 setTimeout(() => window.timelineResearch.map.invalidateSize(), 150);
             },
-            filtered: () => window.timelineResearch.records,
+            filtered: () => {
+                const q=(document.getElementById('timeline-search')?.value||'').trim().toLowerCase();
+                const year=window.timelineResearch.selectedYear;
+                const undated=window.timelineResearch.showUndated;
+                return window.timelineResearch.records.filter(r=>{
+                    const a=r.assessment||{};
+                    const text=[r.food_name,r.ai_country,a.probable_origin_country,a.probable_origin_place,
+                        ...(a.route_hypotheses||[]).map(h=>h.route||'')].join(' ').toLowerCase();
+                    if(q && !text.includes(q)) return false;
+                    const y=Number(a.earliest_supported_year);
+                    if(Number.isFinite(year) && Number.isFinite(y)) return y<=year;
+                    if(!Number.isFinite(y)) return undated;
+                    return true;
+                });
+            },
             refresh: async () => {
                 try {
                     const res = await fetch('foodways_timeline_research.json', { cache: 'no-store' });
