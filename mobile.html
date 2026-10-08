@@ -1066,75 +1066,6 @@
             }
         };
 
-        window.app = {
-            _authListenerInstalled:false,
-            applySession: async (session)=>{
-                if(!session){
-                    state.role='guest';
-                    const pr=document.getElementById('profile-role'); if(pr)pr.innerText='Guest User';
-                    document.getElementById('btn-login-profile')?.classList.remove('hidden');
-                    document.getElementById('btn-logout-profile')?.classList.add('hidden');
-                    document.getElementById('header-add-btn')?.classList.add('hidden');
-                    return;
-                }
-                try{
-                    const {data:isAdmin,error}=await supabaseClient.rpc('ensure_foodways_admin');
-                    if(error) throw error;
-                    state.role=isAdmin===true?'admin':'guest';
-                    const pr=document.getElementById('profile-role'); if(pr)pr.innerText=state.role==='admin'?'Admin Access':'Signed-in Viewer';
-                    document.getElementById('btn-login-profile')?.classList.toggle('hidden',state.role==='admin');
-                    document.getElementById('btn-logout-profile')?.classList.toggle('hidden',state.role!=='admin');
-                    document.getElementById('header-add-btn')?.classList.toggle('hidden',state.role!=='admin');
-                }catch(e){console.error('Auth registry sync failed:',e);state.role='guest';}
-            },
-            init: async ()=>{
-                if(!window.app._authListenerInstalled){
-                    window.app._authListenerInstalled=true;
-                    supabaseClient.auth.onAuthStateChange(async (_event,session)=>{await window.app.applySession(session);});
-                }
-                const {data:{session}}=await supabaseClient.auth.getSession();
-                await window.app.applySession(session);
-                await window.mapLogic.init();
-            },
-            enterApp: ()=>{
-                document.getElementById('landing-page').classList.add('opacity-0');
-                setTimeout(()=>{
-                    document.getElementById('landing-page').classList.add('hidden');
-                    document.getElementById('main-app').classList.remove('hidden');
-                    window.dashboard.renderKPI();
-                    window.dashboard.renderFeed();
-                    window.mapLogic.render();
-                },300);
-            },
-            enterAdmin: ()=>{window.app.enterApp();setTimeout(()=>window.ui.openModal('login-modal'),450);},
-            switchTab:(tab,el)=>{
-                document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); if(el)el.classList.add('active');
-                ['dashboard','map','profile','ai-map','curate-map'].forEach(id=>document.getElementById('view-'+id)?.classList.add('hidden'));
-                document.getElementById('view-'+tab)?.classList.remove('hidden');
-                if(tab==='map')setTimeout(()=>window.mapLogic.map?.invalidateSize(),150);
-                if(tab==='profile')setTimeout(()=>window.dashboard.renderAnalytics(),100);
-                if(tab==='ai-map'){window.mobileAI.initMap();window.mobileAI.refresh();setTimeout(()=>window.mobileAI.aiMap?.invalidateSize(),150);}
-                if(tab==='curate-map')window.mobileAI.refresh();
-            },
-            handleGlobalSearch:(val)=>{state.filter=val;state.pagination.page=1;window.dashboard.renderFeed();},
-            logout:async()=>{const {error}=await supabaseClient.auth.signOut();if(error)alert(error.message);await window.app.applySession(null);},
-            login:async()=>{
-                const btn=document.getElementById('btn-login');
-                if(btn)btn.innerHTML='<i class="fas fa-circle-notch fa-spin mr-2"></i> Redirecting...';
-                const redirectTo=['localhost','127.0.0.1'].includes(window.location.hostname)?window.location.origin+'/':'https://anggaconni.github.io/Foodways/mobile.html';
-                const {error}=await supabaseClient.auth.signInWithOAuth({provider:'google',options:{redirectTo}});
-                if(error){
-                    if(btn)btn.innerHTML='<i class="fab fa-google mr-2"></i> Continue with Google';
-                    alert(error.message);
-                }
-            },
-            nextFoodwayId:()=>{
-                const nums=(state.data||[]).map(x=>String(x.id||'').match(/^FH(\d+)$/i)).filter(Boolean).map(m=>parseInt(m[1],10));
-                return 'FH'+String((nums.length?Math.max(...nums):0)+1).padStart(3,'0');
-            },
-            exportData:()=>{const csv=Papa.unparse(state.data||[]);const blob=new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='foodways_mobile_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),100);}
-        };
-
         window.mobileAI = {
             records: [],
             aiMap: null,
@@ -1362,7 +1293,7 @@ window.app = {
                 btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Redirecting...';
                 const { error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
-                    options: { redirectTo: window.location.href.split('#')[0].split('?')[0] }
+                    options: { redirectTo: 'https://anggaconni.github.io/Foodways/mobile.html' }
                 });
                 if(error) {
                     btn.innerHTML = '<i class="fab fa-google mr-2"></i> Continue with Google';
