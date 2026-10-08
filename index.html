@@ -2190,7 +2190,7 @@
             },
 
             switchTab: (t) => {
-                ['dashboard','map','ai-map'].forEach(id => {
+                ['dashboard','map','ai-map','timeline'].forEach(id => {
                     const el=document.getElementById('view-'+id);
                     if(el) el.classList.add('hidden');
                 });
@@ -2201,6 +2201,10 @@
                 if(t==='ai-map') {
                     window.aiRadar.initMaps();
                     window.aiRadar.refresh();
+                }
+                if(t==='timeline') {
+                    window.timelineResearch.initMap();
+                    window.timelineResearch.refresh();
                 }
             },
             exportData: () => {
