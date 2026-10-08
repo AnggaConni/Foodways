@@ -1271,6 +1271,49 @@
         };
 
 
+        window.timelineResearch = {
+            records: [],
+            map: null,
+            lastPayload: null,
+            esc: (value) => window.escapeHtml ? window.escapeHtml(String(value ?? '')) : String(value ?? ''),
+            initMap: () => {
+                const el = document.getElementById('timeline-map');
+                if (!el) return;
+                if (!window.timelineResearch.map) {
+                    window.timelineResearch.map = L.map('timeline-map', { zoomControl: true }).setView([10, 20], 2);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(window.timelineResearch.map);
+                }
+                setTimeout(() => window.timelineResearch.map.invalidateSize(), 150);
+            },
+            filtered: () => window.timelineResearch.records,
+            refresh: async () => {
+                try {
+                    const res = await fetch('foodways_timeline_research.json', { cache: 'no-store' });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const payload = await res.json();
+                    window.timelineResearch.lastPayload = payload;
+                    window.timelineResearch.records = Array.isArray(payload.records) ? payload.records : [];
+                    window.timelineResearch.render();
+                } catch (e) {
+                    console.error('Timeline research load failed:', e);
+                    const warning = document.getElementById('timeline-warning');
+                    if (warning) {
+                        warning.classList.remove('hidden');
+                        warning.textContent = 'Unable to load timeline research: ' + (e.message || e);
+                    }
+                }
+            },
+            render: () => {},
+            openDetail: () => {},
+            closeDetail: () => {
+                const modal = document.getElementById('timeline-detail-modal');
+                if (modal) modal.classList.add('hidden');
+            }
+        };
+
         window.aiRadar = {
             records: [],
             aiMap: null,
