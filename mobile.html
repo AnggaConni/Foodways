@@ -53,9 +53,9 @@
             background-color: var(--opera-bg); 
             color: #1a1a1a;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; 
+            overflow: hidden;
+            /* Use the mobile layout viewport so the app reaches the browser toolbar edge. */
             height: 100vh;
-            height: 100dvh; 
             overscroll-behavior-y: none;
         }
 
@@ -184,7 +184,7 @@
     </div>
 
     <!-- 2. MAIN APP LAYOUT -->
-    <div id="main-app" class="h-full w-full relative hidden">
+    <div id="main-app" class="h-full min-h-full w-full relative hidden">
         
         <!-- HEADER (Z-4000) - Lower than Modals -->
         <div class="fixed top-0 left-0 w-full bg-opera-midnight text-white border-b border-gray-800 z-[4000] px-4 h-14 flex items-center justify-between shadow-md">
