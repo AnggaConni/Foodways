@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-10-08T19:54:16.543852+00:00",
+  "generated_at": "2026-10-08T20:16:00.870964+00:00",
   "stats": {
     "ai_records": 58,
     "human_records": 0,
-    "researched": 3,
-    "cached": 0,
-    "errors": 4
+    "researched": 0,
+    "cached": 3,
+    "errors": 17
   },
   "disclaimer": "Heuristic research dataset. AI is currently an assistant for discovery and hypothesis generation. No human curator has yet verified the complete timeline or causal trade-route relationships.",
   "records": [
