@@ -1307,6 +1307,35 @@
                 }
             },
             render: () => { window.timelineResearch.renderList(); window.timelineResearch.renderRoutes(); window.timelineResearch.renderMap(); },
+            renderList: () => {
+                const box=document.getElementById('timeline-list');
+                if(!box) return;
+                const q=(document.getElementById('timeline-search')?.value||'').trim().toLowerCase();
+                const data=window.timelineResearch.records.filter(r=>{
+                    const a=r.assessment||{};
+                    return !q || [r.food_name,r.ai_country,a.probable_origin_country,a.probable_origin_place]
+                        .join(' ').toLowerCase().includes(q);
+                }).slice().sort((a,b)=>{
+                    const ay=Number(a.assessment?.earliest_supported_year);
+                    const by=Number(b.assessment?.earliest_supported_year);
+                    if(Number.isFinite(ay)&&Number.isFinite(by)) return ay-by;
+                    if(Number.isFinite(ay)) return -1;
+                    if(Number.isFinite(by)) return 1;
+                    return String(a.food_name||'').localeCompare(String(b.food_name||''));
+                });
+                box.innerHTML=data.length?data.map(r=>{
+                    const a=r.assessment||{},c=r.confidence||{},band=c.band||'Very Low';
+                    const year=Number(a.earliest_supported_year);
+                    const y=Number.isFinite(year)?year:'No dated evidence';
+                    const cls=band==='High'?'text-emerald-700':band==='Medium'?'text-amber-700':'text-rose-700';
+                    return '<button onclick="window.timelineResearch.openDetail('+JSON.stringify(r.source_id)+')" class="w-full text-left p-4 rounded-2xl border border-slate-200 hover:border-amber-300 bg-white">'
+                        +'<div class="flex items-start justify-between gap-3"><div><div class="text-[10px] uppercase tracking-widest font-black text-slate-400">'+y+'</div>'
+                        +'<div class="font-black text-slate-900 mt-1">'+window.timelineResearch.esc(r.food_name)+'</div>'
+                        +'<div class="text-xs text-slate-500 mt-1">'+window.timelineResearch.esc(a.probable_origin_place||a.probable_origin_country||r.ai_country||'Unknown')+'</div></div>'
+                        +'<div class="text-right"><div class="text-xs font-black '+cls+'">'+window.timelineResearch.esc(band)+'</div><div class="text-lg font-black">'+(Number(c.overall||0)*100).toFixed(0)+'%</div></div></div>'
+                        +'<div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold"><span class="px-2 py-1 rounded bg-slate-100">Date '+(Number(c.date||0)*100).toFixed(0)+'%</span><span class="px-2 py-1 rounded bg-slate-100">Origin '+(Number(c.origin||0)*100).toFixed(0)+'%</span><span class="px-2 py-1 rounded bg-cyan-50 text-cyan-700">Route '+(Number(c.trade_route||0)*100).toFixed(0)+'%</span></div></button>';
+                }).join(''):'<div class="p-8 text-center text-sm text-slate-400">No researched records match.</div>';
+            },
             openDetail: () => {},
             closeDetail: () => {
                 const modal = document.getElementById('timeline-detail-modal');
