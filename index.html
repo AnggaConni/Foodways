@@ -2169,54 +2169,95 @@
             closeEditor: () => document.getElementById('curate-editor-modal').classList.add('hidden'),
 
             saveCurated: async () => {
-                if(state.role!=='admin') return alert('Admin Only');
-
-                const lat = parseLocalizedNumber(document.getElementById('curate-lat')?.value);
-                const lng = parseLocalizedNumber(document.getElementById('curate-lng')?.value);
-
-                const originLatRaw = document.getElementById('curate-origin-lat')?.value;
-                const originLngRaw = document.getElementById('curate-origin-lng')?.value;
-                const originLat = originLatRaw ? parseLocalizedNumber(originLatRaw) : null;
-                const originLng = originLngRaw ? parseLocalizedNumber(originLngRaw) : null;
-
-                const record={
-                    id:window.app.nextFoodwayId(),
-                    food_name:document.getElementById('curate-food-name')?.value.trim(),
-                    country:document.getElementById('curate-country')?.value.trim(),
-                    lat,
-                    lng,
-                    origin_food_name:document.getElementById('curate-origin-name')?.value.trim()||null,
-                    origin_country:document.getElementById('curate-origin-country')?.value.trim()||null,
-                    origin_lat:Number.isFinite(originLat)?String(originLat):null,
-                    origin_lng:Number.isFinite(originLng)?String(originLng):null,
-                    connection_type:document.getElementById('curate-connection-type')?.value||null,
-                    unesco_status:document.getElementById('curate-unesco')?.value.trim()||null,
-                    description:document.getElementById('curate-description')?.value.trim(),
-                    research_links:document.getElementById('curate-links')?.value.trim()||null
-                };
-
-                if(!record.food_name||!record.country||!Number.isFinite(record.lat)||!Number.isFinite(record.lng)){
-                    return alert('Food name, country, latitude and longitude are required. Use either comma or dot for decimals.');
-                }
-
-                if(!confirm('Save this curated AI record to Supabase as '+record.id+'?')) return;
-
                 const button = document.querySelector('#curate-editor-modal button[onclick="window.aiRadar.saveCurated()"]');
                 const oldText = button?.innerHTML;
-                if(button){
-                    button.disabled=true;
-                    button.innerHTML='<i class="fas fa-circle-notch fa-spin mr-2"></i> Saving...';
-                }
 
-                window.ui.toggleLoader(true);
-                try{
+                try {
+                    // 1) Verify the real Supabase session, not only local UI state.
+                    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+                    if(userError || !user){
+                        return alert('You are not signed in to Supabase. Please sign in with your authorized Google account first.');
+                    }
+
+                    // 2) Verify Admin permission directly against Supabase.
+                    const { data: isAdmin, error: adminError } = await supabaseClient.rpc('is_foodways_admin');
+                    if(adminError){
+                        console.error('Foodways admin check failed:', adminError);
+                        return alert('Admin check failed: '+adminError.message);
+                    }
+                    if(isAdmin !== true){
+                        return alert('Your Google account is signed in, but it is not registered as a Foodways Admin.');
+                    }
+
+                    state.role='admin';
+
+                    // 3) Parse coordinates robustly.
+                    const lat = parseLocalizedNumber(document.getElementById('curate-lat')?.value);
+                    const lng = parseLocalizedNumber(document.getElementById('curate-lng')?.value);
+
+                    const originLatRaw = document.getElementById('curate-origin-lat')?.value;
+                    const originLngRaw = document.getElementById('curate-origin-lng')?.value;
+                    const originLat = originLatRaw ? parseLocalizedNumber(originLatRaw) : null;
+                    const originLng = originLngRaw ? parseLocalizedNumber(originLngRaw) : null;
+
+                    // 4) Read the latest ID from Supabase to avoid stale browser state.
+                    const { data: latestRow, error: latestError } = await supabaseClient
+                        .from('Heritage Foodways')
+                        .select('id')
+                        .order('id', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+
+                    if(latestError) throw latestError;
+
+                    const latestMatch = String(latestRow?.id || '').match(/^FH(\d+)$/i);
+                    const nextNumber = latestMatch ? Number(latestMatch[1]) + 1 : 1;
+                    const nextId = 'FH'+String(nextNumber).padStart(3,'0');
+
+                    const record={
+                        id:nextId,
+                        food_name:document.getElementById('curate-food-name')?.value.trim(),
+                        country:document.getElementById('curate-country')?.value.trim(),
+                        lat,
+                        lng,
+                        origin_food_name:document.getElementById('curate-origin-name')?.value.trim()||null,
+                        origin_country:document.getElementById('curate-origin-country')?.value.trim()||null,
+                        origin_lat:Number.isFinite(originLat)?String(originLat):null,
+                        origin_lng:Number.isFinite(originLng)?String(originLng):null,
+                        connection_type:document.getElementById('curate-connection-type')?.value||null,
+                        unesco_status:document.getElementById('curate-unesco')?.value.trim()||null,
+                        description:document.getElementById('curate-description')?.value.trim()||null,
+                        research_links:document.getElementById('curate-links')?.value.trim()||null
+                    };
+
+                    if(!record.food_name||!record.country||!Number.isFinite(record.lat)||!Number.isFinite(record.lng)){
+                        return alert('Food name, country, latitude and longitude are required. Use either comma or dot for decimals.');
+                    }
+
+                    if(!confirm('Save this curated AI record to Supabase as '+record.id+'?')) return;
+
+                    if(button){
+                        button.disabled=true;
+                        button.innerHTML='<i class="fas fa-circle-notch fa-spin mr-2"></i> Saving...';
+                    }
+
+                    window.ui.toggleLoader(true);
+
                     const {data,error}=await supabaseClient
                         .from('Heritage Foodways')
                         .insert(record)
                         .select()
                         .single();
 
-                    if(error) throw error;
+                    if(error){
+                        console.error('Foodways insert failed:', {
+                            code:error.code,
+                            message:error.message,
+                            details:error.details,
+                            hint:error.hint
+                        });
+                        throw error;
+                    }
 
                     state.data.push(transformData(data));
                     window.mapLogic.render();
@@ -2224,11 +2265,12 @@
                     window.dashboard.renderFeed();
                     window.aiRadar.closeEditor();
 
-                    if(button) button.innerHTML='<i class="fas fa-check mr-2"></i> Saved';
                     alert('Saved to Supabase: '+record.id);
                 }catch(e){
                     console.error('Foodways curate save failed:',e);
-                    alert('Save failed: '+(e?.message||e));
+                    const details=[e?.message,e?.code?('Code: '+e.code):'',e?.details||'',e?.hint||'']
+                        .filter(Boolean).join('\n');
+                    alert('Save failed:\n\n'+details);
                 }finally{
                     window.ui.toggleLoader(false);
                     if(button){
@@ -2236,7 +2278,7 @@
                         button.innerHTML=oldText||'Save to Supabase';
                     }
                 }
-            }
+            },            }
         };
 
         window.mapLogic = {
