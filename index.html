@@ -781,6 +781,22 @@
         </div>
     </div>
     
+    <!-- AUTH NOTIFICATION -->
+    <div id="auth-notice" class="fixed top-6 right-6 z-[5000] hidden w-[360px] max-w-[calc(100%-32px)]">
+        <div id="auth-notice-card" class="bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 flex items-start gap-3">
+            <div id="auth-notice-icon" class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0">
+                <i id="auth-notice-icon-i" class="fas fa-circle-info"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+                <div id="auth-notice-title" class="font-black text-sm text-slate-900"></div>
+                <div id="auth-notice-message" class="text-xs text-slate-600 mt-1 leading-5"></div>
+            </div>
+            <button onclick="window.ui.hideAuthNotice()" class="text-slate-400 hover:text-slate-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
     <!-- LOGIN -->
     <div id="login-modal" class="fixed inset-0 z-modal hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="bg-white w-96 p-8 rounded-2xl border border-gray-300 shadow-2xl text-gray-800">
@@ -1248,6 +1264,34 @@
             },
             openModal: (id) => document.getElementById(id).classList.remove('hidden'),
             closeModal: (id) => document.getElementById(id).classList.add('hidden'),
+            hideAuthNotice: () => {
+                const el=document.getElementById('auth-notice');
+                if(el) el.classList.add('hidden');
+            },
+            showAuthNotice: (title, message, tone='info') => {
+                const el=document.getElementById('auth-notice');
+                const card=document.getElementById('auth-notice-card');
+                const icon=document.getElementById('auth-notice-icon');
+                const iconI=document.getElementById('auth-notice-icon-i');
+                const titleEl=document.getElementById('auth-notice-title');
+                const msgEl=document.getElementById('auth-notice-message');
+                if(!el||!card||!icon||!iconI||!titleEl||!msgEl) return;
+                const tones={
+                    success:{bg:'bg-emerald-100',text:'text-emerald-700',icon:'fa-circle-check',border:'border-emerald-200'},
+                    warning:{bg:'bg-amber-100',text:'text-amber-700',icon:'fa-clock',border:'border-amber-200'},
+                    info:{bg:'bg-blue-100',text:'text-blue-700',icon:'fa-circle-info',border:'border-blue-200'},
+                    error:{bg:'bg-red-100',text:'text-red-700',icon:'fa-circle-exclamation',border:'border-red-200'}
+                };
+                const t=tones[tone]||tones.info;
+                icon.className='w-9 h-9 rounded-xl flex items-center justify-center '+t.bg+' '+t.text+' shrink-0';
+                card.className='bg-white rounded-2xl shadow-2xl p-4 flex items-start gap-3 border '+t.border;
+                iconI.className='fas '+t.icon;
+                titleEl.textContent=title;
+                msgEl.textContent=message;
+                el.classList.remove('hidden');
+                clearTimeout(window.ui._authNoticeTimer);
+                window.ui._authNoticeTimer=setTimeout(()=>window.ui.hideAuthNotice(),7000);
+            },
             showError: (msg) => {
                 document.getElementById('loading-container').classList.add('hidden');
                 alert(msg);
@@ -2402,6 +2446,25 @@
                     const { data: isAdmin, error } = await supabaseClient.rpc('ensure_foodways_admin');
                     if (error) throw error;
                     state.role = isAdmin === true ? 'admin' : 'guest';
+
+                    const uid=session.user?.id || session.user?.email || '';
+                    if(uid && uid !== window.app._lastAuthNoticeUserId){
+                        window.app._lastAuthNoticeUserId=uid;
+                        window.ui.closeModal('login-modal');
+                        if(state.role === 'admin'){
+                            window.ui.showAuthNotice(
+                                'Admin access granted',
+                                'Your Google account is authorized. Admin tools are now available.',
+                                'success'
+                            );
+                        } else {
+                            window.ui.showAuthNotice(
+                                'Account registered',
+                                'Your Google account has been registered. Admin access is pending approval. Contact Angga via LinkedIn to request access.',
+                                'warning'
+                            );
+                        }
+                    }
                 } catch (e) {
                     console.error('Admin registry sync failed:', e);
                     state.role = 'guest';
@@ -2458,6 +2521,7 @@
                 window.ui.renderAuth();
             },
             _authListenerInstalled: false,
+            _lastAuthNoticeUserId: null,
             initiateAddEntry: () => {
                 state.editId = null;
                 document.querySelectorAll('#input-modal input, #input-modal textarea').forEach(el => el.value = '');
