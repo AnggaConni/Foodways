@@ -1120,7 +1120,64 @@
             }
         };
 
-        window.mapLogic = {
+                window.dashboard = {
+            countryChart: null,
+            feedLimit: 8,
+            renderKPI: () => {
+                const data=state.data||[], total=data.length;
+                const countries=new Set(data.map(d=>String(d.country||'').trim()).filter(Boolean)).size;
+                const mapped=data.filter(d=>Number.isFinite(Number(d.lat))&&Number.isFinite(Number(d.lng))).length;
+                const links=data.filter(d=>String(d.origin_food_name||'').trim()!=='').length;
+                const pct=n=>total?Math.round(n/total*100):0;
+                const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+                set('kpi-total',total); set('kpi-countries',countries); set('kpi-mapped-mobile',pct(mapped)+'%');
+                set('kpi-mapped-mobile-sub',mapped+' of '+total+' mapped'); set('kpi-links-mobile',links);
+                window.dashboard.renderCountryChart();
+            },
+            renderCountryChart: () => {
+                const canvas=document.getElementById('chart-country-mobile');
+                if(!canvas || typeof Chart==='undefined') return;
+                const counts={};
+                (state.data||[]).forEach(d=>{const k=String(d.country||'Unspecified').trim()||'Unspecified';counts[k]=(counts[k]||0)+1;});
+                const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+                if(window.dashboard.countryChart) window.dashboard.countryChart.destroy();
+                window.dashboard.countryChart=new Chart(canvas.getContext('2d'),{
+                    type:'bar',
+                    data:{labels:top.map(x=>x[0]),datasets:[{data:top.map(x=>x[1]),backgroundColor:['#ff1b2d','#d4af37','#0891b2','#059669','#8b5cf6','#94a3b8'],borderRadius:6}]},
+                    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{beginAtZero:true,ticks:{precision:0,font:{size:9}},grid:{color:'#f1f5f9'}}}}
+                });
+            },
+            renderFeed: () => {
+                const box=document.getElementById('card-feed');
+                if(!box) return;
+                const q=String(state.filter||'').toLowerCase().trim();
+                const rows=(state.data||[]).filter(d=>!q||[d.food_name,d.country,d.origin_food_name,d.connection_type].join(' ').toLowerCase().includes(q));
+                box.innerHTML=rows.slice().reverse().slice(0,window.dashboard.feedLimit).map(d=>{
+                    const id=String(d.id||'').replace(/'/g,"\\'");
+                    return '<button onclick="window.dashboard.showDetail(window.dashboard._byId(\''+id+'\'))" class="mobile-card w-full text-left p-4">'+
+                        '<div class="flex items-start justify-between gap-3"><div class="min-w-0">'+
+                        '<div class="text-[10px] uppercase tracking-wider text-gray-400 font-black">'+window.escapeHtml(d.country||'Unknown')+'</div>'+
+                        '<div class="font-black text-opera-midnight mt-1 leading-5">'+window.escapeHtml(d.food_name||'Untitled')+'</div>'+
+                        '<div class="text-[10px] text-gray-500 mt-1">'+window.escapeHtml(d.connection_type||'Curated record')+'</div>'+
+                        '</div><i class="fas fa-chevron-right text-gray-300 mt-1"></i></div></button>';
+                }).join('') || '<div class="text-center text-xs text-gray-400 py-8">No records found.</div>';
+                const more=document.getElementById('btn-load-more');
+                if(more) more.classList.toggle('hidden',rows.length<=window.dashboard.feedLimit);
+            },
+            loadMore: () => { window.dashboard.feedLimit += 8; window.dashboard.renderFeed(); },
+            _byId: (id) => (state.data||[]).find(d=>String(d.id)===String(id)),
+            showDetail: async (d) => {
+                if(!d) return;
+                state.currentDetail=d;
+                if(typeof window.ui.openModal==='function') window.ui.openModal('detail-modal');
+                if(typeof window.dashboard.renderDetailSkeleton==='function'){
+                    window.dashboard.renderDetailSkeleton(d);
+                    setTimeout(()=>window.dashboard.renderDetailContent?.(d),50);
+                }
+            },
+            renderAnalytics: () => window.dashboard.renderCountryChart()
+        };
+window.mapLogic = {
             map: null, layers: [],
             init: async () => {
                 const loadingEl = document.getElementById('loading-indicator');
