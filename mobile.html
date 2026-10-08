@@ -321,15 +321,6 @@
             </div>
         </div>
 
-        <div id="view-curate-map" class="view-container pt-24 px-4 pb-[calc(60px+env(safe-area-inset-bottom))] hidden overflow-y-auto bg-gray-50">
-            <div class="flex items-center justify-between mb-3">
-                <div><h2 class="font-black text-base">Global Map Curate</h2><p class="text-[10px] text-gray-400">Human review before Supabase</p></div>
-                <span id="mobile-curate-count" class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full font-bold">0</span>
-            </div>
-            <input id="mobile-curate-search" oninput="window.mobileAI.render()" placeholder="Search candidate..." class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none mb-3">
-            <div id="mobile-curate-list" class="space-y-2"></div>
-        </div>
-
         <!-- BOTTOM NAVIGATION -->
         <div class="bottom-nav">
             <div class="nav-item active" onclick="window.app.switchTab('dashboard', this)">
@@ -343,10 +334,6 @@
             <div class="nav-item" onclick="window.app.switchTab('ai-map', this)">
                 <i class="fas fa-robot"></i>
                 <span>AI</span>
-            </div>
-            <div class="nav-item" onclick="window.app.switchTab('curate-map', this)">
-                <i class="fas fa-user-check"></i>
-                <span>Curate</span>
             </div>
             <div class="nav-item" onclick="window.app.switchTab('profile', this)">
                 <i class="fas fa-user"></i>
@@ -1070,39 +1057,108 @@
             records: [],
             aiMap: null,
             refresh: async () => {
-                const r = await fetch('ai_culinary.json',{cache:'no-store'});
-                const p = await r.json();
-                const inv = Array.isArray(p) ? p : (p.inventory || []);
-                window.mobileAI.records = inv.filter(x => {
-                    const cats = Array.isArray(x.categories) ? x.categories.join(' ') : String(x.category || '');
-                    return /culinary/i.test(cats);
-                }).map(x => ({
-                    source_id:x.id||'', name:x.element_name||'', country:x.location?.country||'',
-                    lat:Number(x.location?.lat), lng:Number(x.location?.lng),
-                    category:Array.isArray(x.categories)?x.categories.join(' | '):(x.category||''),
-                    description:x.resume_analisa?.description||'', links:Array.isArray(x.source_urls)?x.source_urls:[]
-                })).filter(x => Number.isFinite(x.lat)&&Number.isFinite(x.lng));
-                window.mobileAI.render();
+                const list=document.getElementById('mobile-curate-list');
+                const count=document.getElementById('mobile-ai-count');
+                try {
+                    const r = await fetch('ai_culinary.json',{cache:'no-store'});
+                    if(!r.ok) throw new Error('HTTP '+r.status);
+                    const p = await r.json();
+                    const inv = Array.isArray(p) ? p : (p.inventory || []);
+
+                    const getCoord = (x,key) => {
+                        const nested = Number(x?.location?.[key]);
+                        if (Number.isFinite(nested)) return nested;
+                        const root = Number(x?.[key]);
+                        return Number.isFinite(root) ? root : null;
+                    };
+
+                    window.mobileAI.records = inv.filter(x => {
+                        const cats = Array.isArray(x.categories) ? x.categories.join(' ') : String(x.category || '');
+                        return /culinary/i.test(cats);
+                    }).map(x => {
+                        const categories = Array.isArray(x.categories) ? x.categories.join(' | ') : (x.category || '');
+                        return {
+                            source_id:x.id||'',
+                            name:x.element_name||'',
+                            country:x.country||x.location?.country||'',
+                            lat:getCoord(x,'lat'),
+                            lng:getCoord(x,'lng'),
+                            category:categories,
+                            description:x.description||x.resume_analisa?.description||'',
+                            significance:x.cultural_significance||x.resume_analisa?.cultural_significance||'',
+                            links:Array.isArray(x.source_urls)?x.source_urls:[],
+                            shared:x.shared_heritage?.is_shared===true,
+                            confidence:Number(x.shared_heritage?.confidence_score||0)
+                        };
+                    }).filter(x => Number.isFinite(x.lat)&&Number.isFinite(x.lng));
+
+                    window.mobileAI.render();
+                    const map=window.mobileAI.aiMap;
+                    if(map){
+                        setTimeout(()=>map.invalidateSize(),120);
+                    }
+                } catch(e) {
+                    console.error('Mobile AI layer load failed:',e);
+                    window.mobileAI.records=[];
+                    if(count) count.textContent='Unavailable';
+                    if(list) list.innerHTML='<div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-xs">Unable to load AI culinary data. '+window.escapeHtml(e.message||'Unknown error')+'</div>';
+                }
             },
             initMap: () => {
-                if(window.mobileAI.aiMap) return;
+                const el=document.getElementById('ai-map-container');
+                if(!el) return null;
+                if(window.mobileAI.aiMap) {
+                    setTimeout(()=>window.mobileAI.aiMap.invalidateSize(),120);
+                    return window.mobileAI.aiMap;
+                }
                 window.mobileAI.aiMap=L.map('ai-map-container',{zoomControl:true}).setView([20,0],2);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(window.mobileAI.aiMap);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+                    maxZoom:19,
+                    attribution:'&copy; OpenStreetMap contributors'
+                }).addTo(window.mobileAI.aiMap);
+                setTimeout(()=>window.mobileAI.aiMap.invalidateSize(),150);
+                return window.mobileAI.aiMap;
             },
             filtered: () => {
-                const q=(document.getElementById('mobile-ai-search')?.value||document.getElementById('mobile-curate-search')?.value||'').toLowerCase().trim();
+                const q=(document.getElementById('mobile-ai-search')?.value||'').toLowerCase().trim();
                 return window.mobileAI.records.filter(x=>!q||[x.name,x.country,x.category,x.description].join(' ').toLowerCase().includes(q));
             },
             render: () => {
                 const data=window.mobileAI.filtered();
-                const a=document.getElementById('mobile-ai-count');if(a)a.textContent=data.length+' signals';
-                const b=document.getElementById('mobile-curate-count');if(b)b.textContent=data.length+' candidates';
-                if(window.mobileAI.aiMap){
-                    window.mobileAI.aiMap.eachLayer(layer=>{if(layer instanceof L.CircleMarker)window.mobileAI.aiMap.removeLayer(layer);});
-                    data.forEach(x=>L.circleMarker([x.lat,x.lng],{radius:6,color:'#0891b2',fillColor:'#06b6d4',fillOpacity:.85}).addTo(window.mobileAI.aiMap).bindTooltip(window.escapeHtml(x.name)));
+                const count=document.getElementById('mobile-ai-count');
+                if(count) count.textContent=data.length+' signals';
+
+                const map=window.mobileAI.aiMap;
+                if(!map) return;
+
+                map.eachLayer(layer=>{
+                    if(layer instanceof L.CircleMarker) map.removeLayer(layer);
+                });
+
+                const bounds=L.latLngBounds();
+                data.forEach(x=>{
+                    const marker=L.circleMarker([x.lat,x.lng],{
+                        radius:6,
+                        color:'#0891b2',
+                        fillColor:'#06b6d4',
+                        fillOpacity:.88,
+                        weight:1.5
+                    }).addTo(map);
+                    marker.bindTooltip(window.escapeHtml(x.name||'Culinary signal'));
+                    marker.on('click',()=>{
+                        const idx=window.mobileAI.filtered().indexOf(x);
+                        window.mobileAI.openEditor(idx);
+                    });
+                    bounds.extend([x.lat,x.lng]);
+                });
+
+                if(data.length && bounds.isValid()){
+                    map.fitBounds(bounds,{padding:[30,30],maxZoom:5,animate:false});
+                } else {
+                    map.setView([20,0],2,{animate:false});
                 }
-                const list=document.getElementById('mobile-curate-list');
-                if(list) list.innerHTML=data.map((x,i)=>'<div class="bg-white rounded-xl border border-gray-200 p-3"><div class="font-bold text-sm">'+window.escapeHtml(x.name)+'</div><div class="text-[10px] text-gray-500 mt-1">'+window.escapeHtml(x.country)+' • '+window.escapeHtml(x.category)+'</div><p class="text-xs text-gray-600 mt-2 line-clamp-3">'+window.escapeHtml(x.description)+'</p>'+(state.role==='admin'?'<button onclick="window.mobileAI.openEditor('+i+')" class="mt-2 w-full bg-emerald-600 text-white rounded-lg py-2 text-xs font-bold">Review & Save</button>':'')+'</div>').join('');
+
+                setTimeout(()=>map.invalidateSize(),120);
             },
             openEditor:(i)=>{
                 if(state.role!=='admin') return alert('Admin Only');
@@ -1118,14 +1174,22 @@
                 if(!record.food_name||!record.country||!Number.isFinite(record.lat)||!Number.isFinite(record.lng)) return alert('Food name, country, latitude and longitude are required.');
                 const {data,error}=await supabaseClient.from('Heritage Foodways').insert(record).select().single();
                 if(error) return alert('Save failed: '+error.message);
-                state.data.push(transformData(data)); window.mobileAI.closeEditor(); alert('Saved to Supabase as '+record.id);
+                state.data.push(transformData(data));
+                window.dashboard.render();
+                window.mapLogic.render();
+                window.mobileAI.closeEditor();
+                alert('Saved to Supabase as '+record.id);
             }
         };
 
                 window.dashboard = {
             countryChart: null,
             feedLimit: 8,
-            renderKPI: () => {
+            render: () => {
+                window.dashboard.renderKPI();
+                window.dashboard.renderFeed();
+            },
+                        renderKPI: () => {
                 const data=state.data||[], total=data.length;
                 const countries=new Set(data.map(d=>String(d.country||'').trim()).filter(Boolean)).size;
                 const mapped=data.filter(d=>Number.isFinite(Number(d.lat))&&Number.isFinite(Number(d.lng))).length;
@@ -1184,29 +1248,44 @@ window.app = {
             init: async () => {
                 const loadingEl = document.getElementById('loading-indicator');
 
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session) await window.app.applySession(session);
-
-                supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+                try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
                     await window.app.applySession(session);
-                });
 
-                const { data, error } = await supabaseClient
-                    .from('Heritage Foodways')
-                    .select('*')
-                    .order('id');
+                    supabaseClient.auth.onAuthStateChange(async (_event, nextSession) => {
+                        await window.app.applySession(nextSession);
+                    });
 
-                if (error) {
+                    const { data, error } = await supabaseClient
+                        .from('Heritage Foodways')
+                        .select('*')
+                        .order('id');
+
+                    if (error) throw error;
+
+                    state.data = (data || []).map(transformData);
+
+                    if(loadingEl) loadingEl.innerHTML =
+                        '<i class="fas fa-check text-green-400"></i> ' +
+                        '<span class="text-[10px] text-gray-300 ml-2 font-bold uppercase tracking-widest">' +
+                        state.data.length + ' RECORDS • CLOUD SYNCED</span>';
+
+                    const btnEnter = document.getElementById('btn-enter');
+                    if(btnEnter) btnEnter.classList.remove('hidden');
+
+                    // Prepare both maps without triggering another database query.
+                    window.mobileAI.initMap();
+                    window.mapLogic.init();
+
+                } catch (error) {
                     console.error("Supabase fetch error:", error);
-                    if(loadingEl) loadingEl.innerHTML = '<span class="text-red-400 text-xs font-bold">Connection Failed</span>';
-                    return;
+
+                    if(loadingEl) loadingEl.innerHTML =
+                        '<span class="text-red-400 text-xs font-bold">Database connection failed</span>';
+
+                    const btnEnter = document.getElementById('btn-enter');
+                    if(btnEnter) btnEnter.classList.remove('hidden');
                 }
-
-                state.data = (data || []).map(transformData);
-                if(loadingEl) loadingEl.innerHTML = '<i class="fas fa-check text-green-400"></i> <span class="text-[10px] text-gray-300 ml-2 font-bold uppercase tracking-widest">Cloud Synced</span>';
-
-                const btnEnter = document.getElementById('btn-enter');
-                if(btnEnter) btnEnter.classList.remove('hidden');
             },
             
             applySession: async (session) => {
@@ -1236,7 +1315,16 @@ window.app = {
             },
             
             // ... (Kode di bawah ini JANGAN DIHAPUS, biarkan apa adanya)
-            enterApp: () => { document.getElementById('landing-page').classList.add('opacity-0'); setTimeout(() => { document.getElementById('landing-page').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); window.dashboard.renderKPI(); window.dashboard.renderFeed(); window.mapLogic.init(); window.mapLogic.render(); }, 500); },
+            enterApp: () => {
+                document.getElementById('landing-page').classList.add('opacity-0');
+                setTimeout(() => {
+                    document.getElementById('landing-page').classList.add('hidden');
+                    document.getElementById('main-app').classList.remove('hidden');
+                    window.dashboard.render();
+                    window.mapLogic.init();
+                    window.mobileAI.initMap();
+                }, 300);
+            },
             
             enterAdmin: () => {
                 window.app.enterApp();
@@ -1247,15 +1335,28 @@ window.app = {
 
             switchTab: (tab, el) => {
                 document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); if(el)el.classList.add('active');
-                ['dashboard','map','profile','ai-map','curate-map'].forEach(id=>{const v=document.getElementById('view-'+id);if(v)v.classList.add('hidden');});
+                ['dashboard','map','profile','ai-map'].forEach(id=>{const v=document.getElementById('view-'+id);if(v)v.classList.add('hidden');});
                 const target=document.getElementById('view-'+tab);if(target)target.classList.remove('hidden');
-                if(tab==='map')setTimeout(()=>window.mapLogic.map?.invalidateSize(),100);
+                if(tab==='dashboard')setTimeout(()=>window.dashboard.render(),50);
+                if(tab==='map'){
+                    window.mapLogic.init();
+                    setTimeout(()=>window.mapLogic.map?.invalidateSize(),150);
+                }
                 if(tab==='profile')setTimeout(()=>window.dashboard.renderAnalytics(),100);
-                if(tab==='ai-map'){window.mobileAI.initMap();window.mobileAI.refresh();setTimeout(()=>window.mobileAI.aiMap.invalidateSize(),100);}
-                if(tab==='curate-map')window.mobileAI.refresh();
+                if(tab==='ai-map'){
+                    window.mobileAI.initMap();
+                    window.mobileAI.refresh();
+                    setTimeout(()=>window.mobileAI.aiMap?.invalidateSize(),150);
+                }
+
             },
             
-            handleGlobalSearch: (val) => { state.filter = val; state.pagination.page = 1; window.dashboard.renderFeed(); window.mapLogic.render(); },
+            handleGlobalSearch: (val) => {
+                state.filter = val;
+                state.pagination.page = 1;
+                window.dashboard.renderFeed();
+                window.mapLogic.render();
+            },
             initiateAddEntry: () => { state.editId = null; document.querySelectorAll('#input-modal input, #input-modal textarea').forEach(e => e.value = ''); document.getElementById('input-title').innerText = 'New Entry'; document.getElementById('btn-delete').classList.add('hidden'); document.getElementById('geo-status-text').innerText='Area not set'; window.ui.openModal('input-modal'); },
             
             openInputModal: (mode) => { 
@@ -1478,55 +1579,12 @@ window.app = {
                 return window.mapLogic.map;
             },
 
-            init: async () => {
-                const loadingEl = document.getElementById('loading-indicator');
-
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('Heritage Foodways')
-                        .select('*')
-                        .order('id');
-
-                    if (error) throw error;
-
-                    state.data = (data || []).map(transformData);
-                    window.mapLogic.dataLoaded = true;
-
-                    if (loadingEl) {
-                        loadingEl.innerHTML =
-                            '<i class="fas fa-check text-green-400"></i> ' +
-                            '<span class="text-[10px] text-gray-300 ml-2 font-bold uppercase tracking-widest">Cloud Synced</span>';
-                    }
-
-                    const btnEnter = document.getElementById('btn-enter');
-                    if (btnEnter) btnEnter.classList.remove('hidden');
-
-                    window.mapLogic.initMap();
-                    window.mapLogic.render();
-                } catch (error) {
-                    console.error('Foodways data load failed:', error);
-
-                    if (loadingEl) {
-                        loadingEl.innerHTML =
-                            '<span class="text-red-400 text-xs font-bold">Database connection failed</span>';
-                    }
-
-                    const btnEnter = document.getElementById('btn-enter');
-                    if (btnEnter) btnEnter.classList.remove('hidden');
-
-                    const mapEl = document.getElementById('map-container');
-                    if (mapEl) {
-                        mapEl.innerHTML =
-                            '<div class="h-full flex items-center justify-center p-8 text-center">' +
-                            '<div>' +
-                            '<div class="text-red-500 text-3xl mb-3"><i class="fas fa-triangle-exclamation"></i></div>' +
-                            '<div class="font-black text-gray-700">Unable to load Foodways data</div>' +
-                            '<div class="text-xs text-gray-400 mt-2 max-w-xs">' +
-                            window.escapeHtml(error?.message || 'Supabase request failed') +
-                            '</div>' +
-                            '</div></div>';
-                    }
-                }
+            init: () => {
+                const map=window.mapLogic.initMap();
+                if(!map) return null;
+                window.mapLogic.render();
+                setTimeout(()=>map.invalidateSize(),120);
+                return map;
             },
 
             clearLayers: () => {
