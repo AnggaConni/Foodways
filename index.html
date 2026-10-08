@@ -1440,6 +1440,21 @@
                 }
                 setTimeout(() => window.timelineResearch.map.invalidateSize(), 150);
             },
+            toggleFullscreen: async () => {
+                const card=document.getElementById('timeline-map-card');
+                if(!card) return;
+                try {
+                    if(document.fullscreenElement){
+                        await document.exitFullscreen();
+                    } else if(card.requestFullscreen){
+                        await card.requestFullscreen();
+                    } else {
+                        alert('Full screen is not supported by this browser.');
+                    }
+                } catch(err){
+                    console.warn('Timeline map fullscreen failed:', err);
+                }
+            },
             filtered: () => {
                 const q=(document.getElementById('timeline-search')?.value||'').trim().toLowerCase();
                 const year=window.timelineResearch.selectedYear;
@@ -2880,6 +2895,14 @@
                 window.timelineResearch.updateYearUI();
                 window.timelineResearch.render();
             }
+        });
+        document.addEventListener('fullscreenchange', () => {
+            const icon=document.getElementById('timeline-fullscreen-icon');
+            const active=!!document.fullscreenElement;
+            if(icon) icon.className=active?'fas fa-compress':'fas fa-expand';
+            setTimeout(() => {
+                if(window.timelineResearch?.map) window.timelineResearch.map.invalidateSize();
+            }, 150);
         });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') window.timelineResearch.closeDetail();
