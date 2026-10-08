@@ -2840,7 +2840,23 @@
         };
 
         document.addEventListener('input', (e) => {
-            if (e.target && e.target.id === 'timeline-search') window.timelineResearch.renderList();
+            if (!e.target) return;
+            if (e.target.id === 'timeline-search') {
+                window.timelineResearch.updateYearUI();
+                window.timelineResearch.render();
+            }
+            if (e.target.id === 'timeline-year-slider') {
+                window.timelineResearch.selectedYear = Number(e.target.value);
+                window.timelineResearch.updateYearUI();
+                window.timelineResearch.render();
+            }
+        });
+        document.addEventListener('change', (e) => {
+            if (e.target && e.target.id === 'timeline-show-undated') {
+                window.timelineResearch.showUndated = e.target.checked;
+                window.timelineResearch.updateYearUI();
+                window.timelineResearch.render();
+            }
         });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') window.timelineResearch.closeDetail();
