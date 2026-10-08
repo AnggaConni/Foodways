@@ -4,7 +4,7 @@ Foodways Historical Research Pipeline
 
 Pipeline:
   1. Read AI-discovered culinary signals from ai_culinary.json.
-  2. Read the human-curated Foodways records from Supabase.
+  2. Optionally read the human-curated Foodways records from Supabase.
   3. Ask TinyFish Search for live web evidence about historical dates,
      origins, dissemination and possible trade corridors.
   4. Ask Gemini to inspect the TinyFish evidence + human/AI records and
@@ -16,6 +16,7 @@ Important:
   - This produces a RESEARCH / HEURISTIC DATASET only.
   - It does NOT write anything to Supabase.
   - Human curation remains the final authority for Foodways.
+  - Human cross-check is intentionally DISABLED by default for the first research pass.
   - API keys are read only from environment variables / GitHub Secrets.
 """
 
@@ -50,6 +51,7 @@ SUPABASE_URL = os.getenv(
     "SUPABASE_URL", "https://yyjwodgywizjbnrvdnpn.supabase.co"
 )
 SUPABASE_KEY = os.getenv("SUPABASE_PUBLISHABLE_KEY", "")
+ENABLE_HUMAN_CROSSCHECK = os.getenv("ENABLE_HUMAN_CROSSCHECK", "0") == "1"
 
 TINYFISH_KEY = os.getenv("TINYFISH_API_KEY", "")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY", "")
@@ -158,7 +160,7 @@ def record_signature(record: dict[str, Any], human: dict[str, Any] | None) -> st
 
 def load_human_records() -> list[dict[str, Any]]:
     if not SUPABASE_KEY:
-        fail("SUPABASE_PUBLISHABLE_KEY is required for the human cross-check.")
+        return []
 
     url = f'{SUPABASE_URL.rstrip("/")}/rest/v1/{urllib.parse.quote("Heritage Foodways")}'
     data = request_json(
@@ -297,8 +299,13 @@ def main() -> None:
     if not isinstance(records, list):
         fail("ai_culinary.json does not contain a list of records.")
 
-    human_records = load_human_records()
-    human_index = build_human_index(human_records)
+    if ENABLE_HUMAN_CROSSCHECK:
+        human_records = load_human_records()
+        human_index = build_human_index(human_records)
+    else:
+        human_records = []
+        human_index = {}
+        print("[timeline] Human cross-check disabled for this research pass.")
     cache = load_json(CACHE_FILE, {})
 
     candidates = []
