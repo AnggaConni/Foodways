@@ -296,6 +296,9 @@
                     <button onclick="window.app.switchTab('ai-map')" id="nav-ai-map" class="w-full text-left p-4 rounded-xl hover:bg-gray-800 text-gray-400 hover:text-white transition flex items-center text-md group">
                         <i class="fas fa-robot w-8 group-hover:text-cyan-400 transition"></i> Global Map AI
                     </button>
+                    <button onclick="window.app.switchTab('timeline')" id="nav-timeline" class="w-full text-left p-4 rounded-xl hover:bg-gray-800 text-gray-400 hover:text-white transition flex items-center text-md group">
+                        <i class="fas fa-timeline w-8 group-hover:text-amber-400 transition"></i> Timeline & Trade Routes
+                    </button>
 
                 </nav>
             </div>
@@ -424,6 +427,78 @@
                     <div class="relative shadow-2xl">
                         <input type="text" id="map-search" placeholder="Search Map..." class="bg-white border-none text-gray-800 rounded-xl px-5 py-3 text-sm w-72 shadow-lg focus:ring-2 focus:ring-[var(--opera-red)] outline-none" oninput="window.app.updateMapFilter(this.value)">
                         <i class="fas fa-search absolute right-4 top-3.5 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TIMELINE & TRADE ROUTES -->
+            <div id="view-timeline" class="absolute inset-0 hidden bg-slate-100 overflow-y-auto">
+                <div class="p-7 lg:p-8 max-w-[1800px] mx-auto">
+                    <header class="flex flex-wrap items-end justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-3xl lg:text-4xl font-black text-slate-900">Timeline & Trade Routes</h2>
+                            <p class="text-sm text-slate-500 mt-2 max-w-3xl">Evidence-oriented chronology of culinary traditions, probable origins, and trade-route hypotheses. Uses <strong>Earliest Supported Reference</strong> rather than claiming an actual origin year.</p>
+                        </div>
+                        <div class="text-right">
+                            <div id="timeline-generated" class="text-xs font-mono text-slate-400">Research run: —</div>
+                            <button onclick="window.timelineResearch.refresh()" class="mt-2 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold"><i class="fas fa-rotate mr-1"></i> Refresh Research</button>
+                        </div>
+                    </header>
+                    <div id="timeline-warning" class="hidden mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-900"></div>
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm"><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Researched</div><div id="timeline-kpi-researched" class="text-3xl font-black text-slate-900 mt-1">0</div><div id="timeline-kpi-total" class="text-xs text-slate-500 mt-1">of 0 culinary records</div></div>
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm"><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400">High</div><div id="timeline-kpi-high" class="text-3xl font-black text-emerald-600 mt-1">0</div><div class="text-xs text-slate-500 mt-1">overall ≥ 0.80</div></div>
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm"><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Medium</div><div id="timeline-kpi-medium" class="text-3xl font-black text-amber-600 mt-1">0</div><div class="text-xs text-slate-500 mt-1">overall 0.60–0.79</div></div>
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm"><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Low</div><div id="timeline-kpi-low" class="text-3xl font-black text-rose-600 mt-1">0</div><div class="text-xs text-slate-500 mt-1">overall &lt; 0.60</div></div>
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm"><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Errors</div><div id="timeline-kpi-errors" class="text-3xl font-black text-slate-700 mt-1">0</div><div class="text-xs text-slate-500 mt-1">needs another run</div></div>
+                    </div>
+                    <div id="timeline-main-grid" class="grid grid-cols-1 xl:grid-cols-[1.05fr_0.95fr] gap-6">
+                        <div class="space-y-6">
+                            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div class="p-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <h3 class="font-black text-slate-900 flex items-center gap-2"><i class="fas fa-clock-rotate-left text-amber-500"></i> Evidence Timeline</h3>
+                                        <p class="text-xs text-slate-500 mt-1">Click a record to inspect evidence, uncertainty, and route hypotheses.</p>
+                                    </div>
+                                    <input id="timeline-search" type="text" placeholder="Search food, country, route..." class="px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-amber-400 w-64 max-w-full">
+                                </div>
+                                <div id="timeline-list" class="p-5 space-y-3"></div>
+                            </section>
+                            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div class="p-5 border-b border-slate-200">
+                                    <h3 class="font-black text-slate-900 flex items-center gap-2"><i class="fas fa-route text-cyan-600"></i> Trade-route Hypotheses</h3>
+                                    <p class="text-xs text-slate-500 mt-1">Conceptual relationships inferred by the research assistant. Not reconstructed historical route geometries.</p>
+                                </div>
+                                <div id="timeline-routes" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                            </section>
+                        </div>
+                        <div class="space-y-6">
+                            <section class="relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[520px]">
+                                <div id="timeline-map" class="absolute inset-0"></div>
+                                <div class="absolute top-4 left-4 z-[500] bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 p-3 max-w-xs">
+                                    <div class="text-[10px] uppercase tracking-widest font-black text-slate-400 mb-2">Research Map</div>
+                                    <div class="flex items-center gap-2 text-[11px] text-slate-600 mb-1"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> High confidence</div>
+                                    <div class="flex items-center gap-2 text-[11px] text-slate-600 mb-1"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Medium confidence</div>
+                                    <div class="flex items-center gap-2 text-[11px] text-slate-600"><span class="w-3 h-3 rounded-full bg-rose-500"></span> Low confidence</div>
+                                </div>
+                            </section>
+                            <section class="bg-white rounded-2xl border border-amber-200 shadow-sm p-5">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0"><i class="fas fa-circle-info"></i></div>
+                                    <div>
+                                        <h3 class="font-black text-slate-900">Research status & disclaimer</h3>
+                                        <p class="text-sm text-slate-600 mt-2 leading-6">This is a <strong>heuristic research dataset</strong>. AI is assisting discovery and hypothesis generation. Human curator cross-check is disabled for this stage.</p>
+                                        <div class="mt-3 text-[11px] text-slate-500" id="timeline-human-status">Human cross-check: 0 records</div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+                <div id="timeline-detail-modal" class="hidden fixed inset-0 z-[2200] bg-black/50 backdrop-blur-sm p-5 flex items-center justify-center">
+                    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-y-auto">
+                        <div class="p-6 border-b border-slate-200 flex items-start justify-between gap-4"><div><div id="timeline-detail-band" class="text-[10px] uppercase tracking-widest font-black"></div><h3 id="timeline-detail-title" class="text-2xl font-black text-slate-900 mt-1"></h3><div id="timeline-detail-location" class="text-sm text-slate-500 mt-1"></div></div><button onclick="window.timelineResearch.closeDetail()" class="w-9 h-9 rounded-lg hover:bg-slate-100 text-slate-500"><i class="fas fa-times"></i></button></div>
+                        <div id="timeline-detail-body" class="p-6"></div>
                     </div>
                 </div>
             </div>
@@ -1195,6 +1270,141 @@
             }
         };
 
+
+        window.timelineResearch = {
+            records: [],
+            map: null,
+            lastPayload: null,
+            esc: (value) => window.escapeHtml ? window.escapeHtml(String(value ?? '')) : String(value ?? ''),
+            initMap: () => {
+                const el = document.getElementById('timeline-map');
+                if (!el) return;
+                if (!window.timelineResearch.map) {
+                    window.timelineResearch.map = L.map('timeline-map', { zoomControl: true }).setView([10, 20], 2);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(window.timelineResearch.map);
+                }
+                setTimeout(() => window.timelineResearch.map.invalidateSize(), 150);
+            },
+            filtered: () => window.timelineResearch.records,
+            refresh: async () => {
+                try {
+                    const res = await fetch('foodways_timeline_research.json', { cache: 'no-store' });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const payload = await res.json();
+                    window.timelineResearch.lastPayload = payload;
+                    window.timelineResearch.records = Array.isArray(payload.records) ? payload.records : [];
+                    window.timelineResearch.render();
+                } catch (e) {
+                    console.error('Timeline research load failed:', e);
+                    const warning = document.getElementById('timeline-warning');
+                    if (warning) {
+                        warning.classList.remove('hidden');
+                        warning.textContent = 'Unable to load timeline research: ' + (e.message || e);
+                    }
+                }
+            },
+            render: () => { window.timelineResearch.renderStats(); window.timelineResearch.renderList(); window.timelineResearch.renderRoutes(); window.timelineResearch.renderMap(); },
+            renderStats: () => {
+                const s=window.timelineResearch.lastPayload?.stats||{};
+                const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+                set('timeline-kpi-researched',Number(s.researched||0));
+                set('timeline-kpi-total','of '+Number(s.ai_records||0)+' culinary records');
+                const bands={High:0,Medium:0,Low:0,'Very Low':0};
+                window.timelineResearch.records.forEach(r=>{const b=r.confidence?.band||'Very Low';bands[b]=(bands[b]||0)+1});
+                set('timeline-kpi-high',bands.High);
+                set('timeline-kpi-medium',bands.Medium);
+                set('timeline-kpi-low',bands.Low+bands['Very Low']);
+                set('timeline-kpi-errors',Number(s.errors||0));
+                set('timeline-generated',window.timelineResearch.lastPayload?.generated_at?'Research run: '+new Date(window.timelineResearch.lastPayload.generated_at).toLocaleString():'Research run: —');
+                const w=document.getElementById('timeline-warning');
+                const errors=Number(s.errors||0),cached=Number(s.cached||0),researched=Number(s.researched||0),total=Number(s.ai_records||0);
+                const pending=Math.max(total-researched-cached-errors,0);
+                if(w){w.classList.toggle('hidden',!(errors||pending));w.textContent='Partial research: '+researched+' researched, '+errors+' errors, '+pending+' pending.';}
+            },
+            renderList: () => {
+                const box=document.getElementById('timeline-list');
+                if(!box) return;
+                const q=(document.getElementById('timeline-search')?.value||'').trim().toLowerCase();
+                const data=window.timelineResearch.records.filter(r=>{
+                    const a=r.assessment||{};
+                    return !q || [r.food_name,r.ai_country,a.probable_origin_country,a.probable_origin_place]
+                        .join(' ').toLowerCase().includes(q);
+                }).slice().sort((a,b)=>{
+                    const ay=Number(a.assessment?.earliest_supported_year);
+                    const by=Number(b.assessment?.earliest_supported_year);
+                    if(Number.isFinite(ay)&&Number.isFinite(by)) return ay-by;
+                    if(Number.isFinite(ay)) return -1;
+                    if(Number.isFinite(by)) return 1;
+                    return String(a.food_name||'').localeCompare(String(b.food_name||''));
+                });
+                box.innerHTML=data.length?data.map(r=>{
+                    const a=r.assessment||{},c=r.confidence||{},band=c.band||'Very Low';
+                    const year=Number(a.earliest_supported_year);
+                    const y=Number.isFinite(year)?year:'No dated evidence';
+                    const cls=band==='High'?'text-emerald-700':band==='Medium'?'text-amber-700':'text-rose-700';
+                    return '<button onclick="window.timelineResearch.openDetail('+JSON.stringify(r.source_id)+')" class="w-full text-left p-4 rounded-2xl border border-slate-200 hover:border-amber-300 bg-white">'
+                        +'<div class="flex items-start justify-between gap-3"><div><div class="text-[10px] uppercase tracking-widest font-black text-slate-400">'+y+'</div>'
+                        +'<div class="font-black text-slate-900 mt-1">'+window.timelineResearch.esc(r.food_name)+'</div>'
+                        +'<div class="text-xs text-slate-500 mt-1">'+window.timelineResearch.esc(a.probable_origin_place||a.probable_origin_country||r.ai_country||'Unknown')+'</div></div>'
+                        +'<div class="text-right"><div class="text-xs font-black '+cls+'">'+window.timelineResearch.esc(band)+'</div><div class="text-lg font-black">'+(Number(c.overall||0)*100).toFixed(0)+'%</div></div></div>'
+                        +'<div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold"><span class="px-2 py-1 rounded bg-slate-100">Date '+(Number(c.date||0)*100).toFixed(0)+'%</span><span class="px-2 py-1 rounded bg-slate-100">Origin '+(Number(c.origin||0)*100).toFixed(0)+'%</span><span class="px-2 py-1 rounded bg-cyan-50 text-cyan-700">Route '+(Number(c.trade_route||0)*100).toFixed(0)+'%</span></div></button>';
+                }).join(''):'<div class="p-8 text-center text-sm text-slate-400">No researched records match.</div>';
+            },
+            renderMap: () => {
+                window.timelineResearch.initMap();
+                const m=window.timelineResearch.map;
+                if(!m)return;
+                m.eachLayer(x=>{if(x instanceof L.CircleMarker)m.removeLayer(x);});
+                window.timelineResearch.records.forEach(r=>{
+                    const lat=Number(r.ai_location?.lat),lng=Number(r.ai_location?.lng);
+                    if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+                    const b=r.confidence?.band||'Low',col=b==='High'?'#10b981':b==='Medium'?'#f59e0b':'#f43f5e';
+                    const p=L.circleMarker([lat,lng],{radius:8,color:col,fillColor:col,fillOpacity:.85,weight:2}).addTo(m);
+                    p.bindTooltip(window.timelineResearch.esc(r.food_name||'Foodway'));
+                    p.on('click',()=>window.timelineResearch.openDetail(r.source_id));
+                });
+            },
+            openDetail: (id) => {
+                const r=window.timelineResearch.records.find(x=>x.source_id===id);
+                if(!r)return;
+                const a=r.assessment||{},c=r.confidence||{},modal=document.getElementById('timeline-detail-modal');
+                document.getElementById('timeline-detail-title').textContent=r.food_name||'Foodway';
+                document.getElementById('timeline-detail-location').textContent=[r.ai_country,r.ai_location?.provinces?.join(', ')].filter(Boolean).join(' • ');
+                document.getElementById('timeline-detail-band').textContent=(c.band||'Very Low')+' confidence • '+(Number(c.overall||0)*100).toFixed(0)+'% overall';
+                const body=document.getElementById('timeline-detail-body');
+                const ev=(a.date_evidence||[]).map(e=>'<li><b>'+window.timelineResearch.esc(e.year||'Undated')+'</b> — '+window.timelineResearch.esc(e.claim||'')+' <a class="text-blue-600" target="_blank" href="'+window.timelineResearch.esc(e.source_url||'#')+'">source</a></li>').join('');
+                const rt=(a.route_hypotheses||[]).map(h=>'<div class="border rounded-xl p-3 mb-2"><b>'+window.timelineResearch.esc(h.route||'Route')+'</b><div class="text-sm mt-1">'+window.timelineResearch.esc(h.relationship||'')+'</div><div class="text-xs mt-1 text-cyan-700">'+(Number(h.confidence||0)*100).toFixed(0)+'% confidence</div></div>').join('');
+                body.innerHTML='<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">'+['date','origin','trade_route','overall'].map(k=>'<div class="bg-slate-50 rounded-xl p-3"><div class="text-[10px] uppercase text-slate-400">'+k.replace('_',' ')+'</div><div class="text-xl font-black">'+(Number(c[k]||0)*100).toFixed(0)+'%</div></div>').join('')+'</div>'
+                    +'<div class="grid md:grid-cols-2 gap-5"><div><div class="text-xs uppercase font-black text-slate-400">Earliest Supported Reference</div><div class="text-2xl font-black mt-1">'+(a.earliest_supported_year??'No dated evidence')+'</div><p class="text-sm text-slate-600 mt-3">'+window.timelineResearch.esc(a.origin_reasoning||'')+'</p><p class="text-sm text-slate-600 mt-3"><b>Uncertainty:</b> '+window.timelineResearch.esc(a.uncertainty||'None stated')+'</p></div><div><div class="text-xs uppercase font-black text-slate-400">Date Evidence</div><ul class="list-disc pl-5 text-sm space-y-2">'+(ev||'<li>No dated evidence.</li>')+'</ul><div class="text-xs uppercase font-black text-slate-400 mt-5 mb-2">Trade-route Hypotheses</div>'+ (rt||'<div class="text-sm text-slate-400">None.</div>') +'</div></div><div class="mt-5 pt-4 border-t text-[11px] text-slate-500">Heuristic research only. Human curator verification is not enabled in this stage.</div>';
+                modal.classList.remove('hidden');
+            },
+            openDetail: () => {},
+            renderRoutes: () => {
+                const box=document.getElementById('timeline-routes');
+                if(!box) return;
+                const groups={};
+                window.timelineResearch.records.forEach(r=>{
+                    (r.assessment?.route_hypotheses||[]).forEach(h=>{
+                        const key=h.route||'Unnamed route';
+                        if(!groups[key]) groups[key]=[];
+                        groups[key].push({food:r.food_name,confidence:Number(h.confidence||0),relationship:h.relationship||''});
+                    });
+                });
+                const entries=Object.entries(groups);
+                box.innerHTML=entries.length?entries.map(([route,items])=>{
+                    const avg=items.reduce((s,x)=>s+x.confidence,0)/items.length;
+                    return '<div class="rounded-2xl border border-slate-200 p-4"><div class="flex justify-between gap-3"><div class="font-black text-slate-900">'+window.timelineResearch.esc(route)+'</div><span class="text-[10px] font-black bg-cyan-50 text-cyan-700 px-2 py-1 rounded-full">'+(avg*100).toFixed(0)+'%</span></div>'
+                        +'<div class="mt-3 space-y-2">'+items.map(i=>'<div class="text-xs text-slate-600"><b class="text-slate-800">'+window.timelineResearch.esc(i.food)+'</b><div>'+window.timelineResearch.esc(i.relationship)+'</div></div>').join('')+'</div></div>';
+                }).join(''):'<div class="text-sm text-slate-400 md:col-span-2">No trade-route hypotheses yet.</div>';
+            },
+            closeDetail: () => {
+                const modal = document.getElementById('timeline-detail-modal');
+                if (modal) modal.classList.add('hidden');
+            }
+        };
 
         window.aiRadar = {
             records: [],
@@ -2072,7 +2282,7 @@
             },
 
             switchTab: (t) => {
-                ['dashboard','map','ai-map'].forEach(id => {
+                ['dashboard','map','ai-map','timeline'].forEach(id => {
                     const el=document.getElementById('view-'+id);
                     if(el) el.classList.add('hidden');
                 });
@@ -2083,6 +2293,10 @@
                 if(t==='ai-map') {
                     window.aiRadar.initMaps();
                     window.aiRadar.refresh();
+                }
+                if(t==='timeline') {
+                    window.timelineResearch.initMap();
+                    window.timelineResearch.refresh();
                 }
             },
             exportData: () => {
@@ -2396,6 +2610,13 @@
                 }
             }
         };
+
+        document.addEventListener('input', (e) => {
+            if (e.target && e.target.id === 'timeline-search') window.timelineResearch.renderList();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') window.timelineResearch.closeDetail();
+        });
 
         window.addEventListener('DOMContentLoaded', window.app.init);
 
