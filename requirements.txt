@@ -1,0 +1,1 @@
+# Foodways keep-alive uses Python standard library only.
