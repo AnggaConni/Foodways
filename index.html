@@ -1501,9 +1501,25 @@
                     const payload = await response.json();
                     const inventory = Array.isArray(payload) ? payload : (payload.inventory || []);
                     // ai_culinary.json is already normalized by the Foodways Python sync.
-                    window.aiRadar.records = inventory
-                        .map(x => ({...x, provinces:Array.isArray(x.provinces)?x.provinces:[], tags:Array.isArray(x.tags)?x.tags:[], shared_heritage_detection:x.shared_heritage||{}})).map(x => window.aiRadar.normalize(x))
-                        .filter(x => Number.isFinite(x.lat) && Number.isFinite(x.lng));
+                    window.aiRadar.records = inventory.map(item => ({
+                        source_id: item.source_id || item.id || '',
+                        element_name: item.element_name || '',
+                        category: item.category || '',
+                        country: item.country || '',
+                        provinces: Array.isArray(item.provinces) ? item.provinces : [],
+                        lat: Number(item.lat),
+                        lng: Number(item.lng),
+                        thumbnail_url: item.thumbnail_url || '',
+                        source_urls: Array.isArray(item.source_urls) ? item.source_urls : [],
+                        description: item.description || '',
+                        significance: item.cultural_significance || item.significance || '',
+                        tags: Array.isArray(item.tags) ? item.tags : [],
+                        completion_status: item.completion_status || '',
+                        scraped_at: item.scraped_at || '',
+                        shared: item.shared_heritage?.is_shared === true,
+                        confidence: Number(item.shared_heritage?.confidence_score || 0),
+                        related_elements: Array.isArray(item.shared_heritage?.related_elements) ? item.shared_heritage.related_elements : []
+                    })).filter(x => Number.isFinite(x.lat) && Number.isFinite(x.lng));
                     window.aiRadar.render();
                 } catch (e) {
                     console.error('ICH-Radar culinary load failed:', e);
