@@ -7,13 +7,18 @@ on:
         description: "0 = all culinary records; use 3-5 for a cheap test run"
         required: false
         default: "0"
+      force_run:
+        description: "Run Python now even if the 4-day gate has not elapsed"
+        required: false
+        default: "false"
       force_research:
         description: "Ignore cache and research all selected records"
         required: false
         default: "false"
   schedule:
-    # Weekly research refresh. Cached records are skipped unless their source data changes.
-    - cron: "0 4 * * 1"
+    # Run the workflow daily; a gate below lets Python actually run every 4 days.
+    # Manual workflow_dispatch can bypass the 4-day gate with force_run=true.
+    - cron: "0 4 * * *"
 
 permissions:
   contents: write
@@ -35,7 +40,41 @@ jobs:
       - name: Install research SDKs
         run: python -m pip install --upgrade google-genai pydantic
 
+      - name: Check 4-day gate
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FORCE_RUN: ${{ inputs.force_run || 'false' }}
+        run: |
+          if [ "$FORCE_RUN" = "true" ]; then
+            echo "run_python=true" >> "$GITHUB_OUTPUT"
+            echo "Forced run requested."
+            exit 0
+          fi
+
+          RUNS_JSON=$(curl -fsSL             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             "https://api.github.com/repos/${{ github.repository }}/actions/workflows/research-foodways-timeline.yml/runs?status=success&per_page=10")
+
+          LAST_SUCCESS=$(python -c 'import json,sys; d=json.load(sys.stdin); rs=d.get("workflow_runs",[]); print(rs[1]["created_at"] if len(rs)>1 else "")' <<< "$RUNS_JSON")
+
+          if [ -z "$LAST_SUCCESS" ]; then
+            echo "run_python=true" >> "$GITHUB_OUTPUT"
+            echo "No previous successful run found; running Python."
+            exit 0
+          fi
+
+          python - <<'PY' "$LAST_SUCCESS"
+          import sys
+          from datetime import datetime, timezone
+          last=datetime.fromisoformat(sys.argv[1].replace("Z","+00:00"))
+          age=(datetime.now(timezone.utc)-last).total_seconds()/86400
+          print(f"Days since last successful Python run: {age:.2f}")
+          print("run_python="+("true" if age >= 4 else "false"))
+          with open(__import__("os").environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as fh:
+              fh.write("run_python="+("true" if age >= 4 else "false")+"\n")
+          PY
+
       - name: Run TinyFish + Gemini research
+        if: steps.gate.outputs.run_python == 'true'
         env:
           TINYFISH_API_KEY: ${{ secrets.TINYFISH_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
