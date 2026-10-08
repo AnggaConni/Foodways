@@ -1,0 +1,370 @@
+{
+  "generated_at": "2026-10-08T19:54:16.543852+00:00",
+  "stats": {
+    "ai_records": 58,
+    "human_records": 0,
+    "researched": 3,
+    "cached": 0,
+    "errors": 4
+  },
+  "disclaimer": "Heuristic research dataset. AI is currently an assistant for discovery and hypothesis generation. No human curator has yet verified the complete timeline or causal trade-route relationships.",
+  "records": [
+    {
+      "source_id": "ich-d47c6240",
+      "food_name": "Traditional Ways of Making Artisanal Minas Cheese (Modo de Fazer Queijo Minas Artesanal)",
+      "ai_country": "Brazil",
+      "ai_location": {
+        "lat": -18.5264844,
+        "lng": -44.1588654,
+        "provinces": [
+          "Minas Gerais"
+        ]
+      },
+      "human_match": false,
+      "human_record_id": null,
+      "human_origin": {
+        "origin_food_name": null,
+        "origin_country": null,
+        "origin_lat": null,
+        "origin_lng": null,
+        "research_links": null
+      },
+      "assessment": {
+        "probable_origin_country": "Brazil",
+        "probable_origin_place": "Minas Gerais",
+        "earliest_supported_year": 1800,
+        "date_evidence": [
+          {
+            "year": 1800,
+            "claim": "The first recipe was brought over to Brazil from Portugal in 1800's and adapted to local conditions.",
+            "source_url": "https://www.hotandchilli.com/cheese-brazilian-minas-style-recipe/",
+            "confidence": 0.45
+          }
+        ],
+        "route_hypotheses": [
+          {
+            "route": "Portuguese Transatlantic Colonial Exchange (Azores to Colonial Brazil)",
+            "relationship": "Cheesemaking techniques using raw cow's milk from the Azorean islands of Pico and São Jorge were transplanted by Portuguese migrants and adapted to local conditions in Minas Gerais.",
+            "evidence": [
+              "Academic literature notes that artisanal Minas cheese originated from Pico and São Jorge cheeses from the Azores made with raw cow's milk."
+            ],
+            "confidence": 0.75
+          },
+          {
+            "route": "Estrada Real / Gold Rush Supply Network in Minas Gerais",
+            "relationship": "Minas artisanal cheese developed as a durable foodstuff to sustain miners, merchants, and pack mule convoys traversing the interior mining corridors during the Brazilian gold rush.",
+            "evidence": [
+              "Historical reporting notes the origins date back to Brazil's gold rush in the former Captaincy of Minas Gerais as an enduring food for long journeys."
+            ],
+            "confidence": 0.7
+          }
+        ],
+        "date_confidence": 0.45,
+        "origin_confidence": 0.85,
+        "trade_route_confidence": 0.72,
+        "origin_reasoning": "While the technical lineage derives from Portuguese raw-milk cheesemaking practices (specifically from the Azores), the distinctive 'Modo de Fazer Queijo Minas Artesanal'—characterized by the use of 'pingo' (endogenous whey starter culture) and local raw bovine milk—crystallized specifically in the mountainous territory of Minas Gerais, Brazil.",
+        "uncertainty": "Web sources often refer generally to the '18th century' or 'gold rush' era without citing an exact four-digit baseline year, while informal recipe sources reference the '1800s'. The precise year of adoption in Minas Gerais remains undocumented in the supplied sources.",
+        "contradictions": [
+          "Informal culinary sources place the arrival of the first recipe in Brazil in the 1800s, whereas historical and agricultural narratives attribute its roots to the early-to-mid 18th-century gold rush era in the Captaincy of Minas Gerais."
+        ]
+      },
+      "confidence": {
+        "date": 0.45,
+        "origin": 0.85,
+        "trade_route": 0.72,
+        "overall": 0.651,
+        "band": "Medium"
+      },
+      "tinyfish_sources": [
+        {
+          "position": 1,
+          "site_name": "ich.unesco.org",
+          "title": "Traditional ways of making Artisan Minas Cheese in Minas Gerais",
+          "snippet": "The process of making artisanal Minas cheese involves knowledge and techniques developed by small rural producers in the State of Minas Gerais, in Brazil. Missing:  history  origin  earliest  documented  trade",
+          "url": "https://ich.unesco.org/en/RL/traditional-ways-of-making-artisan-minas-cheese-in-minas-gerais-02102"
+        },
+        {
+          "position": 2,
+          "site_name": "www.youtube.com",
+          "title": "Traditional ways of making Artisan Minas Cheese in Minas Gerais",
+          "snippet": "... Minas Gerais, in Brazil. Local cheesemakers use raw milk and the 'pingo' (drop), a natural yeast composed of region-specific bacteria which ... Missing:  Artesanal)  history  origin  earliest  documented  +2",
+          "url": "https://www.youtube.com/watch?v=SCzx5hTFHkI"
+        },
+        {
+          "position": 3,
+          "site_name": "en.wikipedia.org",
+          "title": "Minas cheese - Wikipedia",
+          "snippet": "Minas cheese is made from cow's milk according to traditional recipes. It used to be matured naturally in the open air or, much less often, over a cooker to ... Missing:  (Modo  Fazer  earliest  documented  trade  route  tradition",
+          "url": "https://en.wikipedia.org/wiki/Minas_cheese"
+        },
+        {
+          "position": 4,
+          "site_name": "pmc.ncbi.nlm.nih.gov",
+          "title": "Artisanal Brazilian Cheeses—History, Marketing, Technological ...",
+          "snippet": "According to Netto [23], the Minas Artisanal cheese has originated from the Pico and São Jorge cheeses, both from the Azorean islands, made with cow's raw milk ... Missing:  (Modo  Fazer",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8307891/"
+        },
+        {
+          "position": 5,
+          "site_name": "ich.unesco.org",
+          "title": "Traditional ways of making Artisan Minas Cheese in Minas Gerais",
+          "snippet": "Traditional ways of making Artisan Minas Cheese in Minas Gerais (Brazil) Representative List - 2024 ... Your browser can't play this video. Learn more ... Missing:  (Modo  Fazer  Artesanal)  history  origin  earliest  +4",
+          "url": "https://ich.unesco.org/en/video/72417"
+        },
+        {
+          "position": 6,
+          "site_name": "www.hotandchilli.com",
+          "title": "Cheese, Brazilian Minas style - a recipe and updates",
+          "snippet": "The first recipe was brought over to Brazil from Portugal in 1800's and adapted to local conditions. In the original recipe the salt is ... Missing:  Traditional  Artisanal  (Modo  Fazer  Artesanal)  +3",
+          "url": "https://www.hotandchilli.com/cheese-brazilian-minas-style-recipe/"
+        },
+        {
+          "position": 7,
+          "site_name": "www.brazilianfarmers.com",
+          "title": "Brazilian Minas Artisanal Cheese Recognized as Intangible ...",
+          "snippet": "A legacy of flavor and history. The origins of Minas Artisanal Cheese date back to Brazil's gold rush in the former Captaincy of Minas Gerais. Missing:  (Modo  Fazer  Queijo  Artesanal)  documented  trade  route",
+          "url": "https://www.brazilianfarmers.com/news/brazilian-minas-artisanal-cheese-recognized-as-intangible-cultural-heritage-by-unesco/"
+        },
+        {
+          "position": 8,
+          "site_name": "ich.unesco.org",
+          "title": "Country page - UNESCO Intangible Cultural Heritage",
+          "snippet": "Traditional ways of making Artisan Minas Cheese in Minas Gerais (Brazil) Representative List - 2024. Tap to unmute. Your browser can't play this video. Learn ... Missing:  (Modo  de  Fazer  Queijo  Artesanal)  history  origin  +6",
+          "url": "https://ich.unesco.org/en/state/brazil-BR?include=film_inc.php&id=72417&width=700&call=film"
+        }
+      ],
+      "heuristic_disclaimer": "Research-assistant output only. Timeline dates, probable origins and trade-route relationships are heuristic hypotheses generated from AI-discovered data and live web evidence. They have not yet been verified by a human curator.",
+      "researched_at": "2026-10-08T19:53:40.972608+00:00"
+    },
+    {
+      "source_id": "ich-ca7fb255",
+      "food_name": "Tunu Ahi Ika",
+      "ai_country": "Chile",
+      "ai_location": {
+        "lat": -32.5976089,
+        "lng": -70.8529753,
+        "provinces": [
+          "Valparaíso Region",
+          "Easter Island (Rapa Nui)"
+        ]
+      },
+      "human_match": false,
+      "human_record_id": null,
+      "human_origin": {
+        "origin_food_name": null,
+        "origin_country": null,
+        "origin_lat": null,
+        "origin_lng": null,
+        "research_links": null
+      },
+      "assessment": {
+        "probable_origin_country": "Chile",
+        "probable_origin_place": "Easter Island (Rapa Nui)",
+        "earliest_supported_year": null,
+        "date_evidence": [],
+        "route_hypotheses": [
+          {
+            "route": "East Polynesian Maritime Migration Network",
+            "relationship": "Ancestral Polynesian voyagers brought seafaring foodways, stone-heating methods, and marine foraging traditions across the Pacific to Rapa Nui, where cooking fish and tubers directly on heated volcanic stones (Tunu Ahi) developed as an open-air companion to earth-oven (umu) cooking.",
+            "evidence": [
+              "Described as an ancestral cooking practice unique to Rapa Nui, utilizing volcanic stones and open fires on the coastline (https://imaginarapanui.com/en/easter-island-food/).",
+              "Identified as traditional Rapa Nui cuisine involving fish, sweet potatoes, and coastal bonfires across Rapa Nui culinary records (https://rapanuitravelguide.com/rapa-nui/traditional-food-of-rapa-nui/)."
+            ],
+            "confidence": 0.7
+          }
+        ],
+        "date_confidence": 0.1,
+        "origin_confidence": 0.85,
+        "trade_route_confidence": 0.65,
+        "origin_reasoning": "Every available source identifies Tunu Ahi (and Tunu Ahi Ika) as an indigenous culinary tradition of the Rapa Nui people on Easter Island (politically part of Chile). The practice relies on local volcanic rocks and coastal fish harvesting, firmly locating its traditional development on Rapa Nui.",
+        "uncertainty": "While sources universally attest to Tunu Ahi as an ancestral practice originating prior to European contact, none of the provided search excerpts provide a specific four-digit historical date or archaeological dating for the first documented instance of the specific compound term 'Tunu Ahi Ika'.",
+        "contradictions": []
+      },
+      "confidence": {
+        "date": 0.1,
+        "origin": 0.85,
+        "trade_route": 0.65,
+        "overall": 0.49,
+        "band": "Low"
+      },
+      "tinyfish_sources": [
+        {
+          "position": 1,
+          "site_name": "imaginarapanui.com",
+          "title": "EASTER ISLAND FOOD | Imagine Rapa Nui Easter Island",
+          "snippet": "Tunu Ahi literally means “cooking with fire or heat” in the Rapanui language and is the other traditional way of cooking food on Easter Island. Missing:  Ika  origin  trade  route  Ika,  Spanish,  people",
+          "url": "https://imaginarapanui.com/en/easter-island-food/"
+        },
+        {
+          "position": 2,
+          "site_name": "www.gochile.cl",
+          "title": "6 typical foods of Rapa Nui: What to eat on Easter Island?",
+          "snippet": "Tunu Ahi is another of the island's ancestral cooking techniques. Its name in Rapa Nui means \"cooking with fire\" and consists of cooking food on hot volcanic ... Missing:  Ika  origin  trade  Ika,",
+          "url": "https://www.gochile.cl/en/articles/6-typical-foods-of-rapa-nui-easter-island.htm"
+        },
+        {
+          "position": 3,
+          "site_name": "kapuatours.cl",
+          "title": "Typical food from easter island - Kapua Rapa Nui Tours",
+          "snippet": "Tunu Ahi. Tunu Ahi literally means “cooking with fire or heat” in Rapa Nui and is another traditional way of cooking in Easter Island. It ... Missing:  Ika  history  origin  earliest  trade  route  Ika,  people",
+          "url": "https://kapuatours.cl/en/blog/gastronomy-and-typical-food-of-easter-island/"
+        },
+        {
+          "position": 4,
+          "site_name": "en.wikipedia.org",
+          "title": "Pascuense cuisine - Wikipedia",
+          "snippet": "Tunu Ahi Ika which translates to fish cooked over fire in Spanish is an ancient culinary tradition of the Rapa Nui people on Easter Island Missing:  Ika  origin  earliest  trade  route  Ika,  translates  fire  ancient  ancestral",
+          "url": "https://en.wikipedia.org/wiki/Pascuense_cuisine"
+        },
+        {
+          "position": 5,
+          "site_name": "rapanuitravelguide.com",
+          "title": "Traditional Food of Rapa Nui: Umu, Po'e & Seafood",
+          "snippet": "Tunu ahi: grilled on hot stones. Tunu ahi is the traditional Rapa Nui barbecue: stones are heated in a fire and the food is cooked directly on top of them. Missing:  Ika  origin  earliest  documented  trade  route  Chile  Ika,  translates  ancient  ancestral",
+          "url": "https://rapanuitravelguide.com/rapa-nui/traditional-food-of-rapa-nui/"
+        },
+        {
+          "position": 6,
+          "site_name": "pmc.ncbi.nlm.nih.gov",
+          "title": "Diet of the prehistoric population of Rapa Nui (Easter Island ...",
+          "snippet": "Tunu Ahi Ika which translates to fish cooked over fire in Spanish is an ancient culinary tradition of the Rapa Nui people on Easter Island Missing:  Tunu  Ahi  Ika  trade  tradition  Ika,  Spanish,  ancestral",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5637906/"
+        },
+        {
+          "position": 7,
+          "site_name": "www.rainforestcruises.com",
+          "title": "Easter Island Cuisine: Traditional Food & Drink You Must Try",
+          "snippet": "Tunu Ahi Ika which translates to fish cooked over fire in Spanish is an ancient culinary tradition of the Rapa Nui people on Easter Island Missing:  Tunu  Ika  history  origin  trade  route  Ika,  fire  Spanish,  ancestral",
+          "url": "https://www.rainforestcruises.com/guides/easter-island-cuisine"
+        },
+        {
+          "position": 8,
+          "site_name": "chile.travel",
+          "title": "Discover the typical cuisine of Chile: a journey from north to south",
+          "snippet": "Tunu Ahi Ika which translates to fish cooked over fire in Spanish is an ancient culinary tradition of the Rapa Nui people on Easter Island Missing:  Ika  history  origin  earliest  documented  trade  Ika,  translates  fire  Spanish,  people",
+          "url": "https://chile.travel/en/blog/typical-cuisine-a-journey-through-the-flavors-of-chile/"
+        }
+      ],
+      "heuristic_disclaimer": "Research-assistant output only. Timeline dates, probable origins and trade-route relationships are heuristic hypotheses generated from AI-discovered data and live web evidence. They have not yet been verified by a human curator.",
+      "researched_at": "2026-10-08T19:53:56.358893+00:00"
+    },
+    {
+      "source_id": "ich-30933539",
+      "food_name": "Fried Wheat Gluten (Mianjin)",
+      "ai_country": "China",
+      "ai_location": {
+        "lat": 34.5412252,
+        "lng": 108.9237067,
+        "provinces": []
+      },
+      "human_match": false,
+      "human_record_id": null,
+      "human_origin": {
+        "origin_food_name": null,
+        "origin_country": null,
+        "origin_lat": null,
+        "origin_lng": null,
+        "research_links": null
+      },
+      "assessment": {
+        "probable_origin_country": "China",
+        "probable_origin_place": null,
+        "earliest_supported_year": null,
+        "date_evidence": [],
+        "route_hypotheses": [
+          {
+            "route": "Buddhist Monastic Exchange Networks (China to Japan)",
+            "relationship": "Dissemination of wheat gluten preparation and meat substitutes across East Asian Buddhist temples, leading to Japanese adaptations such as fu and seitan.",
+            "evidence": [
+              "Sources state wheat gluten was created in China as a meat substitute for Buddhist monks and later became historically popular across Chinese and Japanese cuisines."
+            ],
+            "confidence": 0.75
+          },
+          {
+            "route": "Grand Canal and Jiangnan Inland Waterways",
+            "relationship": "Regional dissemination and commercialization of processed wheat gluten products, particularly fried gluten puffs originating around Wuxi.",
+            "evidence": [
+              "Historical accounts link specific fried wheat gluten varieties to Wuxi during the Qing dynasty, a major grain trade hub along Jiangnan waterways."
+            ],
+            "confidence": 0.65
+          }
+        ],
+        "date_confidence": 0.35,
+        "origin_confidence": 0.85,
+        "trade_route_confidence": 0.7,
+        "origin_reasoning": "Available sources consistently identify China as the origin of wheat gluten (mianjin), highlighting its creation as an ingredient in noodles and as a protein-rich meat substitute developed for Buddhist monastic vegetarian diets.",
+        "uncertainty": "The web sources explicitly reference the 6th century and dynastic periods (Song and Qing dynasties) but do not provide an explicit four-digit year for the earliest documented preparation of mianjin. Additionally, specific regional origins within China vary depending on whether general wheat gluten or specific fried preparations (such as Wuxi you mianjin) are being referenced.",
+        "contradictions": [
+          "General wheat gluten is noted as dating back to the 6th century for noodles and Buddhist vegetarian diets, whereas fried gluten puffs (you mianjin) are separately described as having a 230-year history originating in Wuxi during the Qing dynasty."
+        ]
+      },
+      "confidence": {
+        "date": 0.35,
+        "origin": 0.85,
+        "trade_route": 0.7,
+        "overall": 0.605,
+        "band": "Medium"
+      },
+      "tinyfish_sources": [
+        {
+          "position": 1,
+          "site_name": "",
+          "title": "Seitan - Wikipedia",
+          "snippet": "Wheat gluten first appeared during the 6th century as an ingredient in Chinese noodles. [5] It has historically been popular in the cuisines of China, Japan. ... Missing:  (Mianjin)  trade  route  tradition  Mianjin,",
+          "url": "/url?opi=89978449&q=https://en.wikipedia.org/wiki/Seitan&sa=U&ved=2ahUKEwipmK7umKuXAxW5SmwGHZtNM3MQFnoECAYQAg&usg=AOvVaw1-UuVpn5XDmCynhNwBQRFQ"
+        },
+        {
+          "position": 2,
+          "site_name": "",
+          "title": "Wheat Gluten (Mian Jin, 面筋， Seitan， Mi Chiya)",
+          "snippet": "Wheat gluten has been documented in China since the 6th century. It was widely consumed by the Chinese as a substitute for meat, especially ... Missing:  history  trade  route  tradition",
+          "url": "/url?opi=89978449&q=https://www.guaishushu1.com/wheat-gluten-mian-jin-%25E9%259D%25A2%25E7%25AD%258B%25EF%25BC%258C-seitan%25EF%25BC%258C-mi-chiya/&sa=U&ved=2ahUKEwipmK7umKuXAxW5SmwGHZtNM3MQFnoECAcQAg&usg=AOvVaw1Gl-T0eUiEzlw756kSR2ah"
+        },
+        {
+          "position": 3,
+          "site_name": "",
+          "title": "Seitan & Wheat Gluten - The Woks of Life",
+          "snippet": "Known in Chinese as miànjīn (面筋), it believed to have been invented in ancient China as a meat substitute for Buddhist monks. It's also ... Missing:  history  origin  trade  route  tradition  sticky,",
+          "url": "/url?opi=89978449&q=https://thewoksoflife.com/seitan-wheat-gluten/&sa=U&ved=2ahUKEwipmK7umKuXAxW5SmwGHZtNM3MQFnoECAkQAg&usg=AOvVaw2yAF84NJDqcmOIOud5G7FU"
+        },
+        {
+          "position": 4,
+          "site_name": "",
+          "title": "Gluttons for Gluten - The World of Chinese Magazine",
+          "snippet": "It has a history of more than 230 years, allegedly originating in the city Wuxi during the reign of the Qianlong Emperor of the Qing dynasty. Missing:  origin  trade  route  tradition  product  washing  +4",
+          "url": "/url?opi=89978449&q=https://www.theworldofchinese.com/2019/11/gluttons-for-gluten/&sa=U&ved=2ahUKEwipmK7umKuXAxW5SmwGHZtNM3MQFnoECAsQAg&usg=AOvVaw3jRUkwfBg6fwHju7-2hPR0"
+        },
+        {
+          "position": 5,
+          "site_name": "",
+          "title": "Wheat Gluten (Food) | Encyclopedia MDPI",
+          "snippet": "Wheat gluten first appeared during the 6th century as an ingredient for Chinese noodles. It has historically been popular in the cuisines of ... Missing:  Fried  (Mianjin)  origin  trade  route  tradition  Mianjin,",
+          "url": "/url?opi=89978449&q=https://encyclopedia.pub/entry/38550&sa=U&ved=2ahUKEwipmK7umKuXAxW5SmwGHZtNM3MQFnoECAUQAg&usg=AOvVaw3aDUqvRV3CMBS0ak6HrXEO"
+        },
+        {
+          "position": 6,
+          "site_name": "",
+          "title": "Mianjin 面筋: Part I - by Pamelia Chia - Singapore Noodles",
+          "snippet": "Mianjin or wheat gluten is a traditional Chinese food product created by washing wheat flour dough to remove the starch leaving behind a sticky ... Missing:  history  earliest  trade  tradition",
+          "url": "/url?opi=89978449&q=https://sgpnoodles.substack.com/p/mianjin-part-i&sa=U&ved=2ahUKEwipmK7umKuXAxW5SmwGHZtNM3MQFnoECAoQAg&usg=AOvVaw1SND5DskayibbSSFUYHZ1J"
+        },
+        {
+          "position": 7,
+          "site_name": "",
+          "title": "Washed Flour Wheat Gluten (Seitan/Mian Jin) | Chic Eats",
+          "snippet": "Mianjin or wheat gluten is a traditional Chinese food product created by washing wheat flour dough to remove the starch leaving behind a sticky. Gluten comes ... Missing:  documented  trade  tradition",
+          "url": "/url?opi=89978449&q=https://chiceats.com/recipe/homemade/washed-flour-wheat-gluten-seitanmian-jin&sa=U&ved=2ahUKEwipmK7umKuXAxW5SmwGHZtNM3MQFnoECBcQAg&usg=AOvVaw1v5ZC6C-YcByz2ynZlOzPz"
+        },
+        {
+          "position": 8,
+          "site_name": "",
+          "title": "What Is Seitan? The Complete Guide to Wheat Meat (2026)",
+          "snippet": "Buddhist monks in China were making wheat gluten as a protein source over 1,500 years ago. They called it \"mianjin,\" and it was a staple in ... Missing:  history  trade  tradition",
+          "url": "/url?opi=89978449&q=https://www.everythingvegan.com/blogs/learn/what-is-seitan&sa=U&ved=2ahUKEwipmK7umKuXAxW5SmwGHZtNM3MQFnoECBgQAg&usg=AOvVaw33iQJumPK-C16LuvY2pDKG"
+        }
+      ],
+      "heuristic_disclaimer": "Research-assistant output only. Timeline dates, probable origins and trade-route relationships are heuristic hypotheses generated from AI-discovered data and live web evidence. They have not yet been verified by a human curator.",
+      "researched_at": "2026-10-08T19:54:15.743685+00:00"
+    }
+  ]
+}
