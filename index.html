@@ -1430,12 +1430,7 @@
             renderList: () => {
                 const box=document.getElementById('timeline-list');
                 if(!box) return;
-                const q=(document.getElementById('timeline-search')?.value||'').trim().toLowerCase();
-                const data=window.timelineResearch.records.filter(r=>{
-                    const a=r.assessment||{};
-                    return !q || [r.food_name,r.ai_country,a.probable_origin_country,a.probable_origin_place]
-                        .join(' ').toLowerCase().includes(q);
-                }).slice().sort((a,b)=>{
+                const data=window.timelineResearch.filtered().slice().sort((a,b)=>{
                     const ay=Number(a.assessment?.earliest_supported_year);
                     const by=Number(b.assessment?.earliest_supported_year);
                     if(Number.isFinite(ay)&&Number.isFinite(by)) return ay-by;
@@ -1461,7 +1456,7 @@
                 const m=window.timelineResearch.map;
                 if(!m)return;
                 m.eachLayer(x=>{if(x instanceof L.CircleMarker)m.removeLayer(x);});
-                window.timelineResearch.records.forEach(r=>{
+                window.timelineResearch.filtered().forEach(r=>{
                     const lat=Number(r.ai_location?.lat),lng=Number(r.ai_location?.lng);
                     if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
                     const b=r.confidence?.band||'Low',col=b==='High'?'#10b981':b==='Medium'?'#f59e0b':'#f43f5e';
@@ -1489,7 +1484,7 @@
                 const box=document.getElementById('timeline-routes');
                 if(!box) return;
                 const groups={};
-                window.timelineResearch.records.forEach(r=>{
+                window.timelineResearch.filtered().forEach(r=>{
                     (r.assessment?.route_hypotheses||[]).forEach(h=>{
                         const key=h.route||'Unnamed route';
                         if(!groups[key]) groups[key]=[];
