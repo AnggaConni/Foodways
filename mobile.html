@@ -292,13 +292,37 @@
                 </div>
             </div>
 
-            <h3 class="font-bold text-gray-800 text-sm mb-4 uppercase tracking-wide flex items-center gap-2">
-                <span class="w-1 h-4 bg-opera-gold rounded-full"></span> Interaction Types
-            </h3>
-            
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6 flex items-center justify-center relative">
-                <div class="w-full h-64 relative">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-black text-gray-800 text-sm uppercase tracking-wide flex items-center gap-2">
+                    <span class="w-1 h-4 bg-opera-gold rounded-full"></span> Foodway Connection Pathways
+                </h3>
+                <span class="text-[9px] font-black uppercase tracking-wider text-gray-400">66 records</span>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-5">
+                <div class="relative h-64">
                     <canvas id="chart-type"></canvas>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 mt-4">
+                    <div class="rounded-xl bg-cyan-50 border border-cyan-100 p-3 text-center">
+                        <div class="w-2.5 h-2.5 rounded-full bg-cyan-500 mx-auto mb-2"></div>
+                        <div class="text-[9px] uppercase tracking-wider font-black text-gray-400">Trade</div>
+                        <div id="type-trade-count" class="text-xl font-black text-gray-800 mt-1">28</div>
+                        <div id="type-trade-pct" class="text-[9px] text-gray-400 mt-0.5">42%</div>
+                    </div>
+                    <div class="rounded-xl bg-amber-50 border border-amber-100 p-3 text-center">
+                        <div class="w-2.5 h-2.5 rounded-full bg-amber-500 mx-auto mb-2"></div>
+                        <div class="text-[9px] uppercase tracking-wider font-black text-gray-400">Migration</div>
+                        <div id="type-migration-count" class="text-xl font-black text-gray-800 mt-1">22</div>
+                        <div id="type-migration-pct" class="text-[9px] text-gray-400 mt-0.5">33%</div>
+                    </div>
+                    <div class="rounded-xl bg-rose-50 border border-rose-100 p-3 text-center">
+                        <div class="w-2.5 h-2.5 rounded-full bg-rose-500 mx-auto mb-2"></div>
+                        <div class="text-[9px] uppercase tracking-wider font-black text-gray-400">Colonialism</div>
+                        <div id="type-colonialism-count" class="text-xl font-black text-gray-800 mt-1">16</div>
+                        <div id="type-colonialism-pct" class="text-[9px] text-gray-400 mt-0.5">24%</div>
+                    </div>
                 </div>
             </div>
             
@@ -1232,6 +1256,9 @@
             render: () => {
                 window.dashboard.renderKPI();
                 window.dashboard.renderFeed();
+                if(document.getElementById('view-profile') && !document.getElementById('view-profile').classList.contains('hidden')){
+                    window.dashboard.renderAnalytics();
+                }
             },
                         renderKPI: () => {
                 const data=state.data||[], total=data.length;
@@ -1285,7 +1312,89 @@
                     setTimeout(()=>window.dashboard.renderDetailContent?.(d),50);
                 }
             },
-            renderAnalytics: () => window.dashboard.renderCountryChart()
+            typeChart: null,
+            renderTypeChart: () => {
+                const canvas=document.getElementById('chart-type');
+                if(!canvas || typeof Chart==='undefined') return;
+
+                const counts={Trade:0,Migration:0,Colonialism:0};
+                (state.data||[]).forEach(d=>{
+                    const key=String(d.connection_type||'').trim();
+                    if(key==='Trade') counts.Trade++;
+                    else if(key==='Migration') counts.Migration++;
+                    else if(key==='Colonialism') counts.Colonialism++;
+                });
+
+                const total=counts.Trade+counts.Migration+counts.Colonialism;
+                const pct=n=>total?Math.round((n/total)*100):0;
+
+                const set=(id,v)=>{
+                    const el=document.getElementById(id);
+                    if(el) el.textContent=v;
+                };
+                set('type-trade-count',counts.Trade);
+                set('type-trade-pct',pct(counts.Trade)+'%');
+                set('type-migration-count',counts.Migration);
+                set('type-migration-pct',pct(counts.Migration)+'%');
+                set('type-colonialism-count',counts.Colonialism);
+                set('type-colonialism-pct',pct(counts.Colonialism)+'%');
+
+                if(window.dashboard.typeChart) window.dashboard.typeChart.destroy();
+
+                window.dashboard.typeChart=new Chart(canvas.getContext('2d'),{
+                    type:'doughnut',
+                    data:{
+                        labels:['Trade','Migration','Colonialism'],
+                        datasets:[{
+                            data:[counts.Trade,counts.Migration,counts.Colonialism],
+                            backgroundColor:['#06b6d4','#f59e0b','#f43f5e'],
+                            borderColor:'#ffffff',
+                            borderWidth:5,
+                            hoverOffset:7
+                        }]
+                    },
+                    options:{
+                        responsive:true,
+                        maintainAspectRatio:false,
+                        cutout:'68%',
+                        plugins:{
+                            legend:{display:false},
+                            tooltip:{
+                                callbacks:{
+                                    label:(ctx)=>{
+                                        const value=ctx.raw||0;
+                                        return ' '+ctx.label+': '+value+' records ('+pct(value)+'%)';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    plugins:[{
+                        id:'foodwaysCenterText',
+                        afterDraw(chart){
+                            const {ctx}=chart;
+                            const meta=chart.getDatasetMeta(0);
+                            if(!meta?.data?.length) return;
+                            const x=meta.data[0].x;
+                            const y=meta.data[0].y;
+                            ctx.save();
+                            ctx.textAlign='center';
+                            ctx.textBaseline='middle';
+                            ctx.fillStyle='#1a1a2e';
+                            ctx.font='900 24px Segoe UI';
+                            ctx.fillText(total, x, y-7);
+                            ctx.fillStyle='#94a3b8';
+                            ctx.font='700 9px Segoe UI';
+                            ctx.fillText('FOODWAYS', x, y+12);
+                            ctx.restore();
+                        }
+                    }]
+                });
+            },
+            renderAnalytics: () => {
+                window.dashboard.renderCountryChart();
+                setTimeout(()=>window.dashboard.renderTypeChart(),50);
+            }
         };
 window.app = {
             map: null, layers: [],
