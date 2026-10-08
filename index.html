@@ -1121,8 +1121,13 @@
         window.mapLogic = {
             map: null, layers: [], lines: [], markers: [],
             init: () => {
-                window.mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: false, maxBounds: [[-90, -180], [90, 180]], maxBoundsViscosity: 1.0, minZoom: 2 }).setView([20, 0], 2);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, noWrap: true, bounds: [[-90, -180], [90, 180]] }).addTo(window.mapLogic.map);
+                window.mapLogic.map = L.map('map-container', { zoomControl: false, attributionControl: true, maxBounds: [[-90, -180], [90, 180]], maxBoundsViscosity: 1.0, minZoom: 2 }).setView([20, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    noWrap: true,
+                    bounds: [[-90, -180], [90, 180]],
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(window.mapLogic.map);
                 L.control.zoom({ position: 'topright' }).addTo(window.mapLogic.map);
             },
             resize: () => setTimeout(() => window.mapLogic.map.invalidateSize(), 200),
@@ -1213,8 +1218,10 @@
                 window.ui.closeModal('input-modal');
                 document.getElementById('geo-editor').classList.remove('hidden');
                 if(!window.geoEditor.map) {
-                    window.geoEditor.map = L.map('geo-map').setView([0,0], 2);
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(window.geoEditor.map);
+                    window.geoEditor.map = L.map('geo-map', { attributionControl: true }).setView([0,0], 2);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(window.geoEditor.map);
                     window.geoEditor.map.on('click', e => window.geoEditor.addPoint(e.latlng));
                 }
                 window.geoEditor.points = [];
@@ -1892,7 +1899,9 @@
                             fadeAnimation: false, zoomAnimation: false, preferCanvas: true
                         });
                         
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap contributors'
+                        }).addTo(map);
 
                         const bounds = L.latLngBounds();
                         let hasLayer = false;
