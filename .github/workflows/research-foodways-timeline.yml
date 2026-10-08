@@ -1,0 +1,59 @@
+name: Research Foodways Timeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_records:
+        description: "0 = all culinary records; use 3-5 for a cheap test run"
+        required: false
+        default: "0"
+      force_research:
+        description: "Ignore cache and research all selected records"
+        required: false
+        default: "false"
+  schedule:
+    # Weekly research refresh. Cached records are skipped unless their source data changes.
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  timeline-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout Foodways
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install research SDKs
+        run: python -m pip install --upgrade google-genai pydantic
+
+      - name: Run TinyFish + Gemini research
+        env:
+          TINYFISH_API_KEY: ${{ secrets.TINYFISH_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          TIMELINE_MAX_RECORDS: ${{ inputs.max_records || '0' }}
+          FORCE_TIMELINE_RESEARCH: ${{ inputs.force_research || '0' }}
+        run: python timeline_research.py
+
+      - name: Commit research dataset and cache
+        run: |
+          git config user.name "foodways-research-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add foodways_timeline_research.json foodways_timeline_cache.json
+          if git diff --cached --quiet; then
+            echo "No timeline changes."
+          else
+            git commit -m "Update Foodways timeline research"
+            git push
+          fi
