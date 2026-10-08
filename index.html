@@ -1246,13 +1246,13 @@
 
             refresh: async () => {
                 try {
-                    const response = await fetch('https://raw.githubusercontent.com/AnggaConni/ICH-Radar/main/data.json', { cache: 'no-store' });
+                    const response = await fetch('ai_culinary.json', { cache: 'no-store' });
                     if (!response.ok) throw new Error('HTTP ' + response.status);
                     const payload = await response.json();
                     const inventory = Array.isArray(payload) ? payload : (payload.inventory || []);
+                    // ai_culinary.json is already normalized by the Foodways Python sync.
                     window.aiRadar.records = inventory
-                        .filter(window.aiRadar.isCulinary)
-                        .map(window.aiRadar.normalize)
+                        .map(x => ({...x, provinces:Array.isArray(x.provinces)?x.provinces:[], tags:Array.isArray(x.tags)?x.tags:[], shared_heritage_detection:x.shared_heritage||{}})).map(x => window.aiRadar.normalize(x))
                         .filter(x => Number.isFinite(x.lat) && Number.isFinite(x.lng));
                     window.aiRadar.render();
                 } catch (e) {
