@@ -1324,6 +1324,21 @@
             selectedYear: null,
             showUndated: true,
             routeLines: [],
+            routeLabels: [],
+            routeOverlays: {
+                "Spice Routes": {color:"#be123c", points:[[-8,42],[-2,56],[2,72],[8,82],[12,96],[8,108],[0,120],[-8,132]]},
+                "Silk Roads": {color:"#a16207", points:[[36,-5],[38,15],[39,35],[40,55],[38,72],[40,90],[36,105],[34,120]]},
+                "Indian Ocean": {color:"#0891b2", points:[[-5,38],[0,52],[4,65],[7,78],[5,92],[0,105],[-7,120]]},
+                "Austronesian": {color:"#059669", points:[[10,100],[3,115],[-5,128],[-10,142],[-14,156],[-20,168]]},
+                "Incense Route": {color:"#7c3aed", points:[[16,40],[20,44],[24,47],[28,40],[32,34],[36,30]]},
+                "Tea-Horse Road": {color:"#57534e", points:[[25,100],[27,96],[29,92],[31,88],[30,82],[28,78]]},
+                "Trans-Saharan": {color:"#475569", points:[[30,-15],[27,-5],[24,5],[20,15],[18,25],[16,35]]},
+                "Mediterranean": {color:"#2563eb", points:[[38,-6],[38,5],[37,16],[35,26],[36,34]]},
+                "Portuguese Transatlantic Exchange": {color:"#7c2d12", points:[[38,-28],[28,-25],[12,-20],[-2,-25],[-18,-35],[-20,-44]]},
+                "East Polynesian Maritime Migration": {color:"#0f766e", points:[[-15,145],[-18,160],[-20,-180],[-22,-150],[-27,-125],[-27,-109]]},
+                "Buddhist Monastic Exchange": {color:"#9333ea", points:[[30,105],[32,118],[35,128],[36,139],[35,145]]},
+                "Grand Canal / Jiangnan": {color:"#334155", points:[[31,121],[32,120],[34,119],[36,118],[38,116]]}
+            },
             esc: (value) => window.escapeHtml ? window.escapeHtml(String(value ?? '')) : String(value ?? ''),
             initMap: () => {
                 const el = document.getElementById('timeline-map');
