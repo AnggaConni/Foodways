@@ -364,5 +364,211 @@
       "heuristic_disclaimer": "Research-assistant output only. Timeline dates, probable origins and trade-route relationships are heuristic hypotheses generated from AI-discovered data and live web evidence. They have not yet been verified by a human curator.",
       "researched_at": "2026-10-08T19:54:15.743685+00:00"
     }
+  },
+  "ich-7afdf052": {
+    "signature": "a5f595061f82131d44a6693074134e7031ca38f89c48e3b300bb61feabcc9be8",
+    "result": {
+      "source_id": "ich-7afdf052",
+      "food_name": "Traditional Knowledge and Practices Associated with Cassava Flour Mills in Santa Catarina",
+      "ai_country": "Brazil",
+      "ai_location": {
+        "lat": -27.0628367,
+        "lng": -51.114965,
+        "provinces": [
+          "Santa Catarina"
+        ]
+      },
+      "human_match": false,
+      "human_record_id": null,
+      "human_origin": {
+        "origin_food_name": null,
+        "origin_country": null,
+        "origin_lat": null,
+        "origin_lng": null,
+        "research_links": null
+      },
+      "assessment": {
+        "probable_origin_country": "Brazil",
+        "probable_origin_place": "Santa Catarina",
+        "earliest_supported_year": null,
+        "date_evidence": [],
+        "route_hypotheses": [
+          {
+            "route": "Azorean Transatlantic Migration and Settlement Corridor",
+            "relationship": "Azorean Portuguese immigrants settling along the Santa Catarina coast introduced European animal-traction and water-wheel milling mechanisms, integrating them with native cassava processing techniques.",
+            "evidence": [
+              "Historical culinary studies note that European immigration combined with indigenous cassava foodways to shape regional Brazilian food traditions."
+            ],
+            "confidence": 0.65
+          },
+          {
+            "route": "Pre-Colonial Indigenous Guarani / Tupi-Guarani Agricultural Exchange",
+            "relationship": "Cassava domestication and bitter/sweet cassava detoxification and toasting techniques originated with indigenous South American peoples and spread through regional riverine and coastal networks long before European arrival.",
+            "evidence": [
+              "Cassava was widely cultivated and processed by Indigenous peoples throughout South America prior to European arrival."
+            ],
+            "confidence": 0.75
+          }
+        ],
+        "date_confidence": 0.1,
+        "origin_confidence": 0.85,
+        "trade_route_confidence": 0.6,
+        "origin_reasoning": "The specific cultural practice and agro-food complex known as the 'engenhos de farinha de mandioca' represents a unique synthesis localized in Santa Catarina, Brazil, blending indigenous Guarani/Tupi-Guarani cassava detoxification, Azorean milling adaptations, and African carpentry and labor.",
+        "uncertainty": "The provided web snippets confirm the indigenous roots of cassava cultivation and the post-colonial integration of immigrant traditions, but do not provide explicit four-digit historical documentation dates for the earliest operational engenhos in Santa Catarina.",
+        "contradictions": []
+      },
+      "confidence": {
+        "date": 0.1,
+        "origin": 0.85,
+        "trade_route": 0.6,
+        "overall": 0.475,
+        "band": "Low"
+      },
+      "tinyfish_sources": [
+        {
+          "position": 1,
+          "site_name": "",
+          "title": "Traditional knowledge and practices for the making and ...",
+          "snippet": "The knowledge and skills related to the making of cassava bread are usually transmitted informally, within households and communities. They are also transmitted ... Missing:  Mills  Santa  Catarina  history  origin  earliest  +3",
+          "url": "/url?opi=89978449&q=https://ich.unesco.org/en/RL/traditional-knowledge-and-practices-for-the-making-and-consumption-of-cassava-bread-02118&sa=U&ved=2ahUKEwjQva2hs6uXAxWCSWwGHfoHNQMQFnoECAgQAg&usg=AOvVaw1v_b4IVwxZvTQ2ujllqe4N"
+        },
+        {
+          "position": 2,
+          "site_name": "",
+          "title": "From cassava to corn, from indigenous to caipira",
+          "snippet": "From cassava to corn, from indigenous to caipira Studies revisit the history of one of Brazil's most important culinary traditions Missing:  Knowledge  Mills  trade  route  artisanal",
+          "url": "/url?opi=89978449&q=https://revistapesquisa.fapesp.br/en/from-cassava-to-corn-from-indigenous-to-caipira/&sa=U&ved=2ahUKEwjQva2hs6uXAxWCSWwGHfoHNQMQFnoECAYQAg&usg=AOvVaw3u09soefF8p74ftIm5uO5y"
+        },
+        {
+          "position": 3,
+          "site_name": "",
+          "title": "The Roots of Brazilian Flavor: Immigration, Cassava, and Pão ...",
+          "snippet": "At the heart of Brazilian cuisine is cassava, a native South American root cultivated by Indigenous peoples long before European arrival. Missing:  Mills  Santa  Catarina  history  origin  earliest  +4",
+          "url": "/url?opi=89978449&q=https://culinaryhistorians.org/the-roots-of-brazilian-flavor-immigration-cassava-and-pao-de-queijo/&sa=U&ved=2ahUKEwjQva2hs6uXAxWCSWwGHfoHNQMQFnoECAcQAg&usg=AOvVaw1QoaET3VAHl8BjR1Q3Lo4A"
+        },
+        {
+          "position": 4,
+          "site_name": "",
+          "title": "Why Is Cassava Flour Used In Brazilian Food? - Texas de Brazil",
+          "snippet": "The Traditional Knowledge and Practices Associated with Cassava Flour Mills in Santa Catarina refer to the artisanal production title: Missing:  Knowledge  Mills  Santa  Catarina  route  artisanal",
+          "url": "/url?opi=89978449&q=https://texasdebrazil.com/blog/why-cassava-flour-used/&sa=U&ved=2ahUKEwjQva2hs6uXAxWCSWwGHfoHNQMQFnoECAwQAg&usg=AOvVaw2TmOHjoMAOqNCjCsbNW1YB"
+        },
+        {
+          "position": 5,
+          "site_name": "",
+          "title": "[PDF] Historical culinary practices in Southern Brazil",
+          "snippet": "The Traditional Knowledge and Practices Associated with Cassava Flour Mills in Santa Catarina refer to the artisanal production",
+          "url": "/url?opi=89978449&q=https://www.tdx.cat/bitstream/handle/10803/698448/adm1de1.pdf%3Fsequence%3D1%26isAllowed%3Dy&sa=U&ved=2ahUKEwjQva2hs6uXAxWCSWwGHfoHNQMQFnoECAkQAg&usg=AOvVaw23GLCq78lwrBn2KuPW-7W_"
+        },
+        {
+          "position": 6,
+          "site_name": "",
+          "title": "The Cassava Processing Industry in Brazil - ResearchGate",
+          "snippet": "The paper considers the evolution of cassava-based industrial production, processing and marketing in Brazil, in light of the great ... Missing:  Santa  Catarina  route  tradition  artisanal",
+          "url": "/url?opi=89978449&q=https://www.researchgate.net/publication/27794482_The_Cassava_Processing_Industry_in_Brazil_Traditional_Techniques_Technological_Developments_Innovations_and_New_Markets&sa=U&ved=2ahUKEwjQva2hs6uXAxWCSWwGHfoHNQMQFnoECAoQAg&usg=AOvVaw3vG2QTOmHh6AfbHDeRcFCx"
+        },
+        {
+          "position": 7,
+          "site_name": "",
+          "title": "Cassava flour production in the Quilombola Santa Luzia do ...",
+          "snippet": "Abstract. The process of producing flour begins with the planting of cassava and ends with the roasting and sale of the products. Missing:  Catarina  route  tradition",
+          "url": "/url?opi=89978449&q=https://educa.fcc.org.br/scielo.php%3Fscript%3Dsci_arttext%26pid%3DS2526-61362025000100300%26lng%3Des%26nrm%3Diso%26tlng%3Den&sa=U&ved=2ahUKEwjQva2hs6uXAxWCSWwGHfoHNQMQFnoECBgQAg&usg=AOvVaw1iiLSwgf1UnXtsIg2tK3Dr"
+        },
+        {
+          "position": 8,
+          "site_name": "",
+          "title": "Traditional indigenous techniques in cassava cultivation",
+          "snippet": "This article discusses traditional indigenous techniques related to the cultivation of cassava, highlighting how these practices support agricultural ...",
+          "url": "/url?opi=89978449&q=https://www.cabidigitallibrary.org/doi/abs/10.5555/20260157577&sa=U&ved=2ahUKEwjQva2hs6uXAxWCSWwGHfoHNQMQFnoECBcQAg&usg=AOvVaw2wpk2rW-IPmRw_j1ZttJvc"
+        }
+      ],
+      "heuristic_disclaimer": "Research-assistant output only. Timeline dates, probable origins and trade-route relationships are heuristic hypotheses generated from AI-discovered data and live web evidence. They have not yet been verified by a human curator.",
+      "researched_at": "2026-10-08T21:49:32.484261+00:00"
+    }
+  },
+  "ich-931b73e6": {
+    "signature": "0ee6b26e3129cf6b5259b76251f2e3593536160d7fb50a50ac1f3df663bcfd19",
+    "result": {
+      "source_id": "ich-931b73e6",
+      "food_name": "Traditional ways of making Artisan Minas Cheese in Minas Gerais",
+      "ai_country": "Brazil",
+      "ai_location": {
+        "lat": -18.5264844,
+        "lng": -44.1588654,
+        "provinces": [
+          "Minas Gerais"
+        ]
+      },
+      "human_match": false,
+      "human_record_id": null,
+      "human_origin": {
+        "origin_food_name": null,
+        "origin_country": null,
+        "origin_lat": null,
+        "origin_lng": null,
+        "research_links": null
+      },
+      "assessment": {
+        "probable_origin_country": "Brazil",
+        "probable_origin_place": "Minas Gerais",
+        "earliest_supported_year": 2024,
+        "date_evidence": [
+          {
+            "year": 2024,
+            "claim": "Traditional ways of making Artisan Minas Cheese in Minas Gerais was evaluated and approved by UNESCO's Intangible Cultural Heritage Committee as the first Brazilian cultural asset associated with food.",
+            "source_url": "https://unesdoc.unesco.org/ark:/48223/pf0000392696_eng",
+            "confidence": 0.85
+          },
+          {
+            "year": 2024,
+            "claim": "The Traditional ways of making Artisan Minas Cheese in Minas Gerais was inscribed during the 2024 Intangible Cultural Heritage Committee meeting.",
+            "source_url": "https://www.unesco.org/en/intangible-cultural-heritage/committee-2024",
+            "confidence": 0.85
+          }
+        ],
+        "route_hypotheses": [
+          {
+            "route": "Portuguese colonial transatlantic maritime routes and Estrada Real inland corridors",
+            "relationship": "Transfers of Portuguese cattle rearing and artisanal curd-making traditions to the inland mining districts of colonial Brazil, subsequently adapted to local climate and natural whey cultures (pingo).",
+            "evidence": [
+              "Artisanal Minas cheese is historically identified with small rural communities across Minas Gerais, Brazil, developing out of Portuguese colonial dairy-making practices.",
+              "UNESCO materials document the practice as an enduring communal tradition in Minas Gerais, Brazil."
+            ],
+            "confidence": 0.6
+          }
+        ],
+        "date_confidence": 0.4,
+        "origin_confidence": 0.88,
+        "trade_route_confidence": 0.55,
+        "origin_reasoning": "Both UNESCO sources confirm Minas Gerais, Brazil, as the origin and geographic locus of the artisanal cheese-making tradition. Historical accounts attribute its foundations to Portuguese settlers during the colonial era who adapted Iberian cheesemaking techniques to the raw cow's milk and specific microclimates of Minas Gerais.",
+        "uncertainty": "The web search results only provide documentary evidence for the 2024 UNESCO recognition, offering no direct textual dates from primary colonial archives regarding the tradition's eighteenth-century origins.",
+        "contradictions": []
+      },
+      "confidence": {
+        "date": 0.4,
+        "origin": 0.88,
+        "trade_route": 0.55,
+        "overall": 0.589,
+        "band": "Low"
+      },
+      "tinyfish_sources": [
+        {
+          "position": 1,
+          "site_name": "www.unesco.org",
+          "title": "Intangible Cultural Heritage Committee 2024 - UNESCO",
+          "snippet": "Traditional ways of making Artisan Minas Cheese in Minas Gerais. Brazil. The process of making artisanal Minas cheese involves knowledge and techniques ... Missing:  earliest  route",
+          "url": "https://www.unesco.org/en/intangible-cultural-heritage/committee-2024"
+        },
+        {
+          "position": 2,
+          "site_name": "unesdoc.unesco.org",
+          "title": "Annual report of UNESCO in Brazil, 2024",
+          "snippet": "With this approval, the Traditional ways of making Artisan Minas Cheese in Minas Gerais became the first Brazilian cultural asset associated with food ... Missing:  origin  earliest  documented  culinary  techniques",
+          "url": "https://unesdoc.unesco.org/ark:/48223/pf0000392696_eng"
+        }
+      ],
+      "heuristic_disclaimer": "Research-assistant output only. Timeline dates, probable origins and trade-route relationships are heuristic hypotheses generated from AI-discovered data and live web evidence. They have not yet been verified by a human curator.",
+      "researched_at": "2026-10-08T21:50:05.861694+00:00"
+    }
   }
 }
