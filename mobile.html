@@ -1039,7 +1039,7 @@
             records: [],
             aiMap: null,
             refresh: async () => {
-                const r = await fetch('https://raw.githubusercontent.com/AnggaConni/ICH-Radar/main/data.json',{cache:'no-store'});
+                const r = await fetch('ai_culinary.json',{cache:'no-store'});
                 const p = await r.json();
                 const inv = Array.isArray(p) ? p : (p.inventory || []);
                 window.mobileAI.records = inv.filter(x => {
