@@ -609,6 +609,7 @@
     <script>
         const SUPABASE_URL = 'https://yyjwodgywizjbnrvdnpn.supabase.co';
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_3dTLdT8jsmdLzG_fbM5OxQ_Yt9lE9Pg';
+        const GAS_URL_LEGACY = 'https://script.google.com/macros/s/AKfycbyr5JxnjXhpWqgb0sgXFTCFTbFjjOSrCrYEDPwWbo8zkpwVoH0IbGJfcJRLBlaIBbEK/exec';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
         window.state = { 
@@ -1162,7 +1163,7 @@
             },
 
             fetchGuides: () => {
-                fetch(GAS_URL + '?action=get_guides')
+                fetch(GAS_URL_LEGACY + '?action=get_guides')
                 .then(r => r.json())
                 .then(d => {
                     if(d.status === 'success') {
