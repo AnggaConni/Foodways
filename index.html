@@ -919,10 +919,12 @@
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_3dTLdT8jsmdLzG_fbM5OxQ_Yt9lE9Pg';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
             auth: {
-                flowType: 'pkce',
+                // Foodways is a static browser SPA (GitHub Pages / localhost), so use
+                // Supabase's implicit OAuth flow instead of the PKCE verifier flow.
+                flowType: 'implicit',
                 persistSession: true,
                 autoRefreshToken: true,
-                detectSessionInUrl: false
+                detectSessionInUrl: true
             }
         });
 
@@ -2352,27 +2354,8 @@
                         });
                     }
 
-                    // Handle the OAuth callback explicitly on the app root.
-                    // We disable detectSessionInUrl above so the PKCE exchange happens exactly once.
-                    const params = new URLSearchParams(window.location.search);
-                    const oauthError = params.get('error');
-                    const oauthErrorCode = params.get('error_code');
-                    const oauthErrorDescription = params.get('error_description');
-                    const oauthCode = params.get('code');
-
-                    if (oauthError || oauthErrorCode) {
-                        const detail = [oauthErrorCode, oauthErrorDescription].filter(Boolean).join(' — ') || oauthError;
-                        console.error('OAuth callback error:', detail);
-                        history.replaceState({}, document.title, window.location.pathname);
-                        setTimeout(() => alert('Google sign-in failed: ' + detail), 50);
-                    }
-
-                    if (oauthCode) {
-                        const { error: exchangeError } = await supabaseClient.auth.exchangeCodeForSession(oauthCode);
-                        history.replaceState({}, document.title, window.location.pathname);
-                        if (exchangeError) throw exchangeError;
-                    }
-
+                    // Supabase handles the OAuth callback automatically for the
+                    // browser-based implicit flow and restores the session from the URL fragment.
                     const { data: { session } } = await supabaseClient.auth.getSession();
                     await window.app.applySession(session);
 
@@ -2450,8 +2433,7 @@
                 const btn = document.getElementById('btn-login');
                 if (btn) btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Redirecting...';
 
-                // Always return to the app root, never an OAuth error page or stale query URL.
-                // Local development must use the same localhost origin so the PKCE verifier remains available.
+                // Always return to the canonical app root after Google authentication.
                 const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
                 const authRedirect = isLocal
                     ? window.location.origin + '/'
