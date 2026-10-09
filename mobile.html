@@ -178,6 +178,48 @@
         .markdown-body a { color: var(--opera-red); text-decoration: underline; font-weight: 600; }
         .markdown-body strong { font-weight: 800; color: #000; }
         .markdown-body em { font-style: italic; color: #4b5563; background: #fffbe6; padding: 0 2px; }
+        .markdown-body .markdown-table-wrap {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            -webkit-overflow-scrolling: touch;
+            margin: 1rem 0 1.25rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #fff;
+        }
+        .markdown-body .markdown-table-wrap:focus { outline: 2px solid #d4af37; outline-offset: 2px; }
+        .markdown-body table {
+            width: 100%;
+            min-width: 460px;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .markdown-body th,
+        .markdown-body td {
+            padding: 10px 12px;
+            min-width: 110px;
+            max-width: 280px;
+            text-align: left;
+            vertical-align: top;
+            overflow-wrap: anywhere;
+            border-bottom: 1px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+        }
+        .markdown-body th {
+            background: #f8fafc;
+            color: #1a1a2e;
+            font-weight: 800;
+            white-space: normal;
+        }
+        .markdown-body tr:last-child td { border-bottom: 0; }
+        .markdown-body th:last-child,
+        .markdown-body td:last-child { border-right: 0; }
+        .markdown-body tbody tr:nth-child(even) td { background: #fafafa; }
     </style>
 </head>
 <body>
@@ -614,29 +656,84 @@
             charts: {} 
         };
 
-        // --- SAFE MARKDOWN PARSER (Plain-Text Structured Authoring) ---
+        // --- SAFE MARKDOWN PARSER (tables, headings, lists, inline formatting) ---
         function parseSafeMarkdown(text) {
             if (!text) return '';
 
-            // 1. Sanitize HTML (prevent XSS)
-            let safe = window.escapeHtml(text);
+            const rawLines = String(text).replace(/\r\n?/g, '\n').split('\n');
+            const blocks = [];
+            const outputLines = [];
+            const splitTableRow = (line) => {
+                let value = String(line || '').trim();
+                if (value.startsWith('|')) value = value.slice(1);
+                if (value.endsWith('|')) value = value.slice(0, -1);
+                return value.split('|').map(cell => cell.trim());
+            };
+            const tableSeparator = /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/;
 
-            // 2. Simple Formatting Rules
-            safe = safe.replace(/^# (.*$)/gim, '<h3 class="font-black text-lg mt-4 mb-2 text-opera-midnight border-b border-gray-100 pb-1">$1</h3>');
+            // Cells are escaped before formatting, so table content cannot inject HTML.
+            const renderInline = (value) => {
+                let safeCell = window.escapeHtml(value == null ? '' : String(value));
+                safeCell = safeCell.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi,
+                    (match, label, url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+                safeCell = safeCell.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                safeCell = safeCell.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                return safeCell;
+            };
+
+            // Extract Markdown tables first so later line-break formatting cannot flatten them.
+            for (let i = 0; i < rawLines.length; i++) {
+                if (i + 1 < rawLines.length &&
+                    rawLines[i].includes('|') &&
+                    tableSeparator.test(rawLines[i + 1])) {
+                    const headers = splitTableRow(rawLines[i]);
+                    const bodyRows = [];
+                    i += 2;
+                    while (i < rawLines.length &&
+                        rawLines[i].trim() !== '' &&
+                        rawLines[i].includes('|')) {
+                        bodyRows.push(splitTableRow(rawLines[i]));
+                        i++;
+                    }
+                    i--;
+
+                    const columnCount = Math.max(headers.length, ...bodyRows.map(row => row.length), 1);
+                    const normalizeRow = (row) => Array.from({ length: columnCount }, (_, index) => row[index] || '');
+                    const headHtml = normalizeRow(headers)
+                        .map(cell => `<th scope="col">${renderInline(cell)}</th>`).join('');
+                    const bodyHtml = bodyRows.map(row =>
+                        `<tr>${normalizeRow(row).map(cell => `<td>${renderInline(cell)}</td>`).join('')}</tr>`
+                    ).join('');
+                    const tableHtml = `<div class="markdown-table-wrap" role="region" aria-label="Scrollable table" tabindex="0"><table><thead><tr>${headHtml}</tr></thead><tbody>${bodyHtml || `<tr><td colspan="${columnCount}">No table rows provided.</td></tr>`}</tbody></table></div>`;
+                    const token = `FOODWAYS_MARKDOWN_TABLE_${blocks.length}_TOKEN`;
+                    blocks.push({ token, html: tableHtml });
+                    outputLines.push(token);
+                } else {
+                    outputLines.push(rawLines[i]);
+                }
+            }
+
+            let safe = window.escapeHtml(outputLines.join('\n'));
+
+            // Basic headings and inline emphasis.
+            safe = safe.replace(/^###? (.*$)/gim, '<h3 class="font-black text-lg mt-4 mb-2 text-opera-midnight border-b border-gray-100 pb-1">$1</h3>');
             safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             safe = safe.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            
-            // 3. SECURE LINKS (Only http/https allowed)
-            safe = safe.replace(/\[(.*?)\]\((.*?)\)/g, (match, label, url) => {
-                if (url.match(/^https?:\/\//i)) {
-                    return `<a href="${url}" target="_blank">$1</a>`;
-                }
-                return `${label} (${url})`; // Fallback for unsafe links (javascript:)
-            });
-            
+
+            // Secure Markdown links: only http/https destinations are clickable.
+            safe = safe.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi,
+                (match, label, url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+            safe = safe.replace(/\[([^\]]+)\]\((.*?)\)/g,
+                (match, label, url) => match);
+
             safe = safe.replace(/^\s*-\s+(.*$)/gim, '<div class="flex items-start ml-2 mb-1"><span class="mr-2 text-opera-red">•</span><span>$1</span></div>');
             safe = safe.replace(/\n\n/g, '</p><p class="mb-4">');
             safe = safe.replace(/\n/g, '<br>');
+
+            // Restore trusted table markup after the source text has been escaped.
+            blocks.forEach(({ token, html }) => {
+                safe = safe.split(token).join(html);
+            });
 
             return `<div class="markdown-body text-sm text-gray-600 mb-8 leading-relaxed">${safe}</div>`;
         }
