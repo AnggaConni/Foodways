@@ -132,8 +132,37 @@
             cursor: move;
         }
 
-        .modal-enter { transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .modal-active { transform: translateY(0); }
+        .modal-enter {
+            transform: translate3d(0, 100%, 0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+            pointer-events: none;
+            visibility: visible;
+        }
+        .modal-active {
+            transform: translate3d(0, 0, 0);
+            pointer-events: auto;
+        }
+        /* Keep record details above the Leaflet panes, map controls, header and bottom tabs. */
+        #detail-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 65000;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+        #detail-modal #detail-container {
+            min-height: 0;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .modal-enter { transition-duration: 0.01ms; }
+        }
         
         #landing-page-bg {
             background-image: url('https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
@@ -885,13 +914,33 @@
         window.ui = {
             openModal: (id) => {
                 const el = document.getElementById(id);
+                if (!el) {
+                    console.warn('[Foodways] Modal not found:', id);
+                    return false;
+                }
+                // Reveal first; force layout before applying the slide-in class.
+                // This avoids a mobile/WebView race where the modal stays translated off-screen.
                 el.classList.remove('hidden');
-                setTimeout(() => el.classList.add('modal-active'), 10);
+                el.style.visibility = 'visible';
+                el.style.pointerEvents = 'auto';
+                el.style.zIndex = id === 'detail-modal' ? '65000' : '';
+                void el.offsetHeight;
+                requestAnimationFrame(() => el.classList.add('modal-active'));
+                return true;
             },
             closeModal: (id) => {
                 const el = document.getElementById(id);
+                if (!el) return;
                 el.classList.remove('modal-active');
-                setTimeout(() => el.classList.add('hidden'), 300);
+                el.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    if (!el.classList.contains('modal-active')) {
+                        el.classList.add('hidden');
+                        el.style.visibility = '';
+                        el.style.pointerEvents = '';
+                        el.style.zIndex = '';
+                    }
+                }, 320);
             },
             toggleSearch: () => {
                 const el = document.getElementById('search-overlay');
@@ -1304,13 +1353,41 @@
             loadMore: () => { window.dashboard.feedLimit += 8; window.dashboard.renderFeed(); },
             _byId: (id) => (state.data||[]).find(d=>String(d.id)===String(id)),
             showDetail: async (d) => {
-                if(!d) return;
-                state.currentDetail=d;
-                if(typeof window.ui.openModal==='function') window.ui.openModal('detail-modal');
-                if(typeof window.dashboard.renderDetailSkeleton==='function'){
-                    window.dashboard.renderDetailSkeleton(d);
-                    setTimeout(()=>window.dashboard.renderDetailContent?.(d),50);
+                if (!d) {
+                    console.warn('[Foodways] showDetail called without a record');
+                    return;
                 }
+
+                state.currentDetail = d;
+                const modal = document.getElementById('detail-modal');
+                const container = document.getElementById('detail-container');
+                if (!modal || !container) {
+                    console.error('[Foodways] Detail modal DOM is missing');
+                    return;
+                }
+
+                // Render content before revealing the modal so users never see a blank panel.
+                try {
+                    if (typeof window.dashboard.renderDetailSkeleton === 'function') {
+                        window.dashboard.renderDetailSkeleton(d);
+                    }
+                    if (typeof window.dashboard.renderDetailContent === 'function') {
+                        await window.dashboard.renderDetailContent(d);
+                    }
+                } catch (error) {
+                    console.error('[Foodways] Failed to render detail content:', error);
+                }
+
+                // Remove stale inline state left by an interrupted previous animation.
+                modal.classList.remove('hidden', 'modal-active');
+                modal.style.visibility = 'visible';
+                modal.style.pointerEvents = 'auto';
+                modal.style.zIndex = '65000';
+                void modal.offsetHeight;
+                requestAnimationFrame(() => modal.classList.add('modal-active'));
+
+                const title = document.getElementById('dt-header-title');
+                if (title) title.textContent = d.food_name || 'Foodway Detail';
             },
             typeChart: null,
             renderTypeChart: () => {
@@ -1790,7 +1867,13 @@ window.app = {
                             className: 'custom-tooltip'
                         });
 
-                        marker.on('click', () => window.dashboard.showDetail(d));
+                        marker.on('click', (event) => {
+                            // Stop Leaflet map propagation, but always open the native detail overlay.
+                            if (event && event.originalEvent) {
+                                L.DomEvent.stopPropagation(event.originalEvent);
+                            }
+                            window.dashboard.showDetail(d);
+                        });
                         marker.addTo(map);
                         window.mapLogic.layers.push(marker);
                         bounds.extend([lat, lng]);
