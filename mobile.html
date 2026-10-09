@@ -544,15 +544,29 @@
     </div>
 
     <!-- LOGIN MODAL (Z-5500) -->
-    <div id="login-modal" class="fixed inset-0 z-[5500] bg-opera-midnight/80 backdrop-blur-sm hidden flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+    <div id="login-modal" class="fixed inset-0 z-[5500] bg-opera-midnight/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl p-6 sm:p-8 shadow-2xl relative">
             <div class="absolute top-0 left-0 w-full h-2 bg-opera-red"></div>
-            <h3 class="text-2xl font-black text-opera-midnight mb-1 text-center">Admin Access</h3>
-            <p class="text-xs text-gray-400 text-center mb-6">Sign in with your authorized Google account.</p>
-            <button onclick="window.app.login()" id="btn-login" class="w-full bg-opera-midnight text-white font-bold py-4 rounded-xl shadow-xl active:scale-95 transition-transform">
+            <h3 class="text-2xl font-black text-opera-midnight mb-2 text-center">Admin Access</h3>
+            <p class="text-xs text-gray-500 text-center mb-5 leading-5">
+                Continue with Google to register your account. Your account starts as
+                <strong class="text-gray-700">not authorized</strong>.
+                Admin access is granted manually after approval.
+            </p>
+            <button onclick="window.app.login()" id="btn-login" class="w-full bg-opera-midnight text-white font-bold py-3.5 rounded-xl shadow-xl active:scale-95 transition-transform">
                 <i class="fab fa-google mr-2"></i> Continue with Google
             </button>
-            <button onclick="window.ui.closeModal('login-modal')" class="w-full text-gray-400 text-xs font-bold mt-4 hover:text-gray-600">CANCEL</button>
+
+            <div class="mt-5 rounded-xl border border-blue-100 bg-blue-50 p-4 text-center">
+                <div class="text-xs font-bold text-gray-700">Want to request admin access?</div>
+                <div class="text-[11px] text-gray-500 mt-1 leading-4">Contact Angga Conni for approval.</div>
+                <a href="https://www.linkedin.com/in/anggaconni/" target="_blank" rel="noopener noreferrer"
+                   class="mt-3 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#0A66C2] text-white text-xs font-bold hover:bg-[#004182] transition shadow-sm">
+                    <i class="fab fa-linkedin text-sm"></i> Contact on LinkedIn
+                </a>
+            </div>
+
+            <button onclick="window.ui.closeModal('login-modal')" class="w-full mt-4 text-gray-500 text-xs font-bold hover:text-gray-900 transition">Cancel</button>
         </div>
     </div>
 
