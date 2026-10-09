@@ -1366,7 +1366,128 @@
             },
             loadMore: () => { window.dashboard.feedLimit += 8; window.dashboard.renderFeed(); },
             _byId: (id) => (state.data||[]).find(d=>String(d.id)===String(id)),
-            showDetail: async (d) => {
+
+            // Explicit mobile detail renderer. These methods were missing from mobile.html,
+            // which left the full-screen modal open with an empty content area.
+            renderDetailSkeleton: (d) => {
+                const container = document.getElementById('detail-container');
+                if (!container) return;
+                container.innerHTML = `
+                    <div class="p-6 space-y-4 animate-pulse" aria-label="Loading foodway details">
+                        <div class="h-7 w-3/4 rounded-lg bg-gray-100"></div>
+                        <div class="h-4 w-1/3 rounded bg-gray-100"></div>
+                        <div class="h-44 w-full rounded-2xl bg-gray-100"></div>
+                        <div class="h-4 w-full rounded bg-gray-100"></div>
+                        <div class="h-4 w-5/6 rounded bg-gray-100"></div>
+                    </div>`;
+            },
+
+            renderDetailContent: (d) => {
+                const container = document.getElementById('detail-container');
+                if (!container || !d) return;
+
+                const esc = (value) => window.escapeHtml(value == null ? '' : String(value));
+                const safeUrl = (value) => {
+                    try {
+                        const parsed = new URL(String(value || '').trim(), window.location.href);
+                        return ['http:', 'https:'].includes(parsed.protocol) ? parsed.href : '';
+                    } catch (_) {
+                        return '';
+                    }
+                };
+
+                const imageUrls = String(d.image_url || '')
+                    .split(',')
+                    .map(value => safeUrl(value))
+                    .filter(Boolean)
+                    .slice(0, 5);
+
+                const imagesHtml = imageUrls.length
+                    ? `<div class="grid grid-cols-2 gap-2 mb-5">
+                        ${imageUrls.map((url, index) => `<img src="${esc(url)}" alt="${esc(d.food_name || 'Foodway')} photo ${index + 1}"
+                            loading="lazy" class="w-full h-40 object-cover rounded-xl bg-gray-100 ${index === 0 && imageUrls.length === 1 ? 'col-span-2' : ''}"
+                            onerror="this.style.display='none'">`).join('')}
+                       </div>`
+                    : '';
+
+                const connection = d.origin_food_name
+                    ? `<section class="mb-5 rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                        <div class="text-[10px] uppercase tracking-widest font-black text-amber-700 mb-2">Heritage Connection</div>
+                        <div class="font-bold text-gray-800">${esc(d.origin_food_name)}</div>
+                        <div class="text-xs text-gray-500 mt-1">${esc(d.origin_country || 'Origin country not specified')}</div>
+                        <div class="flex items-center gap-2 my-3 text-opera-gold"><i class="fas fa-arrow-down"></i><span class="text-[10px] uppercase tracking-wider font-black">${esc(d.connection_type || 'Cultural connection')}</span></div>
+                        <div class="font-black text-opera-red">${esc(d.food_name || 'This foodway')}</div>
+                        <div class="text-xs text-gray-500 mt-1">${esc(d.country || '')}</div>
+                       </section>`
+                    : '';
+
+                const description = String(d.description || '').trim();
+                const narrative = description
+                    ? parseSafeMarkdown(description)
+                    : '<p class="text-sm text-gray-400 italic">No historical narrative has been added yet.</p>';
+
+                const status = String(d.unesco_status || '').trim();
+                const coordinates = Number.isFinite(Number(d.lat)) && Number.isFinite(Number(d.lng))
+                    && String(d.lat).trim() !== '' && String(d.lng).trim() !== ''
+                    ? { lat: Number(d.lat), lng: Number(d.lng) }
+                    : null;
+                const locationHtml = coordinates
+                    ? `<a class="inline-flex items-center gap-2 mt-3 text-xs font-bold text-blue-700 underline" href="https://www.openstreetmap.org/?mlat=${coordinates.lat}&mlon=${coordinates.lng}#map=7/${coordinates.lat}/${coordinates.lng}" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-map-marker-alt"></i> ${coordinates.lat.toFixed(5)}, ${coordinates.lng.toFixed(5)} · Open map
+                       </a>`
+                    : '<div class="text-xs text-gray-400 mt-2">Location coordinates are not available.</div>';
+
+                const videoUrls = String(d.youtube_url || '')
+                    .split(/[\\n,]+/)
+                    .map(value => safeUrl(value))
+                    .filter(url => url && /(^|\\.)youtube\\.com$|(^|\\.)youtu\\.be$/.test(new URL(url).hostname))
+                    .slice(0, 4);
+                const videosHtml = videoUrls.length
+                    ? `<section class="mb-5 rounded-2xl border border-gray-100 p-4">
+                        <h3 class="font-black text-sm text-opera-midnight mb-3">Related videos</h3>
+                        <div class="space-y-2">${videoUrls.map((url, index) => `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 rounded-xl bg-gray-50 p-3 text-sm font-bold text-opera-red"><i class="fab fa-youtube text-lg"></i><span>Watch video ${index + 1}</span><i class="fas fa-external-link-alt ml-auto text-xs"></i></a>`).join('')}</div>
+                       </section>`
+                    : '';
+
+                const researchLinks = String(d.research_links || '')
+                    .split(/[\\n,]+/)
+                    .map(value => value.trim())
+                    .filter(Boolean)
+                    .map(value => ({ label: value, url: safeUrl(value) }))
+                    .filter(item => item.url)
+                    .slice(0, 12);
+                const researchHtml = researchLinks.length
+                    ? `<section class="mb-5 rounded-2xl border border-gray-100 p-4">
+                        <h3 class="font-black text-sm text-opera-midnight mb-3">Research & sources</h3>
+                        <div class="space-y-2">${researchLinks.map((item, index) => `<a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer" class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 text-sm text-blue-700 break-all"><i class="fas fa-external-link-alt mt-1"></i><span>Source ${index + 1}: ${esc(item.label)}</span></a>`).join('')}</div>
+                       </section>`
+                    : '';
+
+                container.innerHTML = `
+                    <article class="p-4 sm:p-5 pb-10">
+                        <div class="mb-4">
+                            <div class="text-[10px] uppercase tracking-[0.18em] font-black text-gray-400">${esc(d.country || 'Country not specified')}</div>
+                            <h2 class="text-2xl font-black leading-tight text-opera-midnight mt-1">${esc(d.food_name || 'Untitled foodway')}</h2>
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                <span class="px-3 py-1 rounded-full bg-red-50 text-opera-red text-[10px] font-black">${esc(d.connection_type || 'Culinary tradition')}</span>
+                                ${status ? `<span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black"><i class="fas fa-landmark mr-1"></i>${esc(status)}</span>` : ''}
+                            </div>
+                            ${locationHtml}
+                        </div>
+                        ${imagesHtml}
+                        ${connection}
+                        <section class="mb-5">
+                            <h3 class="font-black text-sm uppercase tracking-wider text-opera-midnight border-b border-gray-100 pb-2 mb-3">Historical narrative</h3>
+                            ${narrative}
+                        </section>
+                        ${videosHtml}
+                        ${researchHtml}
+                        ${d.geometry_json ? '<div class="mb-5 rounded-xl bg-gray-50 p-3 text-xs text-gray-500"><i class="fas fa-draw-polygon text-opera-gold mr-2"></i> Geographic distribution geometry is available for this record.</div>' : ''}
+                        <div class="border-t border-gray-100 pt-4 text-[10px] text-gray-400">Foodways · Shared Heritage</div>
+                    </article>`;
+            },
+
+            showDetail: (d) => {
                 if (!d) {
                     console.warn('[Foodways] showDetail called without a record');
                     return;
@@ -1380,19 +1501,11 @@
                     return;
                 }
 
-                // Render content before revealing the modal so users never see a blank panel.
-                try {
-                    if (typeof window.dashboard.renderDetailSkeleton === 'function') {
-                        window.dashboard.renderDetailSkeleton(d);
-                    }
-                    if (typeof window.dashboard.renderDetailContent === 'function') {
-                        await window.dashboard.renderDetailContent(d);
-                    }
-                } catch (error) {
-                    console.error('[Foodways] Failed to render detail content:', error);
-                }
+                const title = document.getElementById('dt-header-title');
+                if (title) title.textContent = d.food_name || 'Foodway Detail';
 
-                // Remove stale inline state left by an interrupted previous animation.
+                // Show a loading state immediately; still reveal an error message if rendering fails.
+                window.dashboard.renderDetailSkeleton(d);
                 modal.classList.remove('hidden', 'modal-active');
                 modal.style.visibility = 'visible';
                 modal.style.pointerEvents = 'auto';
@@ -1400,8 +1513,16 @@
                 void modal.offsetHeight;
                 requestAnimationFrame(() => modal.classList.add('modal-active'));
 
-                const title = document.getElementById('dt-header-title');
-                if (title) title.textContent = d.food_name || 'Foodway Detail';
+                try {
+                    window.dashboard.renderDetailContent(d);
+                } catch (error) {
+                    console.error('[Foodways] Failed to render detail content:', error);
+                    container.innerHTML = `<div class="p-6 text-center">
+                        <i class="fas fa-triangle-exclamation text-2xl text-amber-500 mb-3"></i>
+                        <h3 class="font-black text-gray-800">Details could not be displayed</h3>
+                        <p class="text-sm text-gray-500 mt-2">${window.escapeHtml(error && error.message ? error.message : 'Unknown rendering error')}</p>
+                       </div>`;
+                }
             },
             typeChart: null,
             renderTypeChart: () => {
