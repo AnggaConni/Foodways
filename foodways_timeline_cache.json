@@ -570,5 +570,69 @@
       "heuristic_disclaimer": "Research-assistant output only. Timeline dates, probable origins and trade-route relationships are heuristic hypotheses generated from AI-discovered data and live web evidence. They have not yet been verified by a human curator.",
       "researched_at": "2026-10-08T21:50:05.861694+00:00"
     }
+  },
+  "ich-a35aaa84": {
+    "signature": "f1b24c6cc63994cf217231c82f998889591f9cee80a8a7972ae0997f474fb0c2",
+    "result": {
+      "source_id": "ich-a35aaa84",
+      "food_name": "Mangú",
+      "ai_country": "Dominican Republic",
+      "ai_location": {
+        "lat": 19.0974031,
+        "lng": -70.3028026,
+        "provinces": []
+      },
+      "human_match": false,
+      "human_record_id": null,
+      "human_origin": {
+        "origin_food_name": null,
+        "origin_country": null,
+        "origin_lat": null,
+        "origin_lng": null,
+        "research_links": null
+      },
+      "assessment": {
+        "probable_origin_country": "Dominican Republic",
+        "probable_origin_place": "Hispaniola (Dominican Republic)",
+        "earliest_supported_year": null,
+        "date_evidence": [],
+        "route_hypotheses": [
+          {
+            "route": "Transatlantic Slave Trade and Caribbean Diaspora",
+            "relationship": "Enslaved Africans brought traditional culinary practices of boiling and mashing starchy crops (fufu) to the Caribbean, adapting them to plantains to produce regional variations such as Dominican mangú and Puerto Rican mofongo.",
+            "evidence": [
+              "Lonely Planet's travel guide notes the direct relationship between boiled and mashed plantain dishes across the region, identifying mangú as a Dominican tradition and comparing it to mofongo."
+            ],
+            "confidence": 0.65
+          }
+        ],
+        "date_confidence": 0.0,
+        "origin_confidence": 0.75,
+        "trade_route_confidence": 0.65,
+        "origin_reasoning": "Mangú is widely documented and recognized as an emblematic dish of the Dominican Republic, emerging from African diaspora foodways that adapted West and Central African mashed tuber preparation techniques (such as fufu) to plantains in the Caribbean.",
+        "uncertainty": "The supplied search results lack primary historical texts or early colonial citations to establish the earliest written mention of mangú. Linguistic theories also vary between an origin in Central/West African terminology (such as 'mangusi') and a popular 20th-century folk etymology tied to the 1916–1924 US occupation.",
+        "contradictions": [
+          "A widespread urban legend attributes the name 'mangú' to American soldiers during the 1916–1924 occupation saying 'Man, this is good!', contradicting linguists and food historians who identify West/Central African roots (e.g., Congolese 'mangusi') preceding the 20th century."
+        ]
+      },
+      "confidence": {
+        "date": 0.0,
+        "origin": 0.75,
+        "trade_route": 0.65,
+        "overall": 0.42,
+        "band": "Low"
+      },
+      "tinyfish_sources": [
+        {
+          "position": 1,
+          "site_name": "dokumen.pub",
+          "title": "The World (Lonely Planet) [2 ed.] 1786576538, 9781786576538",
+          "snippet": "Prepared the same way, but with plantains, the dish is called mangú; with pork rinds mixed in it is called mofongo. A Dominican Passion Not just the USA's ...",
+          "url": "https://dokumen.pub/the-world-lonely-planet-2nbsped-1786576538-9781786576538.html"
+        }
+      ],
+      "heuristic_disclaimer": "Research-assistant output only. Timeline dates, probable origins and trade-route relationships are heuristic hypotheses generated from AI-discovered data and live web evidence. They have not yet been verified by a human curator.",
+      "researched_at": "2026-10-09T10:44:17.761706+00:00"
+    }
   }
 }
