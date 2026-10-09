@@ -1438,9 +1438,9 @@
                     : '<div class="text-xs text-gray-400 mt-2">Location coordinates are not available.</div>';
 
                 const videoUrls = String(d.youtube_url || '')
-                    .split(/[\\n,]+/)
+                    .split(/[\n,]+/)
                     .map(value => safeUrl(value))
-                    .filter(url => url && /(^|\\.)youtube\\.com$|(^|\\.)youtu\\.be$/.test(new URL(url).hostname))
+                    .filter(url => url && /(^|\.)youtube\.com$|(^|\.)youtu\.be$/.test(new URL(url).hostname))
                     .slice(0, 4);
                 const videosHtml = videoUrls.length
                     ? `<section class="mb-5 rounded-2xl border border-gray-100 p-4">
@@ -1450,7 +1450,7 @@
                     : '';
 
                 const researchLinks = String(d.research_links || '')
-                    .split(/[\\n,]+/)
+                    .split(/[\n,]+/)
                     .map(value => value.trim())
                     .filter(Boolean)
                     .map(value => ({ label: value, url: safeUrl(value) }))
