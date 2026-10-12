@@ -961,6 +961,47 @@
     "scraped_at": "2026-06-17T02:43:05.615321Z"
   },
   {
+    "source_id": "ich-bf5a27e8",
+    "element_name": "Ayam Pallu Cuka (Nasu Cukka)",
+    "category": "Culinary Traditions",
+    "country": "Indonesia",
+    "provinces": [
+      "South Sulawesi"
+    ],
+    "lat": -3.6446718,
+    "lng": 119.9471906,
+    "thumbnail_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ayam_Pallu_Cuka.jpg/640px-Ayam_Pallu_Cuka.jpg",
+    "description": "## Description\nAyam Pallu Cuka, also known as Nasu Cukka, is a traditional chicken dish from South Sulawesi, particularly associated with the indigenous Suku Kajang community in Bulukumba. The name 'Pallu' means 'to cook' and 'Cuka' means 'vinegar', indicating a dish of chicken cooked with vinegar. It is characterized by its fresh, sour, and savory taste, often achieved through the use of natural palm vinegar (cuka aren or nira lontar).\n\n## Cultural Significance\nAyam Pallu Cuka is considered an ancestral cuisine ('kuliner leluhur') of the Suku Kajang tribe. The Suku Kajang, residing in Ammatoa, are known for their traditional lifestyle that emphasizes a deep connection with nature and sustainable practices, including 'go local, sustainable, and even biodynamic' concepts. The preparation of this dish, utilizing locally sourced ingredients like free-range chicken and fermented palm vinegar, reflects their traditional wisdom and harmonious relationship with their environment. This culinary practice is a testament to their cultural identity and the preservation of indigenous knowledge through food.\n\n## Tools, Materials & Ingredients\nChicken (preferably free-range chicken)\n• Natural palm vinegar (cuka aren or nira lontar)\n• Shallots (bawang merah)\n• Garlic (bawang putih)\n• Turmeric (kunyit)\n• Coriander (ketumbar)\n• Water\n• Salt/broth powder\n• Chili (optional, as per Bugis Sinjai variation)\n• Lemongrass (optional, as per Bugis Sinjai variation)\n• Candlenut (kemiri, optional, as per Bugis Sinjai variation)\n• Cooking pot/pan\n\n## Step-by-Step Process\nClean the chicken. It can be soaked in vinegar beforehand.\n• Prepare the finely ground spices: shallots, garlic, turmeric, and coriander (and optionally chili, lemongrass, candlenut).\n• Sauté the ground spices in a cooking pot until fragrant.\n• Add the cleaned chicken to the pot and stir until the chicken changes color.\n• Pour in enough water and the palm vinegar.\n• Cook the mixture until the water reduces, the spices are fully absorbed into the chicken, and the chicken becomes tender.\n• Season with salt or broth powder to taste.\n\n## Process Type\nMain Dish\n\n## AI Tags\nTraditional Cuisine\n• Indigenous Food\n• Sustainable Practices\n• Fermented Food\n• South Sulawesi\n• Suku Kajang\n\n## Shared Heritage Detection\nis_shared: True\nconfidence_score: 0.8\nrelated_elements: {'country': 'Indonesia', 'element_name': 'Nasu Cukka (Bugis Sinjai)', 'relationship_reason': \"The term 'Nasu Cukka' is also used for a similar chicken and vinegar dish in Bugis Sinjai, indicating a shared culinary concept within the broader South Sulawesi region, though the specific preparation and cultural ties to fermented aren vinegar are prominent with Suku Kajang.\"}\n\n## Categories\nCulinary Traditions\n\n## Location\ncountry: Indonesia\nprovinces: South Sulawesi\nlat: -3.6446718\nlng: 119.9471906\n\n## Completion Status\nCOMPLETE",
+    "cultural_significance": "Ayam Pallu Cuka is considered an ancestral cuisine ('kuliner leluhur') of the Suku Kajang tribe. The Suku Kajang, residing in Ammatoa, are known for their traditional lifestyle that emphasizes a deep connection with nature and sustainable practices, including 'go local, sustainable, and even biodynamic' concepts. The preparation of this dish, utilizing locally sourced ingredients like free-range chicken and fermented palm vinegar, reflects their traditional wisdom and harmonious relationship with their environment. This culinary practice is a testament to their cultural identity and the preservation of indigenous knowledge through food.",
+    "tags": [
+      "Traditional Cuisine",
+      "Indigenous Food",
+      "Sustainable Practices",
+      "Fermented Food",
+      "South Sulawesi",
+      "Suku Kajang"
+    ],
+    "completion_status": "COMPLETE",
+    "shared_heritage": {
+      "is_shared": true,
+      "confidence_score": 0.8,
+      "related_elements": [
+        {
+          "country": "Indonesia",
+          "element_name": "Nasu Cukka (Bugis Sinjai)",
+          "relationship_reason": "The term 'Nasu Cukka' is also used for a similar chicken and vinegar dish in Bugis Sinjai, indicating a shared culinary concept within the broader South Sulawesi region, though the specific preparation and cultural ties to fermented aren vinegar are prominent with Suku Kajang."
+        }
+      ]
+    },
+    "source_urls": [
+      "https://wikipangan.id/index.php?title=Ayam_Pallu_Cuka",
+      "https://www.kompas.id/baca/humaniora/2023/11/28/berburu-resep-kuliner-tradisional-hingga-pelosok-negeri",
+      "https://www.youtube.com/watch?v=kY0w2_s_e-c",
+      "https://www.youtube.com/watch?v=r087k52402A"
+    ],
+    "scraped_at": "2026-10-12T03:09:48.640364Z"
+  },
+  {
     "source_id": "ich-eda271cc",
     "element_name": "Bakar Batu (Stone Cooking) Ritual",
     "category": "Culinary Traditions",
