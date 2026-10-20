@@ -3453,6 +3453,56 @@
     "scraped_at": "2026-03-21T01:09:06.086862Z"
   },
   {
+    "source_id": "ich-7d0b4216",
+    "element_name": "Zuni Waffle Garden",
+    "category": "Culinary Traditions | Social Practices & Rituals",
+    "country": "United States",
+    "provinces": [
+      "New Mexico"
+    ],
+    "lat": 34.5802074,
+    "lng": -105.996047,
+    "thumbnail_url": "https://www.notecard.news/wp-content/uploads/2021/10/Zuni-Waffle-Garden.jpg",
+    "description": "## Description\nThe Zuni Waffle Garden is an ancient and still-practiced agricultural technique developed by the Zuni people of New Mexico, USA. This method involves creating a grid-like pattern of small, raised earthen walls that form square or rectangular depressions in the soil, resembling a waffle. These depressions are specifically designed to capture and retain rainwater, allowing it to slowly seep into the soil and provide sustained moisture to crops in arid and semi-arid environments. This ingenious system maximizes water efficiency and enables the cultivation of traditional crops such as corn, beans, and squash, which are staples of the Zuni diet.\n\n## Cultural Significance\nThe Zuni Waffle Garden is profoundly significant to Zuni culture and identity, extending beyond mere food production. It embodies ancestral knowledge, resilience, and a deep, spiritual connection to the land and its resources. The practice ensures food security, supports traditional diets, and reinforces community bonds through shared labor and the continuation of ancient traditions. It represents the Zuni people's sustainable relationship with their environment, their ability to thrive in challenging conditions, and a powerful act of cultural reconnection and a strategy for climate resilience.\n\n## Tools, Materials & Ingredients\nHand tools (e.g., hoes, shovels)\n• Native seeds (e.g., corn, beans, squash)\n• Soil (preferably clay-heavy for walls)\n• Optional: gravel, sand, or rock mulch\n\n## Step-by-Step Process\n**Site Selection**: Choose a relatively flat or gently sloping area suitable for cultivation, often near a water source or at the bottom of a drainage area to maximize water collection.\n• **Layout Design**: Mark out a grid pattern on the ground, typically forming squares or rectangles, which will define the individual 'waffle' cells. The pattern can follow the contour of the land.\n• **Digging Depressions**: Dig shallow depressions within each marked cell, typically 6 to 12 inches deep.\n• **Building Walls**: Use the excavated soil to build up raised earthen walls around the perimeter of each depression, creating distinct borders. These walls help to contain water within the cells and provide a shield from wind. Clay-heavy soil is ideal for building sturdy dikes.\n• **Planting**: Plant seeds of traditional crops, such as corn, beans, and squash, within the depressions. Seeds are often planted deeper than conventional methods to access moisture.\n• **Mulching (Optional)**: Apply gravel, sand, or rock mulch within the waffle cells to further conserve water by shading the soil, slowing evaporation, and reducing runoff during heavy rains.\n• **Maintenance**: Regularly maintain the walls to ensure they remain intact and effective in capturing water and protecting plants.\n\n## Process Type\nAgricultural technique\n\n## AI Tags\nIndigenous Knowledge\n• Sustainable Agriculture\n• Water Conservation\n• Drought Resilience\n• Traditional Ecological Knowledge\n• Food Security\n• Climate Adaptation\n\n## Shared Heritage Detection\nis_shared: True\nconfidence_score: 0.9\nrelated_elements: {'country': 'United States', 'element_name': 'Hopi Dryland Farming', 'relationship_reason': 'Both Zuni and Hopi peoples are indigenous to the American Southwest and have developed sophisticated dryland farming techniques to adapt to arid environments. They share principles of water conservation, deep planting, and traditional ecological knowledge to grow crops without irrigation, highlighting a common heritage of resilience and adaptation.'}\n• {'country': 'Various arid regions globally', 'element_name': 'Traditional Water Harvesting Techniques (e.g., terracing, check dams, sunken beds)', 'relationship_reason': 'The Zuni Waffle Garden shares fundamental principles with other traditional water harvesting and conservation methods found in arid regions worldwide. These practices focus on maximizing water infiltration, minimizing runoff and evaporation, and creating microclimates for agricultural purposes in water-scarce environments.'}\n\n## Categories\nCulinary Traditions\n• Social Practices & Rituals\n\n## Location\ncountry: United States\nprovinces: New Mexico\nlat: 34.5802074\nlng: -105.996047\n\n## Completion Status\nCOMPLETE",
+    "cultural_significance": "The Zuni Waffle Garden is profoundly significant to Zuni culture and identity, extending beyond mere food production. It embodies ancestral knowledge, resilience, and a deep, spiritual connection to the land and its resources. The practice ensures food security, supports traditional diets, and reinforces community bonds through shared labor and the continuation of ancient traditions. It represents the Zuni people's sustainable relationship with their environment, their ability to thrive in challenging conditions, and a powerful act of cultural reconnection and a strategy for climate resilience.",
+    "tags": [
+      "Indigenous Knowledge",
+      "Sustainable Agriculture",
+      "Water Conservation",
+      "Drought Resilience",
+      "Traditional Ecological Knowledge",
+      "Food Security",
+      "Climate Adaptation"
+    ],
+    "completion_status": "COMPLETE",
+    "shared_heritage": {
+      "is_shared": true,
+      "confidence_score": 0.9,
+      "related_elements": [
+        {
+          "country": "United States",
+          "element_name": "Hopi Dryland Farming",
+          "relationship_reason": "Both Zuni and Hopi peoples are indigenous to the American Southwest and have developed sophisticated dryland farming techniques to adapt to arid environments. They share principles of water conservation, deep planting, and traditional ecological knowledge to grow crops without irrigation, highlighting a common heritage of resilience and adaptation."
+        },
+        {
+          "country": "Various arid regions globally",
+          "element_name": "Traditional Water Harvesting Techniques (e.g., terracing, check dams, sunken beds)",
+          "relationship_reason": "The Zuni Waffle Garden shares fundamental principles with other traditional water harvesting and conservation methods found in arid regions worldwide. These practices focus on maximizing water infiltration, minimizing runoff and evaporation, and creating microclimates for agricultural purposes in water-scarce environments."
+        }
+      ]
+    },
+    "source_urls": [
+      "https://greenbeanconnection.com/waffle-gardens-the-roots-of-square-foot-gardening/",
+      "https://notechmagazine.com/2021/11/14/waffle-gardens/",
+      "https://www.nuwao.org/waffle-gardens",
+      "https://www.colorado.edu/wearewater/activity/waffle-garden",
+      "https://pbmg.org/waffle-gardening/",
+      "https://www.marysbloomers.com/ancient-pueblo-farming-waffle-gardens-harvest-rainwater/",
+      "https://resilience.arizona.edu/news/2024-10-25/what-800-year-old-seeds-and-hopi-dryland-farmer-teach-us-about-adaptation-hope"
+    ],
+    "scraped_at": "2026-10-20T02:31:12.511589Z"
+  },
+  {
     "source_id": "ich-56a24cc4",
     "element_name": "Anishinaabe Traditional Wild Rice Harvesting (Manoominikewin)",
     "category": "Culinary Traditions",
