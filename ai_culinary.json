@@ -1,5 +1,71 @@
 [
   {
+    "source_id": "ich-15b233a5",
+    "element_name": "Ofício das Paneleiras de Goiabeiras",
+    "category": "Traditional Craftsmanship | Culinary Traditions",
+    "country": "Brazil",
+    "provinces": [
+      "Espírito Santo"
+    ],
+    "lat": -19.5687682,
+    "lng": -40.1721991,
+    "thumbnail_url": "https://api.microlink.io/?url=https%3A//bd.iphan.gov.br/dspace/handle/123456789/220&screenshot=true&meta=false&embed=screenshot.url",
+    "description": "## Description\nThe Ofício das Paneleiras de Goiabeiras is the traditional craft of making clay pots by hand, primarily used for preparing and serving typical Capixaba dishes such as moqueca capixaba and torta capixaba. This artisanal practice is deeply rooted in the Goiabeiras Velha neighborhood of Vitória, Espírito Santo, Brazil. It is predominantly a female activity, passed down through generations from mother to daughter, and serves as the main source of income for over 120 families in the community. The craft involves a unique process of extracting special clay from the Vale do Mulembá, molding it manually, drying, polishing, open-air firing, and then impermeabilizing and coloring the pots with tannin extracted from red mangrove bark.\n\n## Cultural Significance\nThis craft is a vibrant testament to the cultural richness of Espírito Santo and stands as a significant symbol of Capixaba identity. It was the first manual knowledge to be recognized as Intangible Cultural Heritage of Brazil by the Instituto do Patrimônio Histórico e Artístico Nacional (IPHAN) in 2002, being inscribed in the Book of Knowledge. The tradition spans over 400 years, with its techniques originating from indigenous groups, specifically the Tupi-Guarani and Una tribes, and later adopted by colonists and descendants of enslaved Africans who settled in the mangrove region. The pots are not merely utilitarian objects but are considered indispensable for the authentic preparation of iconic local dishes, thus intertwining craftsmanship with culinary heritage. The craft also holds an Indicação Geográfica (Geographical Indication) seal, further affirming its unique origin and quality. In 2011, the Paneleiras de Goiabeiras received the 2010 Best Practices certificate from the UN-Habitat, acknowledging its contributions to civic engagement, cultural vitality, poverty reduction, income generation, gender equality, and social inclusion.\n\n## Tools, Materials & Ingredients\nSpecial clay from Vale do Mulembá (Mulembá Valley), a mangrove region in Vitória, Espírito Santo.\n• Tannin (tanino) extracted from the bark of the red mangrove (mangue-vermelho).\n• Rudimentary tools, including 'vassourinha de muxinga' (a type of broom), 'cuia' (gourd), 'arco' (bow), and 'faca' (knife).\n\n## Step-by-Step Process\n**Extraction and Preparation of Raw Materials:** Clay is extracted from the Vale do Mulembá, and tannin from the red mangrove bark. Men often assist in the extraction, cleaning, and initial preparation of the clay.\n• **Clay Preparation:** The extracted clay undergoes a cleaning and preparation process.\n• **Manual Modeling:** The pots are meticulously molded by hand, without the use of modern equipment or a potter's wheel. Each pot is typically crafted by a single individual.\n• **Sun Drying:** The freshly molded pots are left to dry naturally under the sun.\n• **Polishing:** Once dried, the pots are carefully polished to achieve a smooth finish.\n• **Open-Air Firing (Queima):** The pots are fired in open-air bonfires, without the use of enclosed kilns or ovens. Specific 'beds' for firing are prepared outside the workshop.\n• **Tannin Application (Impermeabilization and Coloring):** While the pots are still hot from the firing process, the tannin dye is applied. This step imparts the characteristic dark color to the pots and also serves to impermeabilize them.\n\n## Process Type\nArtisanal Ceramic Production\n\n## AI Tags\nTraditional Craftsmanship\n• Culinary Traditions\n• Intangible Cultural Heritage\n• Brazil\n• Espírito Santo\n• Goiabeiras\n• Clay Pots\n• Moqueca Capixaba\n• Torta Capixaba\n• Indigenous Heritage\n• Sustainable Livelihoods\n\n## Shared Heritage Detection\nis_shared: True\nconfidence_score: 1.0\nrelated_elements: {'country': 'Brazil', 'element_name': 'Traditional ceramic practices of Tupi-Guarani and Una indigenous peoples', 'relationship_reason': 'The technique employed by the Paneleiras has direct indigenous origins, specifically from the Tupi-Guarani and Una tribes, with historical roots extending over 400 years. This ancestral knowledge was subsequently adopted and adapted by colonists and descendants of enslaved Africans who settled in the mangrove region of Goiabeiras. The production process maintains essential characteristics that align with the ceramic practices of native groups across the Americas.'}\n\n## Categories\nTraditional Craftsmanship\n• Culinary Traditions\n\n## Location\ncountry: Brazil\nprovinces: Espírito Santo\nlat: -19.5687682\nlng: -40.1721991\n\n## Completion Status\nCOMPLETE",
+    "cultural_significance": "This craft is a vibrant testament to the cultural richness of Espírito Santo and stands as a significant symbol of Capixaba identity. It was the first manual knowledge to be recognized as Intangible Cultural Heritage of Brazil by the Instituto do Patrimônio Histórico e Artístico Nacional (IPHAN) in 2002, being inscribed in the Book of Knowledge. The tradition spans over 400 years, with its techniques originating from indigenous groups, specifically the Tupi-Guarani and Una tribes, and later adopted by colonists and descendants of enslaved Africans who settled in the mangrove region. The pots are not merely utilitarian objects but are considered indispensable for the authentic preparation of iconic local dishes, thus intertwining craftsmanship with culinary heritage. The craft also holds an Indicação Geográfica (Geographical Indication) seal, further affirming its unique origin and quality. In 2011, the Paneleiras de Goiabeiras received the 2010 Best Practices certificate from the UN-Habitat, acknowledging its contributions to civic engagement, cultural vitality, poverty reduction, income generation, gender equality, and social inclusion.",
+    "tags": [
+      "Traditional Craftsmanship",
+      "Culinary Traditions",
+      "Intangible Cultural Heritage",
+      "Brazil",
+      "Espírito Santo",
+      "Goiabeiras",
+      "Clay Pots",
+      "Moqueca Capixaba",
+      "Torta Capixaba",
+      "Indigenous Heritage",
+      "Sustainable Livelihoods"
+    ],
+    "completion_status": "COMPLETE",
+    "shared_heritage": {
+      "is_shared": true,
+      "confidence_score": 1.0,
+      "related_elements": [
+        {
+          "country": "Brazil",
+          "element_name": "Traditional ceramic practices of Tupi-Guarani and Una indigenous peoples",
+          "relationship_reason": "The technique employed by the Paneleiras has direct indigenous origins, specifically from the Tupi-Guarani and Una tribes, with historical roots extending over 400 years. This ancestral knowledge was subsequently adopted and adapted by colonists and descendants of enslaved Africans who settled in the mangrove region of Goiabeiras. The production process maintains essential characteristics that align with the ceramic practices of native groups across the Americas."
+        }
+      ]
+    },
+    "source_urls": [
+      "https://bd.iphan.gov.br/dspace/handle/123456789/220",
+      "https://sebrae.com.br/sites/PortalSebrae/artesanato/paneleiras-de-goiabeiras-conheca-sua-tradicao,9340b95760810810VgnVCM1000004c00210aRCRD",
+      "https://memoriadobarro.com.br/patrimonio/",
+      "https://www.camara.leg.br/tv/200700-paneleiras-de-goiabeiras-brasilidade/",
+      "https://www.agazeta.com.br/es/cotidiano/oficio-das-paneleiras-duas-decadas-de-reconhecimento-1222",
+      "https://www.pontosolidario.org.br/oficio-das-paneleiras-de-goiabeiras-es/",
+      "https://www.vitoria.es.gov.br/turista/paneleiras-de-goiabeiras",
+      "https://www.ipatrimonio.org/espiritosanto/vitoria/oficio-das-paneleiras-de-goiabeiras",
+      "https://memoriadobarro.com.br/panelas-de-barro-de-goiabeiras/",
+      "https://memoriadobarro.com.br/",
+      "https://www.bembrasileiro.com.br/oficio-das-paneleiras-de-goiabeiras/",
+      "https://www.vitoria.es.gov.br/noticia/paneleiras-de-goiabeiras-recebem-certificado-de-melhores-praticas-da-onu-15494",
+      "https://g1.globo.com/es/espirito-santo/noticia/2024/08/06/apos-reconhecimento-de-patrimonio-cultural-imaterial-do-es-paneleiras-pedem-ajuda-para-manter-tradicao.ghtml",
+      "https://www.panrotas.com.br/noticia/destinos/2026/05/paneleiras-de-goiabeiras-em-vitoria-es-unem-tradicao-cultura-e-resistencia_200407.html",
+      "https://www.youtube.com/watch?v=110k2L2197k",
+      "https://acontecenopais.com.br/panelas-de-barro-de-goiabeiras-um-tesouro-cultural-do-espirito-santo-que-une-tradicao-e-identidade/",
+      "https://www.seculodiario.com.br/cultura/oficio-das-paneleiras-de-goiabeiras-e-revalidado-como-patrimonio-cultural-do-brasil",
+      "https://www.youtube.com/watch?v=17X21-41-4Y",
+      "https://www.youtube.com/watch?v=Xh0Y-3L111E",
+      "https://www.vitoria.es.gov.br/noticia/galpao-das-paneleiras-de-goiabeiras-passa-a-funcionar-de-segunda-a-sabado-26034",
+      "https://www.scielo.br/j/inter/a/K69R878534X773wX338578Q/?lang=pt",
+      "https://www.gov.br/pt-br/noticias/cultura/2023/08/iphan-lanca-publicacao-sobre-o-oficio-das-paneleiras-de-goiabeiras",
+      "https://capixabadagema.com.br/paneleiras-de-goiabeiras-visita-historia-e-precos/",
+      "https://www.mapcarta.com/1856526067"
+    ],
+    "scraped_at": "2026-10-24T02:24:01.082465Z"
+  },
+  {
     "source_id": "ich-03f06897",
     "element_name": "Queijo Artesanal da Serra da Canastra",
     "category": "Culinary Traditions",
@@ -454,6 +520,62 @@
       "https://en.wikipedia.org/wiki/Dabu_County"
     ],
     "scraped_at": "2026-08-15T00:39:45.669064Z"
+  },
+  {
+    "source_id": "ich-d29bffa4",
+    "element_name": "Ox's Birthday Festival (牛生日节)",
+    "category": "Social Practices & Rituals | Culinary Traditions",
+    "country": "China",
+    "provinces": [
+      "Guangxi Zhuang Autonomous Region"
+    ],
+    "lat": 24.0,
+    "lng": 109.0,
+    "thumbnail_url": "https://api.microlink.io/?url=https%3A//www.neac.gov.cn/seac/zt/mzwh/mlz/fsxg.shtml&screenshot=true&meta=false&embed=screenshot.url",
+    "description": "## Description\nThe Ox's Birthday Festival (牛生日节) is a traditional festival of the Mulao ethnic group, celebrated annually on the eighth day of the fourth lunar month. It is a day dedicated to honoring and protecting working cattle, which are considered indispensable for agriculture. During this festival, cattle are given a day of rest from farm work, cleaned, and provided with special food, while offerings are made to the 'cattle pen god' and ancestors.\n\n## Cultural Significance\nThis festival holds deep cultural significance for the Mulao people, expressing their profound gratitude and respect for working cattle. These animals are regarded as 'mankind's good friends' and are crucial for their agricultural livelihoods. The rituals and practices of the festival, including prayers for the cattle's safety and well-being, reflect the community's reliance on these animals for a successful harvest and their overall sustenance.\n\n## Tools, Materials & Ingredients\nGood grass\n• First-class fodder\n• Glutinous rice (specifically black polished glutinous rice meal)\n• Wine\n• Meat (chicken and ducks for memorial ceremony)\n• Branches of Chinese sweet gum\n• Soybeans and maize (for well-off families)\n• Egg distiller's grains (for well-off families)\n\n## Step-by-Step Process\nOn the eighth day of the fourth lunar month, every Mulao household gives their oxen a holiday, allowing them to rest from farm work.\n• Families thoroughly clean their cattle pens.\n• The working cattle are washed clean.\n• Branches of the Chinese sweet gum are inserted on the cattle pen gates to ward off mosquitoes and flies.\n• Chicken and ducks are prepared to make wine and meat for a memorial ceremony dedicated to the 'cattle pen god'.\n• Dark polished glutinous rice meal is prepared as an offering to ancestors.\n• Cattle are fed with first-class fodder.\n• The cooked black polished glutinous rice is offered to the ox to eat first.\n• Well-off families may also prepare a special feed by macerating soybeans and maize, mixed with egg distiller's grains, for their oxen.\n• After the cattle have been fed and honored, the community shares the remaining food and celebrates the festival.\n\n## Process Type\nFestival/Ritual\n\n## AI Tags\nMulao ethnic group\n• Ox's Birthday Festival\n• Cattle worship\n• Agricultural traditions\n• Guangxi folklore\n• Rural community practices\n• Animal welfare\n• Food security\n• Traditional rituals\n\n## Shared Heritage Detection\nis_shared: True\nconfidence_score: 0.7\nrelated_elements: {'country': 'India', 'element_name': 'Mattu Pongal', 'relationship_reason': 'A festival dedicated to cattle, expressing gratitude for their role in agriculture.'}\n• {'country': 'Nepal', 'element_name': 'Gai Tihar (part of Tihar festival)', 'relationship_reason': 'A day dedicated to worshipping cows, recognizing their importance in livelihoods and sustenance.'}\n• {'country': 'Various agricultural societies globally', 'element_name': 'Reverence for working animals', 'relationship_reason': 'Many agricultural societies share a deep respect and dedicate specific practices or festivals to working animals, especially cattle, due to their vital role in farming and sustenance.'}\n\n## Categories\nSocial Practices & Rituals\n• Culinary Traditions\n\n## Location\ncountry: China\nprovinces: Guangxi Zhuang Autonomous Region\nlat: 24.0\nlng: 109.0\n\n## Completion Status\nCOMPLETE",
+    "cultural_significance": "This festival holds deep cultural significance for the Mulao people, expressing their profound gratitude and respect for working cattle. These animals are regarded as 'mankind's good friends' and are crucial for their agricultural livelihoods. The rituals and practices of the festival, including prayers for the cattle's safety and well-being, reflect the community's reliance on these animals for a successful harvest and their overall sustenance.",
+    "tags": [
+      "Mulao ethnic group",
+      "Ox's Birthday Festival",
+      "Cattle worship",
+      "Agricultural traditions",
+      "Guangxi folklore",
+      "Rural community practices",
+      "Animal welfare",
+      "Food security",
+      "Traditional rituals"
+    ],
+    "completion_status": "COMPLETE",
+    "shared_heritage": {
+      "is_shared": true,
+      "confidence_score": 0.7,
+      "related_elements": [
+        {
+          "country": "India",
+          "element_name": "Mattu Pongal",
+          "relationship_reason": "A festival dedicated to cattle, expressing gratitude for their role in agriculture."
+        },
+        {
+          "country": "Nepal",
+          "element_name": "Gai Tihar (part of Tihar festival)",
+          "relationship_reason": "A day dedicated to worshipping cows, recognizing their importance in livelihoods and sustenance."
+        },
+        {
+          "country": "Various agricultural societies globally",
+          "element_name": "Reverence for working animals",
+          "relationship_reason": "Many agricultural societies share a deep respect and dedicate specific practices or festivals to working animals, especially cattle, due to their vital role in farming and sustenance."
+        }
+      ]
+    },
+    "source_urls": [
+      "https://www.neac.gov.cn/seac/zt/mzwh/mlz/fsxg.shtml",
+      "https://www.chinadragontours.com/mulao-ethnic-group-festivals/ox-birth-festival-of-mulao-ethnic-group.htm",
+      "https://en.wikipedia.org/wiki/Luocheng_Mulao_Autonomous_County",
+      "https://www.factsanddetails.com/china/Minorities_in_Guangxi_Guizhou_and_Southern_China/Mulao_Minority.html",
+      "http://english.scio.gov.cn/culture/2017-06/07/content_40974955.htm",
+      "https://www.intotravelchina.com/china-ethnic-groups/mulao-ethnic.html"
+    ],
+    "scraped_at": "2026-10-24T02:24:42.588729Z"
   },
   {
     "source_id": "ich-37f54957",
@@ -2209,6 +2331,64 @@
       "https://www.biblio.serere.org/le-couscous-origine-de-la-recette/"
     ],
     "scraped_at": "2026-04-13T01:30:42.423184Z"
+  },
+  {
+    "source_id": "ich-95f0b011",
+    "element_name": "Practices and traditional knowledge of Terere in the culture of Pohã Ñana, Guaraní ancestral drink in Paraguay",
+    "category": "Social Practices & Rituals | Culinary Traditions | Oral Traditions",
+    "country": "Paraguay",
+    "provinces": [],
+    "lat": -23.3165935,
+    "lng": -58.1693445,
+    "thumbnail_url": "https://api.microlink.io/?url=https%3A//ich.unesco.org/en/RL/practices-and-traditional-knowledge-of-terere-in-the-culture-of-poha-nana-guarani-ancestral-drink-in-paraguay-01603&screenshot=true&meta=false&embed=screenshot.url",
+    "description": "## Description\nTerere is a traditional Guaraní ancestral drink prepared in a jug or thermos, where cold water (or citrus juice and ice) is mixed with Pohã Ñana (medicinal herbs) crushed in a mortar. This mixture is then served in a glass pre-filled with yerba mate and consumed through a bombilla (metal or cane straw). The preparation and consumption of Terere is an intimate ritual involving a series of pre-established codes.\n\n## Cultural Significance\nThe practice of Terere in the culture of Pohã Ñana is deeply ingrained in Guaraní culture and fosters social cohesion, promoting inclusion, friendship, dialogue, respect, and solidarity within communities. It is considered a gift from the gods by the Guaraní people. The traditional knowledge associated with the healing attributes of Pohã Ñana and their correct use is transmitted spontaneously within families, strengthening new generations' appreciation of their rich cultural and botanical heritage.\n\n## Tools, Materials & Ingredients\nCold water (or citrus juice and ice)\n• Pohã Ñana (medicinal herbs)\n• Mortar\n• Yerba mate\n• Jug or thermos\n• Glass or gourd (also called mate or porongo)\n• Bombilla (metal or cane straw)\n\n## Step-by-Step Process\nCrush the Pohã Ñana (medicinal herbs) in a mortar.\n• Place yerba mate in a glass or gourd.\n• Add the crushed Pohã Ñana to the glass or gourd with the yerba mate.\n• Fill a jug or thermos with very cold water (or citrus juice and ice).\n• Pour the cold water mixture from the jug/thermos into the glass/gourd containing the yerba mate and Pohã Ñana.\n• Sip the prepared drink through a bombilla.\n\n## Process Type\nBeverage preparation\n\n## AI Tags\nGuaraní culture\n• Terere\n• Pohã Ñana\n• Traditional drink\n• Medicinal herbs\n• Social ritual\n• Paraguay\n• Intangible Cultural Heritage\n• Yerba Mate\n\n## Shared Heritage Detection\nis_shared: True\nconfidence_score: 0.9\nrelated_elements: {'country': 'Argentina', 'element_name': 'Yerba Mate / Tereré consumption', 'relationship_reason': 'Yerba mate and Tereré are widely consumed in Argentina, with shared Guaraní roots and cultural significance.'}\n• {'country': 'Brazil', 'element_name': 'Yerba Mate / Tereré consumption', 'relationship_reason': 'The Guaraní people are spread across Brazil, and yerba mate/Tereré is a traditional beverage in the region.'}\n• {'country': 'Bolivia', 'element_name': 'Yerba Mate / Tereré consumption', 'relationship_reason': 'Guaraní communities in Bolivia maintain traditions including the consumption of yerba mate/Tereré.'}\n• {'country': 'Uruguay', 'element_name': 'Yerba Mate / Tereré consumption', 'relationship_reason': 'Yerba mate and Tereré are popular beverages in Uruguay, stemming from shared regional cultural influences.'}\n\n## Categories\nSocial Practices & Rituals\n• Culinary Traditions\n• Oral Traditions\n\n## Location\ncountry: Paraguay\nlat: -23.3165935\nlng: -58.1693445\n\n## Completion Status\nCOMPLETE",
+    "cultural_significance": "The practice of Terere in the culture of Pohã Ñana is deeply ingrained in Guaraní culture and fosters social cohesion, promoting inclusion, friendship, dialogue, respect, and solidarity within communities. It is considered a gift from the gods by the Guaraní people. The traditional knowledge associated with the healing attributes of Pohã Ñana and their correct use is transmitted spontaneously within families, strengthening new generations' appreciation of their rich cultural and botanical heritage.",
+    "tags": [
+      "Guaraní culture",
+      "Terere",
+      "Pohã Ñana",
+      "Traditional drink",
+      "Medicinal herbs",
+      "Social ritual",
+      "Paraguay",
+      "Intangible Cultural Heritage",
+      "Yerba Mate"
+    ],
+    "completion_status": "COMPLETE",
+    "shared_heritage": {
+      "is_shared": true,
+      "confidence_score": 0.9,
+      "related_elements": [
+        {
+          "country": "Argentina",
+          "element_name": "Yerba Mate / Tereré consumption",
+          "relationship_reason": "Yerba mate and Tereré are widely consumed in Argentina, with shared Guaraní roots and cultural significance."
+        },
+        {
+          "country": "Brazil",
+          "element_name": "Yerba Mate / Tereré consumption",
+          "relationship_reason": "The Guaraní people are spread across Brazil, and yerba mate/Tereré is a traditional beverage in the region."
+        },
+        {
+          "country": "Bolivia",
+          "element_name": "Yerba Mate / Tereré consumption",
+          "relationship_reason": "Guaraní communities in Bolivia maintain traditions including the consumption of yerba mate/Tereré."
+        },
+        {
+          "country": "Uruguay",
+          "element_name": "Yerba Mate / Tereré consumption",
+          "relationship_reason": "Yerba mate and Tereré are popular beverages in Uruguay, stemming from shared regional cultural influences."
+        }
+      ]
+    },
+    "source_urls": [
+      "https://ich.unesco.org/en/RL/practices-and-traditional-knowledge-of-terere-in-the-culture-of-poha-nana-guarani-ancestral-drink-in-paraguay-01603",
+      "https://www.yerbamateargentina.org/en/yerba-mate/the-guarani-culture-language-people-and-yerba-mate/",
+      "https://www.britannica.com/place/Paraguay/Culture-Traditions-Cuisine",
+      "https://www.britannica.com/topic/Guarani",
+      "https://en.wikipedia.org/wiki/Paraguayan_cuisine"
+    ],
+    "scraped_at": "2026-10-24T02:23:36.637178Z"
   },
   {
     "source_id": "ich-680a4062",
