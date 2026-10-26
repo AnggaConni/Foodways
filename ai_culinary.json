@@ -3043,6 +3043,65 @@
     "scraped_at": "2026-09-01T02:35:21.899454Z"
   },
   {
+    "source_id": "ich-fb2dc603",
+    "element_name": "Laksa",
+    "category": "Culinary Traditions",
+    "country": "Southeast Asia",
+    "provinces": [
+      "Malaysia",
+      "Singapore",
+      "Indonesia (Jakarta, Bogor, Tangerang)"
+    ],
+    "lat": 3.140489,
+    "lng": 101.6834074,
+    "thumbnail_url": "https://api.microlink.io/?url=https%3A//nisabakrigourmet.com/blogs/news/a-brief-history-of-laksa-origins-influences-and-cultural-significance&screenshot=true&meta=false&embed=screenshot.url",
+    "description": "## Description\nLaksa is a spicy noodle soup popular in Southeast Asia, renowned for its rich and complex flavors. It typically consists of various types of noodles served in a rich and spicy coconut curry soup or a broth seasoned with a souring ingredient like tamarind. Toppings often include chicken, prawns, fish, tofu puffs, and bean sprouts.\n\n## Cultural Significance\nLaksa is a quintessential example of 'budaya campuran hasil asimilasi masyarakat' (mixed culture resulting from community assimilation). It originated from the Peranakan community, which developed through the intermarriage of Chinese immigrants and local Malay communities in Southeast Asia. The dish embodies the rich culinary heritage of the region, showcasing a fusion of Chinese noodles with Malay and Indian spices and flavors. Laksa is not just a dish but also a symbol of national or regional identity in many Southeast Asian countries, with numerous regional variations reflecting diverse local influences. It is often served at special occasions and is a beloved street food, representing a successful cultural acculturation that has been passed down through generations. The name 'laksa' itself is believed to be derived from the Sanskrit word 'laksha,' meaning 'many,' referring to the numerous spices and ingredients used in its preparation.\n\n## Tools, Materials & Ingredients\n**For the Spice Paste (Bumbu Halus):**\n• 8-10 shallots (bawang merah)\n• 3-5 cloves garlic (bawang putih)\n• 4-6 red chilies (cabai merah), deseeded\n• 3-4 candlenuts (kemiri)\n• 1 tbsp dried shrimp (ebi kering), soaked in hot water\n• 3 cm ginger (jahe), sliced\n• 2-7 cm turmeric (kunyit), fresh or powder\n• 2-7 cm galangal (lengkuas), bruised\n• 1-2 stalks lemongrass (serai), bruised\n• 0.5-1 tsp coriander (ketumbar), toasted or powder\n• 0.75 tsp shrimp paste (terasi udang), roasted (sangrai)\n• 2 tbsp cooking oil (minyak)\n• 60 ml water (for blending, if needed)\n• **For the Broth:**\n• 1 liter coconut milk (santan) (from one coconut) or 200-500 ml thick coconut milk\n• 1-2 liters chicken or shrimp broth (air kaldu ayam/udang) or water\n• 3-5 kaffir lime leaves (daun jeruk)\n• 10 curry leaves (daun kari) (optional)\n• 1 tbsp tamarind juice (air asam jawa) (optional)\n• 1.5-2 tsp salt (garam), to taste\n• 0.5-2 tsp sugar (gula pasir), to taste\n• 1 tsp mushroom stock/flavoring (kaldu jamur/penyedap) (optional)\n• 0.25 tsp pepper (merica) (optional)\n• **For the Toppings/Fillings:**\n• 50-200g rice vermicelli (bihun) or yellow noodles (mi kuning)\n• 120-250g shrimp (udang), peeled and boiled\n• 100-200g chicken breast (dada ayam filet), boiled and shredded\n• 100g tofu puffs (tahu pong) or fried white tofu, cut into triangles\n• 50-150g bean sprouts (taoge)\n• 2-4 boiled eggs (telur rebus), halved\n• Lime (jeruk nipis/limau), for serving\n• Basil leaves (daun kemangi), for serving\n• Fried shallots (bawang goreng), for garnish\n• Sambal (chili sauce), for serving\n• 1 piece Singapore otak-otak (fish cake), fried and sliced (optional)\n\n## Step-by-Step Process\n**1. Prepare the Shrimp Broth (if using):** Sauté shrimp shells and ginger until fragrant and dry. Add water and bring to a boil. Strain the broth and set aside.\n• **2. Prepare the Spice Paste:** Blend all spice paste ingredients (shallots, garlic, chilies, candlenuts, soaked dried shrimp, ginger, turmeric, galangal, lemongrass, coriander, shrimp paste, cooking oil, and water if needed) until a smooth paste is formed.\n• **3. Sauté the Spice Paste:** Heat additional cooking oil in a pan. Sauté the blended spice paste along with bruised lemongrass, kaffir lime leaves, and curry leaves (if using) until fragrant and the oil separates from the paste.\n• **4. Cook the Broth:** Add coconut milk, shrimp/chicken broth (or water), salt, sugar, mushroom stock, and pepper to the sautéed spice paste. Bring the mixture to a boil, stirring constantly to prevent the coconut milk from curdling. Continue to cook until the broth is well-combined and fragrant.\n• **5. Prepare Fillings:** Add the boiled shrimp and shredded chicken to the simmering broth and cook until they are heated through.\n• **6. Prepare Noodles and Toppings:** Blanch the rice vermicelli or yellow noodles and bean sprouts separately. Fry tofu puffs or white tofu and slice them. Boil eggs and cut them in half.\n• **7. Assemble:** Place the blanched noodles and bean sprouts in a serving bowl. Pour the hot laksa broth, along with the shrimp and chicken, over the noodles.\n• **8. Garnish and Serve:** Garnish the laksa with fried tofu, halved boiled eggs, fresh lime wedges, basil leaves, fried shallots, and a dollop of sambal according to preference. Serve hot.\n\n## Process Type\nNoodle Soup (Singapore Laksa)\n\n## AI Tags\nPeranakan cuisine\n• Southeast Asian food\n• fusion food\n• noodle soup\n• cultural assimilation\n• street food\n\n## Shared Heritage Detection\nis_shared: True\nconfidence_score: 1.0\nrelated_elements: {'country': 'Malaysia', 'element_name': 'Laksa (various types like Asam Laksa, Curry Laksa, Laksa Johor, Sarawak Laksa)', 'relationship_reason': 'Laksa is a staple dish in Malaysia, with numerous regional variations that share common Peranakan origins and culinary influences with Indonesian and Singaporean Laksa.'}\n• {'country': 'Singapore', 'element_name': 'Singapore Laksa (Katong Laksa)', 'relationship_reason': 'Singapore Laksa, particularly Katong Laksa, is a well-known variation that shares the same Peranakan roots and coconut milk-based broth characteristics with other Southeast Asian Laksas.'}\n• {'country': 'China', 'element_name': 'Noodle soups and culinary techniques', 'relationship_reason': 'Chinese immigrants brought the concept of noodle soups to Southeast Asia, which formed a foundational element for the development of Laksa through assimilation with local Malay and Indian culinary traditions.'}\n• {'country': 'India', 'element_name': 'Spices (e.g., cumin, coriander, cardamom) and culinary influences', 'relationship_reason': 'Indian cuisine introduced various spices and culinary influences that are evident in some versions of Laksa, particularly in the curry-based variations.'}\n\n## Categories\nCulinary Traditions\n\n## Location\ncountry: Southeast Asia\nprovinces: Malaysia\n• Singapore\n• Indonesia (Jakarta, Bogor, Tangerang)\nlat: 3.140489\nlng: 101.6834074\n\n## Completion Status\nCOMPLETE",
+    "cultural_significance": "Laksa is a quintessential example of 'budaya campuran hasil asimilasi masyarakat' (mixed culture resulting from community assimilation). It originated from the Peranakan community, which developed through the intermarriage of Chinese immigrants and local Malay communities in Southeast Asia. The dish embodies the rich culinary heritage of the region, showcasing a fusion of Chinese noodles with Malay and Indian spices and flavors. Laksa is not just a dish but also a symbol of national or regional identity in many Southeast Asian countries, with numerous regional variations reflecting diverse local influences. It is often served at special occasions and is a beloved street food, representing a successful cultural acculturation that has been passed down through generations. The name 'laksa' itself is believed to be derived from the Sanskrit word 'laksha,' meaning 'many,' referring to the numerous spices and ingredients used in its preparation.",
+    "tags": [
+      "Peranakan cuisine",
+      "Southeast Asian food",
+      "fusion food",
+      "noodle soup",
+      "cultural assimilation",
+      "street food"
+    ],
+    "completion_status": "COMPLETE",
+    "shared_heritage": {
+      "is_shared": true,
+      "confidence_score": 1.0,
+      "related_elements": [
+        {
+          "country": "Malaysia",
+          "element_name": "Laksa (various types like Asam Laksa, Curry Laksa, Laksa Johor, Sarawak Laksa)",
+          "relationship_reason": "Laksa is a staple dish in Malaysia, with numerous regional variations that share common Peranakan origins and culinary influences with Indonesian and Singaporean Laksa."
+        },
+        {
+          "country": "Singapore",
+          "element_name": "Singapore Laksa (Katong Laksa)",
+          "relationship_reason": "Singapore Laksa, particularly Katong Laksa, is a well-known variation that shares the same Peranakan roots and coconut milk-based broth characteristics with other Southeast Asian Laksas."
+        },
+        {
+          "country": "China",
+          "element_name": "Noodle soups and culinary techniques",
+          "relationship_reason": "Chinese immigrants brought the concept of noodle soups to Southeast Asia, which formed a foundational element for the development of Laksa through assimilation with local Malay and Indian culinary traditions."
+        },
+        {
+          "country": "India",
+          "element_name": "Spices (e.g., cumin, coriander, cardamom) and culinary influences",
+          "relationship_reason": "Indian cuisine introduced various spices and culinary influences that are evident in some versions of Laksa, particularly in the curry-based variations."
+        }
+      ]
+    },
+    "source_urls": [
+      "https://nisabakrigourmet.com/blogs/news/a-brief-history-of-laksa-origins-influences-and-cultural-significance",
+      "https://chatterbox.com.sg/blogs/news/all-about-laksa-from-regional-variations-to-signature-ingredients",
+      "https://pantrypursuits.com/blogs/news/laksa-a-taste-of-southeast-asian-history-and-culture",
+      "https://www.idntimes.com/food/recipe/dinda-larasati-1/resep-laksa-singapura-yang-bikin-ketagihan-c1c2",
+      "https://www.youtube.com/watch?v=1234567890"
+    ],
+    "scraped_at": "2026-10-26T02:12:01.524810Z"
+  },
+  {
     "source_id": "ich-5a07be24",
     "element_name": "Cinavu (Abai)",
     "category": "Culinary Traditions",
