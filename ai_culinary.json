@@ -1931,6 +1931,61 @@
     "scraped_at": "2026-09-05T01:57:21.006838Z"
   },
   {
+    "source_id": "ich-195dab1f",
+    "element_name": "Transhumance (Transumanza)",
+    "category": "Social Practices & Rituals | Culinary Traditions | Oral Traditions",
+    "country": "Italy",
+    "provinces": [
+      "Molise",
+      "Abruzzo",
+      "Puglia",
+      "Campania",
+      "Basilicata",
+      "Lazio",
+      "Lombardy",
+      "Trentino-Alto Adige (Val Senales in South Tyrol)"
+    ],
+    "lat": 41.684672,
+    "lng": 14.595614,
+    "thumbnail_url": "https://api.microlink.io/?url=https%3A//www.visitlazio.com/en/unesco-transhumance&screenshot=true&meta=false&embed=screenshot.url",
+    "description": "## Description\nTranshumance is an ancient pastoral practice involving the seasonal migration of livestock, primarily sheep, but also cattle and goats, along with their shepherds, between different pastures. This movement occurs from lowland areas to high mountain pastures in spring (known as 'monticazione') and back to the lowlands in autumn ('demonticazione'). The journeys are undertaken along semi-natural paths called 'tratturi', often lasting for days with stops at designated 'post stations'.\n\n## Cultural Significance\nThis prehistoric tradition, dating back to at least the third century BCE in Italy, represents a fundamental piece of Italy's agricultural culture. It has preserved a balanced relationship between humans and nature, promoting the sustainable use of natural resources, respect for animal welfare, and adherence to seasonal rhythms. The practice has shaped landscapes and influenced social structures for millennia. Transhumance was inscribed as Intangible Cultural Heritage of Humanity by UNESCO in 2019, following a joint nomination by Italy, Greece, and Austria.\n\n## Tools, Materials & Ingredients\nLivestock (sheep, cattle, goats)\n• Shepherds\n• Dogs\n• Horses\n• Tratturi (ancient sheep tracks)\n• Rest areas, fences, shelters, chapels, taverns, inns (historical infrastructure along tratturi)\n\n## Step-by-Step Process\n**Monticazione (Spring):** Shepherds lead their flocks from lowland pastures to high mountain pastures as temperatures rise and mountain vegetation becomes available.\n• **Summer Grazing:** Livestock graze in the fertile mountain pastures during the warmer months.\n• **Demonticazione (Autumn):** As winter approaches, shepherds guide their animals back down from the high mountain pastures to the warmer lowland areas.\n• The migration involves traveling along established 'tratturi' (sheep tracks) for several days, with planned stops at 'post stations' for rest and sustenance.\n\n## Process Type\nSeasonal Livestock Migration\n\n## AI Tags\nTraditional Knowledge\n• Pastoralism\n• Livestock Management\n• Seasonal Migration\n• Sustainable Agriculture\n• Cultural Landscape\n• UNESCO Heritage\n\n## Shared Heritage Detection\nis_shared: True\nconfidence_score: 1.0\nrelated_elements: {'country': 'Greece', 'element_name': 'Transhumance', 'relationship_reason': 'Greece, along with Italy and Austria, jointly proposed Transhumance for UNESCO Intangible Cultural Heritage recognition, as it is a shared traditional practice in the Mediterranean and Alpine regions.'}\n• {'country': 'Austria', 'element_name': 'Transhumance', 'relationship_reason': 'Austria, along with Italy and Greece, jointly proposed Transhumance for UNESCO Intangible Cultural Heritage recognition. The Val Senales transhumance in Italy is a cross-border and trans-glacial migration to pastures in Vent, Austria.'}\n\n## Categories\nSocial Practices & Rituals\n• Culinary Traditions\n• Oral Traditions\n\n## Location\ncountry: Italy\nprovinces: Molise\n• Abruzzo\n• Puglia\n• Campania\n• Basilicata\n• Lazio\n• Lombardy\n• Trentino-Alto Adige (Val Senales in South Tyrol)\nlat: 41.684672\nlng: 14.595614\n\n## Completion Status\nCOMPLETE",
+    "cultural_significance": "This prehistoric tradition, dating back to at least the third century BCE in Italy, represents a fundamental piece of Italy's agricultural culture. It has preserved a balanced relationship between humans and nature, promoting the sustainable use of natural resources, respect for animal welfare, and adherence to seasonal rhythms. The practice has shaped landscapes and influenced social structures for millennia. Transhumance was inscribed as Intangible Cultural Heritage of Humanity by UNESCO in 2019, following a joint nomination by Italy, Greece, and Austria.",
+    "tags": [
+      "Traditional Knowledge",
+      "Pastoralism",
+      "Livestock Management",
+      "Seasonal Migration",
+      "Sustainable Agriculture",
+      "Cultural Landscape",
+      "UNESCO Heritage"
+    ],
+    "completion_status": "COMPLETE",
+    "shared_heritage": {
+      "is_shared": true,
+      "confidence_score": 1.0,
+      "related_elements": [
+        {
+          "country": "Greece",
+          "element_name": "Transhumance",
+          "relationship_reason": "Greece, along with Italy and Austria, jointly proposed Transhumance for UNESCO Intangible Cultural Heritage recognition, as it is a shared traditional practice in the Mediterranean and Alpine regions."
+        },
+        {
+          "country": "Austria",
+          "element_name": "Transhumance",
+          "relationship_reason": "Austria, along with Italy and Greece, jointly proposed Transhumance for UNESCO Intangible Cultural Heritage recognition. The Val Senales transhumance in Italy is a cross-border and trans-glacial migration to pastures in Vent, Austria."
+        }
+      ]
+    },
+    "source_urls": [
+      "https://www.visitlazio.com/en/unesco-transhumance",
+      "https://www.worldmonumentsfund.org/program/transhumance-cultural-landscape",
+      "https://www.alpinarena.com/en/val-senales/transhumance",
+      "https://www.spaghettiandmandolino.it/en/transhumance-unesco-heritage/",
+      "https://www.unesco.org/en/intangible-heritage/italy"
+    ],
+    "scraped_at": "2026-10-30T03:24:10.490127Z"
+  },
+  {
     "source_id": "ich-bdaf6663",
     "element_name": "Maasai Cow Blood Drinking (Osaroi)",
     "category": "Culinary Traditions | Social Practices & Rituals",
